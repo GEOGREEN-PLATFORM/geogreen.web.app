@@ -1,23 +1,24 @@
 <script setup lang="ts">
 interface Props {
-  label: string;
-  designType: "primary" | "secondary";
-  disabled: boolean;
+  label: string
+  designType: 'primary' | 'secondary'
+  disabled: boolean
+  type: 'submit'
 }
 const props = withDefaults(defineProps<Props>(), {
-  label: "Зарегистрироваться",
+  label: 'Зарегистрироваться',
   rounded: true,
-  designType: "primary",
+  designType: 'primary',
   disabled: false,
-});
+})
 const buttonDesignTypeSettings = ref({
   outline: false,
   rounded: true,
-});
+})
 
 onMounted(() => {
-  buttonDesignTypeSettings.value.outline = props.designType === "secondary";
-});
+  buttonDesignTypeSettings.value.outline = props.designType === 'secondary'
+})
 </script>
 
 <template>
@@ -32,6 +33,7 @@ onMounted(() => {
       :rounded="buttonDesignTypeSettings.rounded"
       :outline="buttonDesignTypeSettings.outline"
       :disable="disabled"
+      :type="type"
     />
   </div>
 </template>
