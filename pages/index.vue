@@ -13,6 +13,7 @@
     <div style="width: 500px">
       <KTInput />
       <KTButton />
+      <KTInputOTP />
     </div>
   </div>
 </template>

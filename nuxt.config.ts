@@ -24,7 +24,7 @@ export default defineNuxtConfig({
       brand: {
         primary: '#6369D1',
         dark: '#120C0A',
-        negative: '#BD7700',
+        negative: '#FA5738',
         positive: '#BC0909',
       },
     },

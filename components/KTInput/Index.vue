@@ -23,20 +23,26 @@ interface Props {
     | undefined
   required: boolean
   rules: ValidationRule[]
+  hideBottomSpace: boolean
+  hideErrorIcon: boolean
+  placeholder: string
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
   rounded: true,
   outlined: true,
   required: true,
-  rules: () => [val => (val && val.length > 0) || ''],
+  rules: () => [val => (val && val.length > 0) || 'Поле не может быть пустым'],
   type: 'text',
   label: 'Метка',
+  placeholder: 'Введите текст',
+  hideErrorIcon: true,
+  hideBottomSpace: false,
 })
 const inputValue = ref(props.modelValue)
 const showPassword = ref(false)
 const currentType = ref(props.type)
-const inputRef = ref()
+const qInputRef = ref()
 function togglePassword() {
   showPassword.value = !showPassword.value
   currentType.value = showPassword.value ? 'text' : 'password'
@@ -46,6 +52,7 @@ function togglePassword() {
 <template>
   <div class="kt-input-main">
     <q-input
+      ref="qInputRef"
       v-model="inputValue"
       :rounded="rounded"
       :outlined="outlined"
@@ -53,6 +60,10 @@ function togglePassword() {
       :type="currentType"
       :rules="rules"
       lazy-rules
+      :no-error-icon="hideErrorIcon"
+      :hide-bottom-space="hideBottomSpace"
+      :placeholder="placeholder"
+      @update:model-value="qInputRef?.validate"
     >
       <template #append>
         <q-icon

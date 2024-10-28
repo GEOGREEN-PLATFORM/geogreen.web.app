@@ -12,6 +12,19 @@
     border-color: var(--app-blue-9);
     border-width: 1px;
   }
+  .q-field--outlined.q-field--highlighted.q-field--error .q-field__control:after {
+    border-color: var(--app-red-10);
+  }
+  .q-field--outlined.q-field--highlighted.q-field--error {
+    .q-field__label {
+      color: rgba(0, 0, 0, 0.7);
+    }
+  }
+  .q-field--outlined.q-field--highlighted.q-field--error.q-field--focused {
+    .q-field__label {
+      color: var(--app-blue-9);
+    }
+  }
   .q-field__label {
     transform: skewX(-10deg);
     top: 22px;
@@ -32,11 +45,11 @@
   .q-field__marginal {
     height: 64px;
   }
-  input[type="password"] {
-    font-family: LVerdana;
+  input[type="password"]:not(:placeholder-shown) {
+    font-family: Verdana;
     letter-spacing: 0.1em;
     color: rgba(0, 0, 0, 0.7);
-  }
+}
   input {
     font-size: 16px;
   }

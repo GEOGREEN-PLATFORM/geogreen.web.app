@@ -5,7 +5,7 @@ interface Props {
 interface UserData {
   login: string
   password: string
-  email?: string
+  email: string
 }
 const props = withDefaults(defineProps<Props>(), {
   type: 'login',
@@ -17,6 +17,13 @@ const userData = ref<UserData>({
   password: '',
   email: '',
 })
+
+function goToAlternateAuth(currentAuthType: 'login' | 'register') {
+  const alternateAuthType = currentAuthType == 'login' ? 'register' : 'login'
+  navigateTo({
+    path: `/auth/${alternateAuthType}`,
+  })
+}
 function checkFormValid() {
   formRef.value
     ?.validate()
@@ -35,10 +42,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <q-form ref="formRef" @submit="checkFormValid">
-    <div class="page-content__auth-form">
+  <q-form ref="formRef" greedy class="auth-form" @submit="checkFormValid">
+    <div class="auth-form__input-fields">
       <KTInput
-        v-if="type === 'register' && userData.email"
+        v-if="type === 'register'"
         v-model="userData.email"
         label="Почта"
       />
@@ -50,35 +57,39 @@ onMounted(() => {
         type="password"
       />
     </div>
-    <div class="page-content__action-buttons">
+    <div class="auth-form__action-buttons">
       <KTButton
         :disabled="formHasError"
         :label="type === 'login' ? 'Войти в аккаунт' : 'Далее'"
         type="submit"
       />
       <KTButton
-        :label="type === 'login' ? 'У меня нет аккаунта' : 'Далее'"
+        :label="type === 'login' ? 'У меня нет аккаунта' : 'У меня есть аккаунт'"
         design-type="secondary"
+        @click="goToAlternateAuth(type)"
       />
     </div>
   </q-form>
 </template>
 
-<style scoped>
-.page-content__auth-form {
-  display: flex;
-  flex-direction: column;
+<style scoped lang="scss">
+.auth-form {
   width: 100%;
-  gap: 16px;
-  margin-top: 84px;
-  margin-bottom: 56px;
-  padding: 0px 16px;
-}
-.page-content__action-buttons {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  gap: 8px;
-  padding: 0px 16px;
+  &__input-fields {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+    margin-top: 84px;
+    margin-bottom: 56px;
+    padding: 0px 16px;
+  }
+  &__action-buttons {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+    padding: 0px 16px;
+  }
 }
 </style>
