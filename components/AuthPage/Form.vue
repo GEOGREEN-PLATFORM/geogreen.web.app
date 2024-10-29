@@ -1,41 +1,51 @@
 <script setup lang="ts">
-interface Props {
-  type: 'login' | 'register'
+interface ButtonOptions {
+  designType: "primary" | "secondary";
+  label: string;
 }
-interface UserData {
-  login: string
-  password: string
-  email: string
+interface Props {
+  buttonOptions: {
+    main: ButtonOptions,
+    sub: ButtonOptions,
+  }
 }
 const props = withDefaults(defineProps<Props>(), {
-  type: 'login',
+  buttonOptions: () => { return {
+    main: {
+      designType: "primary",
+      label: "Отправить",
+    },
+    sub: {
+      designType: "secondary",
+      label: "Отменить",
+    }
+  } }
 })
+const emits = defineEmits<{
+  "subButtonClick": [],
+  "mainButtonClick": [],
+}>();
+
 const { formRef, formBindValidation, formIsDirty, formHasError, formReset }
   = useFormValidation()
-const userData = ref<UserData>({
-  login: '',
-  password: '',
-  email: '',
-})
 
-function goToAlternateAuth(currentAuthType: 'login' | 'register') {
-  const alternateAuthType = currentAuthType == 'login' ? 'register' : 'login'
-  navigateTo({
-    path: `/auth/${alternateAuthType}`,
-  })
+function sendActionEvent(eventType: "sub" | "main") {
+  eventType === 'main' ? emits("mainButtonClick") : emits("subButtonClick");
 }
+
 function checkFormValid() {
   formRef.value
     ?.validate()
     .then((success) => {
       if (success) {
-        console.log('success')
+        sendActionEvent("main");
       }
       else {
         console.log('failed')
       }
     })
 }
+
 onMounted(() => {
   formBindValidation()
 })
@@ -43,30 +53,18 @@ onMounted(() => {
 
 <template>
   <q-form ref="formRef" greedy class="auth-form" @submit="checkFormValid">
-    <div class="auth-form__input-fields">
-      <KTInput
-        v-if="type === 'register'"
-        v-model="userData.email"
-        label="Почта"
-      />
-      <KTInput v-model="userData.login" required label="Логин" />
-      <KTInput
-        v-model="userData.password"
-        required
-        label="Пароль"
-        type="password"
-      />
-    </div>
+    <slot name="form-content" />
     <div class="auth-form__action-buttons">
       <KTButton
         :disabled="formHasError"
-        :label="type === 'login' ? 'Войти в аккаунт' : 'Далее'"
+        :label="buttonOptions.main.label"
+        :design-type="buttonOptions.main.designType"
         type="submit"
       />
       <KTButton
-        :label="type === 'login' ? 'У меня нет аккаунта' : 'У меня есть аккаунт'"
-        design-type="secondary"
-        @click="goToAlternateAuth(type)"
+        :label="buttonOptions.sub.label"
+        :design-type="buttonOptions.sub.designType"
+        @click="sendActionEvent('sub')"
       />
     </div>
   </q-form>
@@ -75,15 +73,6 @@ onMounted(() => {
 <style scoped lang="scss">
 .auth-form {
   width: 100%;
-  &__input-fields {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 8px;
-    margin-top: 84px;
-    margin-bottom: 56px;
-    padding: 0px 16px;
-  }
   &__action-buttons {
     display: flex;
     flex-direction: column;

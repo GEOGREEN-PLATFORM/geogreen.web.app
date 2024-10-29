@@ -2,8 +2,8 @@
 interface Props {
   label: string
   designType: 'primary' | 'secondary'
-  disabled: boolean
-  type: 'submit'
+  disabled?: boolean
+  type?: 'submit'
 }
 const props = withDefaults(defineProps<Props>(), {
   label: 'Зарегистрироваться',
