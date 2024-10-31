@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface Props {
-  digitCount: number
+  digitCount?: number
   modelValue: string
   isError?: boolean
 }
@@ -8,12 +8,12 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   digitCount: 4,
   modelValue: '',
-  isError: true,
+  isError: false,
 })
 const emits = defineEmits<{
-  (eventName: 'update:modelValue', value: string): void
-  (eventName: 'update:isError', value: boolean): void
-  (eventName: 'isFull'): void
+  'update:modelValue': [string],
+  'update:isError': [boolean],
+  'isFull': [],
 }>()
 const otpCont = ref<HTMLElement>()
 const digits = reactive<string[]>([])
@@ -171,7 +171,7 @@ watch(
       @keydown="handleKey($event, ind)"
     />
     <div v-if="isError" class="otp-error-message">
-      Неверный СМС-код. Попробуйте заново
+      Неверный код, попробуйте еще
     </div>
   </div>
 </template>
@@ -199,7 +199,9 @@ watch(
   }
   .otp-box {
     outline: none;
+    appearance: none;
     border: 1px solid var(--app-black-8);
+    background-color: transparent;
     width: 54px;
     height: 54px;
     color: var(--app-black);

@@ -3,8 +3,8 @@ definePageMeta({
   layout: 'auth'
 })
 interface ButtonOptions {
-  designType: "primary" | "secondary";
-  label: string;
+  designType: "primary" | "secondary" | "tertiary"
+  label: string
 }
 interface UserData {
   login: string
@@ -27,12 +27,14 @@ const buttonOptions = ref<{main: ButtonOptions, sub: ButtonOptions}>({
   }
 });
 const registrationStep = ref(1);
+const isWrongCode = ref(false);
+const authCode = ref("");
 
 function handleMainButtonClick(regStep: number) {
   switch (regStep) {
     case (1):
       goToNextRegStep();
-      updateButtonOptions(regStep);
+      updateButtonOptions(regStep + 1);
       break;
     default:
       break;
@@ -43,6 +45,10 @@ function handleSubButtonClick(regStep: number) {
   switch (regStep) {
     case (1):
       goToLogin();
+      break;
+    case (2):
+      goToPrevRegStep();
+      updateButtonOptions(regStep - 1);
       break;
     default:
       break;
@@ -74,8 +80,14 @@ function updateButtonOptions(regStep: number) {
     }
   }
 }
+function sendAuthCode() {
+  isWrongCode.value = true;
+}
 function goToNextRegStep() {
   registrationStep.value++;
+}
+function goToPrevRegStep() {
+  registrationStep.value--;
 }
 function goToLogin() {
   navigateTo({ path: '/auth/login' });
@@ -99,10 +111,10 @@ function goToLogin() {
               type="password"
             />
           </div>
-          <div v-else>
-            <div>Введите код подтверждения, 
+          <div class="form-content" v-else>
+            <div class="form-content__otp-hint">Введите код подтверждения, 
               отправленный вам на почту</div>
-            <KTInputOTP></KTInputOTP>
+            <KTInputOTP v-model="authCode" :is-error="isWrongCode" @is-full="sendAuthCode"></KTInputOTP>
           </div>
         </template>
       </AuthPageForm>
@@ -119,5 +131,12 @@ function goToLogin() {
     margin-top: 84px;
     margin-bottom: 56px;
     padding: 0px 16px;
+
+    &__otp-hint {
+      font-weight: 400;
+      line-height: 17.07px;
+      text-align: center;
+
+    }
   }
 </style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface ButtonOptions {
-  designType: "primary" | "secondary";
+  designType: "primary" | "secondary" | "tertiary";
   label: string;
 }
 interface Props {
