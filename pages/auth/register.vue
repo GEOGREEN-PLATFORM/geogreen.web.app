@@ -5,6 +5,7 @@ definePageMeta({
 interface ButtonOptions {
   designType: "primary" | "secondary" | "tertiary"
   label: string
+  loading?: boolean
 }
 interface UserData {
   login: string
@@ -16,79 +17,30 @@ const userData = ref<UserData>({
   password: '',
   email: '',
 })
+
 const buttonOptions = ref<{main: ButtonOptions, sub: ButtonOptions}>({
   main: {
     designType: "primary",
-    label: "Далее",
+    label: "Зарегистрироваться",
+    loading: false,
   },
   sub: {
     designType: "secondary",
     label: "У меня есть аккаунт",
   }
 });
-const registrationStep = ref(1);
-const isWrongCode = ref(false);
-const authCode = ref("");
 
-function handleMainButtonClick(regStep: number) {
-  switch (regStep) {
-    case (1):
-      goToNextRegStep();
-      updateButtonOptions(regStep + 1);
-      break;
-    default:
-      break;
-  }
+function sendRegister() {
+  //запрос к апи
+  buttonOptions.value.main.loading = true;
+  setTimeout(() => goToMainPage(), 5000); 
 }
 
-function handleSubButtonClick(regStep: number) {
-  switch (regStep) {
-    case (1):
-      goToLogin();
-      break;
-    case (2):
-      goToPrevRegStep();
-      updateButtonOptions(regStep - 1);
-      break;
-    default:
-      break;
-  }
+function goToMainPage() {
+  buttonOptions.value.main.loading = false;
+  navigateTo({ path: '/' });
 }
-function updateButtonOptions(regStep: number) {
-  if (regStep === 1) {
-    buttonOptions.value = {
-      main: {
-    designType: "primary",
-    label: "Далее",
-  },
-  sub: {
-    designType: "secondary",
-    label: "У меня есть аккаунт",
-  }
-    }
-  }
-  else {
-    buttonOptions.value = {
-      main: {
-    designType: "primary",
-    label: "Зарегистрироваться",
-  },
-  sub: {
-    designType: "tertiary",
-    label: "Назад",
-  }
-    }
-  }
-}
-function sendAuthCode() {
-  isWrongCode.value = true;
-}
-function goToNextRegStep() {
-  registrationStep.value++;
-}
-function goToPrevRegStep() {
-  registrationStep.value--;
-}
+
 function goToLogin() {
   navigateTo({ path: '/auth/login' });
 }
@@ -97,9 +49,9 @@ function goToLogin() {
 <template>
   <div>
     <NuxtLayout name="auth">
-      <AuthPageForm :button-options="buttonOptions" @main-button-click="handleMainButtonClick(registrationStep)" @sub-button-click="handleSubButtonClick(registrationStep)">
+      <AuthPageForm :button-options="buttonOptions" @main-button-click="sendRegister" @sub-button-click="goToLogin">
         <template #form-content>
-          <div class="form-content" v-if="registrationStep === 1">
+          <div class="form-content">
             <KTInput
               v-model="userData.email"
               label="Почта"
@@ -110,11 +62,6 @@ function goToLogin() {
               label="Пароль"
               type="password"
             />
-          </div>
-          <div class="form-content" v-else>
-            <div class="form-content__otp-hint">Введите код подтверждения, 
-              отправленный вам на почту</div>
-            <KTInputOTP v-model="authCode" :is-error="isWrongCode" @is-full="sendAuthCode"></KTInputOTP>
           </div>
         </template>
       </AuthPageForm>

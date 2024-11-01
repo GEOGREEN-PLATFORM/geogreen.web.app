@@ -5,6 +5,7 @@ definePageMeta({
 interface ButtonOptions {
   designType: "primary" | "secondary" | "tertiary"
   label: string
+  loading?: boolean;
 }
 interface UserData {
   login: string
@@ -20,19 +21,22 @@ const buttonOptions = ref<{main: ButtonOptions, sub: ButtonOptions}>({
   main: {
     designType: "primary",
     label: "Войти",
+    loading: false,
   },
   sub: {
     designType: "secondary",
     label: "У меня нет аккаунта",
   }
 });
-
-function handleMainButtonClick() {
-
+function sendLogin() {
+  //запрос к апи
+  buttonOptions.value.main.loading = true;
+  setTimeout(() => goToMainPage(), 5000); 
 }
 
-function handleSubButtonClick() {
-  goToRegister();
+function goToMainPage() {
+  buttonOptions.value.main.loading = false;
+  navigateTo({ path: '/' });
 }
 function goToRegister() {
   navigateTo({ path: '/auth/register' });
@@ -42,7 +46,7 @@ function goToRegister() {
 <template>
   <div>
     <NuxtLayout name="auth">
-      <AuthPageForm :button-options="buttonOptions" @main-button-click="handleMainButtonClick" @sub-button-click="handleSubButtonClick">
+      <AuthPageForm :button-options="buttonOptions" @main-button-click="sendLogin" @sub-button-click="goToRegister">
         <template #form-content>
           <div class="form-content">
             <KTInput v-model="userData.login" label="Логин" />

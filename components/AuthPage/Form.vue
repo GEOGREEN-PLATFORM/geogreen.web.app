@@ -2,6 +2,7 @@
 interface ButtonOptions {
   designType: "primary" | "secondary" | "tertiary";
   label: string;
+  loading?: boolean
 }
 interface Props {
   buttonOptions: {
@@ -14,6 +15,7 @@ const props = withDefaults(defineProps<Props>(), {
     main: {
       designType: "primary",
       label: "Отправить",
+      loading: false,
     },
     sub: {
       designType: "secondary",
@@ -59,6 +61,7 @@ onMounted(() => {
         :disabled="formHasError"
         :label="buttonOptions.main.label"
         :design-type="buttonOptions.main.designType"
+        :loading="buttonOptions.main.loading"
         type="submit"
       />
       <KTButton
@@ -77,7 +80,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     width: 100%;
-    gap: 8px;
+    gap: 16px;
     padding: 0px 16px;
   }
 }

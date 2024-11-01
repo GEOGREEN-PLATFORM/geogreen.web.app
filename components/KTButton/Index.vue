@@ -4,6 +4,7 @@ interface Props {
   designType: 'primary' | 'secondary' | 'tertiary'
   disabled?: boolean
   type?: 'submit'
+  loading?: boolean
 }
 const props = withDefaults(defineProps<Props>(), {
   label: 'Зарегистрироваться',
@@ -15,6 +16,7 @@ const buttonDesignTypeSettings = ref({
   outline: false,
   rounded: true,
   flat: false,
+  loading: false,
 })
 
 onMounted(() => {
@@ -37,6 +39,7 @@ onMounted(() => {
       :flat="buttonDesignTypeSettings.flat"
       :disable="disabled"
       :type="type"
+      :loading="loading"
     />
   </div>
 </template>
