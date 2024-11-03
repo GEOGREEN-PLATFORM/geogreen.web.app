@@ -37,7 +37,7 @@ const props = withDefaults(defineProps<Props>(), {
   label: 'Метка',
   placeholder: 'Введите текст',
   hideErrorIcon: true,
-  hideBottomSpace: false,
+  hideBottomSpace: true,
 })
 const inputValue = ref(props.modelValue)
 const showPassword = ref(false)

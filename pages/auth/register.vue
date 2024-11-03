@@ -52,6 +52,7 @@ function goToLogin() {
       <AuthPageForm :button-options="buttonOptions" @main-button-click="sendRegister" @sub-button-click="goToLogin">
         <template #form-content>
           <div class="form-content">
+            <div class="form-content__input-fields">
             <KTInput
               v-model="userData.email"
               label="Почта"
@@ -62,6 +63,12 @@ function goToLogin() {
               label="Пароль"
               type="password"
             />
+          </div>
+            <div class="form-content__accept-rules-block text-center">
+              <span class="form-content__info-text form-content__info-text--small">
+                Регистрируясь, вы соглашаетесь<br>с&nbsp;<span style="text-decoration: underline;">правилами платформы</span>
+              </span>
+            </div>
           </div>
         </template>
       </AuthPageForm>
@@ -74,16 +81,35 @@ function goToLogin() {
     display: flex;
     flex-direction: column;
     width: 100%;
-    gap: 8px;
+    gap: 24px;
     margin-top: 84px;
-    margin-bottom: 56px;
+    margin-bottom: 24px;
     padding: 0px 16px;
-
+    &__input-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
     &__otp-hint {
       font-weight: 400;
       line-height: 17.07px;
       text-align: center;
-
+    }
+    &__accept-rules-block {
+    }
+    &__info-text {
+      font-weight: 400;
+      font-style: italic;
+      font-size: 16px;
+      color: var(--app-blue-9);
+      &--small {
+        font-size: 12px;
+      }
+      &--error {
+        color: var(--app-red-10);
+        font-style: normal;
+        font-weight: 500;
+      }
     }
   }
 </style>
