@@ -70,30 +70,9 @@ function goToRegister() {
 
 <style lang="scss" scoped>
   .form-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
     margin-top: 84px;
     margin-bottom: 56px;
     padding: 0px 16px;
     gap: 8px;
-    &__input-fields {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    &__auth-error-block {
-    }
-    &__info-text {
-      font-weight: 400;
-      font-style: italic;
-      font-size: 16px;
-      color: var(--app-blue-9);
-      &--error {
-        color: var(--app-red-10);
-        font-style: normal;
-        font-weight: 500;
-      }
-    }
   }
 </style>

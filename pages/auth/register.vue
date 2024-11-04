@@ -69,39 +69,10 @@ function goToLogin() {
 </template>
 
 <style lang="scss" scoped>
-  .form-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 24px;
-    margin-top: 84px;
-    margin-bottom: 24px;
-    padding: 0px 16px;
-    &__input-fields {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    &__otp-hint {
-      font-weight: 400;
-      line-height: 17.07px;
-      text-align: center;
-    }
-    &__accept-rules-block {
-    }
-    &__info-text {
-      font-weight: 400;
-      font-style: italic;
-      font-size: 16px;
-      color: var(--app-blue-9);
-      &--small {
-        font-size: 12px;
-      }
-      &--error {
-        color: var(--app-red-10);
-        font-style: normal;
-        font-weight: 500;
-      }
-    }
-  }
+.form-content {
+  gap: 24px;
+  margin-top: 84px;
+  margin-bottom: 24px;
+  padding: 0px 16px;
+}
 </style>

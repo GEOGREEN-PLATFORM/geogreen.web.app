@@ -72,7 +72,7 @@ onMounted(() => {
   </q-form>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .auth-form {
   width: 100%;
   &__action-buttons {
@@ -81,6 +81,30 @@ onMounted(() => {
     width: 100%;
     gap: 16px;
     padding: 0px 16px;
+  }
+  .form-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    &__input-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    &__info-text {
+      font-weight: 400;
+      font-style: italic;
+      font-size: 16px;
+      color: var(--app-blue-9);
+      &--small {
+        font-size: 12px;
+      }
+      &--error {
+        color: var(--app-red-10);
+        font-style: normal;
+        font-weight: 500;
+      }
+    }
   }
 }
 </style>

@@ -26,6 +26,7 @@ interface Props {
   hideBottomSpace?: boolean
   hideErrorIcon?: boolean
   placeholder?: string
+  name?: string
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
@@ -50,10 +51,11 @@ const currentType = ref(props.type)
 const qInputRef = ref()
 
 function updateValue(value: string | number | null) {
-  qInputRef.value?.validate();
-  emits("update:modelValue", value);
+  nextTick(() => {
+    qInputRef.value?.validate();
+    emits("update:modelValue", value);
+  });
 }
-
 function togglePassword() {
   showPassword.value = !showPassword.value
   currentType.value = showPassword.value ? 'text' : 'password'
@@ -74,6 +76,7 @@ function togglePassword() {
       :no-error-icon="hideErrorIcon"
       :hide-bottom-space="hideBottomSpace"
       :placeholder="placeholder"
+      :name="name"
       @update:model-value="updateValue"
     >
       <template #append>
@@ -87,5 +90,3 @@ function togglePassword() {
     </q-input>
   </div>
 </template>
-
-<style scoped lang="scss"></style>
