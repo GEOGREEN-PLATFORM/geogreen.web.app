@@ -1,0 +1,78 @@
+.kt-input-main {
+  .q-field--outlined.q-field--rounded .q-field__control {
+    border-radius: 16px;
+  }
+  .q-field--outlined .q-field__control:before {
+    border: 1px solid var(--app-black-6);
+  }
+  .q-field--outlined .q-field__control:after {
+    border: 1px solid transparent;
+  }
+  .q-field--outlined.q-field--highlighted .q-field__control:after {
+    border-color: var(--app-blue-9);
+    border-width: 1px;
+  }
+  .q-field--outlined.q-field--highlighted.q-field--error .q-field__control:after {
+    border-color: var(--app-red-10);
+  }
+  .q-field--outlined.q-field--highlighted.q-field--error {
+    .q-field__label {
+      color: rgba(0, 0, 0, 0.7);
+    }
+  }
+  .q-field--outlined.q-field--highlighted.q-field--error.q-field--focused {
+    .q-field__label {
+      color: var(--app-blue-9);
+    }
+  }
+  .q-field__label {
+    transform: skewX(-10deg);
+    top: 22px;
+  }
+  .q-field--float .q-field__label {
+    transform: translateY(-48%) scale(0.85) skewX(0deg);
+  }
+  .q-field__native,
+  .q-field__input {
+    color: var(--app-black-10);
+  }
+  .q-field--labeled .q-field__native {
+    line-height: 20px;
+  }
+  .q-field__control {
+    height: 64px;
+  }
+  .q-field__marginal {
+    height: 64px;
+  }
+  input[type="password"]:not(:placeholder-shown) {
+    font-family: Verdana;
+    letter-spacing: 0.1em;
+    color: rgba(0, 0, 0, 0.7);
+}
+  input {
+    font-size: 16px;
+  }
+}
+.kt-button-main {
+  .q-btn--rounded {
+    border-radius: 16px;
+  }
+  .q-btn {
+    height: 52px;
+    width: 100%;
+    font-size: 16px;
+    &::before {
+      box-shadow: none;
+    }
+  }
+  .q-btn.disabled {
+    opacity: 1 !important;
+  }
+}
+.q-field__label {
+  color: rgba(0, 0, 0, 0.7);
+}
+.q-icon {
+  fill: var(--app-black-6);
+}
