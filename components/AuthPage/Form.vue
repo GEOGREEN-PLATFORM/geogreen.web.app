@@ -1,38 +1,35 @@
 <script setup lang="ts">
-interface ButtonOptions {
-  designType: "primary" | "secondary" | "tertiary";
-  label: string;
-  loading?: boolean
-}
 interface Props {
   buttonOptions: {
-    main: ButtonOptions,
-    sub: ButtonOptions,
+    main: ButtonOptions
+    sub: ButtonOptions
   }
 }
 const props = withDefaults(defineProps<Props>(), {
-  buttonOptions: () => { return {
-    main: {
-      designType: "primary",
-      label: "Отправить",
-      loading: false,
-    },
-    sub: {
-      designType: "secondary",
-      label: "Отменить",
+  buttonOptions: () => {
+    return {
+      main: {
+        designType: 'primary',
+        label: 'Отправить',
+        loading: false,
+      },
+      sub: {
+        designType: 'secondary',
+        label: 'Отменить',
+      },
     }
-  } }
+  },
 })
 const emits = defineEmits<{
-  "subButtonClick": [],
-  "mainButtonClick": [],
-}>();
+  subButtonClick: []
+  mainButtonClick: []
+}>()
 
 const { formRef, formBindValidation, formIsDirty, formHasError, formReset }
   = useFormValidation()
 
-function sendActionEvent(eventType: "sub" | "main") {
-  eventType === 'main' ? emits("mainButtonClick") : emits("subButtonClick");
+function sendActionEvent(eventType: 'sub' | 'main') {
+  eventType === 'main' ? emits('mainButtonClick') : emits('subButtonClick')
 }
 
 function checkFormValid() {
@@ -40,7 +37,7 @@ function checkFormValid() {
     ?.validate()
     .then((success) => {
       if (success) {
-        sendActionEvent("main");
+        sendActionEvent('main')
       }
       else {
         console.log('failed')
@@ -54,10 +51,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <q-form ref="formRef" greedy class="auth-form" @submit="checkFormValid">
+  <q-form ref="formRef" novalidate greedy class="auth-form" @submit="checkFormValid">
     <slot name="form-content" />
     <div class="auth-form__action-buttons">
       <KTButton
+        v-if="buttonOptions.main.show !== false"
         :disabled="formHasError"
         :label="buttonOptions.main.label"
         :design-type="buttonOptions.main.designType"
@@ -65,6 +63,7 @@ onMounted(() => {
         type="submit"
       />
       <KTButton
+         v-if="buttonOptions.sub.show !== false"
         :label="buttonOptions.sub.label"
         :design-type="buttonOptions.sub.designType"
         @click="sendActionEvent('sub')"

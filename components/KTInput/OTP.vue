@@ -11,9 +11,9 @@ const props = withDefaults(defineProps<Props>(), {
   isError: false,
 })
 const emits = defineEmits<{
-  'update:modelValue': [string],
-  'update:isError': [boolean],
-  'isFull': [],
+  'update:modelValue': [string]
+  'update:isError': [boolean]
+  'isFull': []
 }>()
 const otpCont = ref<HTMLElement>()
 const digits = reactive<string[]>([])

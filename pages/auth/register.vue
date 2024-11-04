@@ -1,48 +1,39 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: 'auth'
+  layout: 'auth',
 })
-interface ButtonOptions {
-  designType: "primary" | "secondary" | "tertiary"
-  label: string
-  loading?: boolean
-}
-interface UserData {
-  login: string
-  password: string
-  email: string
-}
-const userData = ref<UserData>({
+
+const userData = ref<UserAuthData>({
   login: '',
   password: '',
   email: '',
 })
 
-const buttonOptions = ref<{main: ButtonOptions, sub: ButtonOptions}>({
+const buttonOptions = ref<{ main: ButtonOptions, sub: ButtonOptions }>({
   main: {
-    designType: "primary",
-    label: "Зарегистрироваться",
+    designType: 'primary',
+    label: 'Зарегистрироваться',
     loading: false,
   },
   sub: {
-    designType: "secondary",
-    label: "У меня есть аккаунт",
-  }
-});
+    designType: 'secondary',
+    label: 'У меня есть аккаунт',
+  },
+})
 
 function sendRegister() {
-  //запрос к апи
-  buttonOptions.value.main.loading = true;
-  setTimeout(() => goToMainPage(), 5000); 
+  // запрос к апи
+  buttonOptions.value.main.loading = true
+  setTimeout(() => goToMainPage(), 5000)
 }
 
 function goToMainPage() {
-  buttonOptions.value.main.loading = false;
-  navigateTo({ path: '/' });
+  buttonOptions.value.main.loading = false
+  navigateTo({ path: '/' })
 }
 
 function goToLogin() {
-  navigateTo({ path: '/auth/login' });
+  navigateTo({ path: '/auth/login' })
 }
 </script>
 
@@ -53,20 +44,21 @@ function goToLogin() {
         <template #form-content>
           <div class="form-content">
             <div class="form-content__input-fields">
-            <KTInput
-              v-model="userData.email"
-              label="Почта"
-            />
-            <KTInput v-model="userData.login" label="Логин" />
-            <KTInput
-              v-model="userData.password"
-              label="Пароль"
-              type="password"
-            />
-          </div>
+              <KTInput
+                v-model="userData.email!"
+                label="Почта"
+                type="email"
+              />
+              <KTInput v-model="userData.login" label="Логин" />
+              <KTInput
+                v-model="userData.password"
+                label="Пароль"
+                type="password"
+              />
+            </div>
             <div class="form-content__accept-rules-block text-center">
               <span class="form-content__info-text form-content__info-text--small">
-                Регистрируясь, вы соглашаетесь<br>с&nbsp;<span style="text-decoration: underline;">правилами платформы</span>
+                Регистрируясь, вы соглашаетесь<br />с&nbsp;<span style="text-decoration: underline;">правилами платформы</span>
               </span>
             </div>
           </div>
