@@ -123,15 +123,16 @@ function goBack() {
 </template>
 
 <style lang="scss" scoped>
-  .form-content {
-    margin-top: 84px;
-    margin-bottom: 56px;
-    padding: 0px 16px;
-    gap: 8px;
-    &__page-step-hint {
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 17.07px;
-    }
+@use '@/assets/styles/pages/auth.scss';
+.form-content {
+  margin-top: 84px;
+  margin-bottom: 56px;
+  padding: 0px 16px;
+  gap: 8px;
+  &__page-step-hint {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 17.07px;
   }
+}
 </style>

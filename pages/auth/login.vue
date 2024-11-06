@@ -49,11 +49,12 @@ function goToRegister() {
               </span>
             </div>
             <div class="form-content__input-fields">
-              <KTInput v-model="userData.login" label="Логин" />
+              <KTInput v-model="userData.login" label="Логин" name="login"/>
               <KTInput
                 v-model="userData.password"
                 label="Пароль"
                 type="password"
+                name="password"
               />
             </div>
             <div class="form-content__forgot-password-block text-right">
@@ -69,10 +70,11 @@ function goToRegister() {
 </template>
 
 <style lang="scss" scoped>
-  .form-content {
-    margin-top: 84px;
-    margin-bottom: 56px;
-    padding: 0px 16px;
-    gap: 8px;
-  }
+@use '@/assets/styles/pages/auth.scss';
+.form-content {
+  margin-top: 84px;
+  margin-bottom: 56px;
+  padding: 0px 16px;
+  gap: 8px;
+}
 </style>

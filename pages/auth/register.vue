@@ -69,6 +69,7 @@ function goToLogin() {
 </template>
 
 <style lang="scss" scoped>
+@use '@/assets/styles/pages/auth.scss';
 .form-content {
   gap: 24px;
   margin-top: 84px;
