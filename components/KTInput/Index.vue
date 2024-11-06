@@ -4,10 +4,10 @@ import { mdiEyeOffOutline, mdiEyeOutline } from '@quasar/extras/mdi-v6'
 
 interface Props {
   modelValue: string
-  rounded: boolean
-  outlined: boolean
+  rounded?: boolean
+  outlined?: boolean
   label: string
-  type:
+  type?:
     | 'number'
     | 'password'
     | 'search'
@@ -21,11 +21,12 @@ interface Props {
     | 'date'
     | 'datetime-local'
     | undefined
-  required: boolean
-  rules: ValidationRule[]
-  hideBottomSpace: boolean
-  hideErrorIcon: boolean
-  placeholder: string
+  required?: boolean
+  rules?: ValidationRule[]
+  hideBottomSpace?: boolean
+  hideErrorIcon?: boolean
+  placeholder?: string
+  name?: string
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
@@ -39,10 +40,22 @@ const props = withDefaults(defineProps<Props>(), {
   hideErrorIcon: true,
   hideBottomSpace: true,
 })
+
+const emits = defineEmits<{
+  'update:modelValue': [string | number | null]
+}>();
+
 const inputValue = ref(props.modelValue)
 const showPassword = ref(false)
 const currentType = ref(props.type)
 const qInputRef = ref()
+
+function updateValue(value: string | number | null) {
+  nextTick(() => {
+    qInputRef.value?.validate();
+    emits("update:modelValue", value);
+  });
+}
 function togglePassword() {
   showPassword.value = !showPassword.value
   currentType.value = showPassword.value ? 'text' : 'password'
@@ -63,7 +76,8 @@ function togglePassword() {
       :no-error-icon="hideErrorIcon"
       :hide-bottom-space="hideBottomSpace"
       :placeholder="placeholder"
-      @update:model-value="qInputRef?.validate"
+      :name="name"
+      @update:model-value="updateValue"
     >
       <template #append>
         <q-icon
@@ -76,5 +90,3 @@ function togglePassword() {
     </q-input>
   </div>
 </template>
-
-<style scoped lang="scss"></style>
