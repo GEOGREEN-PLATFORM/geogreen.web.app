@@ -49,7 +49,7 @@ function goToRegister() {
               </span>
             </div>
             <div class="form-content__input-fields">
-              <KTInput v-model="userData.login" label="Логин" name="login"/>
+              <KTInput v-model="userData.login" label="Логин" name="login" />
               <KTInput
                 v-model="userData.password"
                 label="Пароль"

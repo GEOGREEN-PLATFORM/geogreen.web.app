@@ -8,7 +8,7 @@
     "lint:eslint": "eslint .",
     "lint:prettier": "prettier . --check",
     "lintfix": "eslint . --fix && prettier --write --list-different .",
-    "dev": "nuxt dev --port 7894",
+    "dev": "nuxt dev --port 7894 --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",

@@ -2,59 +2,59 @@
 definePageMeta({
   layout: 'auth',
 })
-const INITIAL_STEP = 1;
+const INITIAL_STEP = 1
 class PageState {
-  private currentStep: number;
-  private hintText: string;
-  private currentButtonOpts: { main: ButtonOptions, sub: ButtonOptions };
+  private currentStep: number
+  private hintText: string
+  private currentButtonOpts: { main: ButtonOptions, sub: ButtonOptions }
 
-  private readonly defaultSubButton: ButtonOptions = { designType: 'tertiary', label: 'Назад', show: true };
+  private readonly defaultSubButton: ButtonOptions = { designType: 'tertiary', label: 'Назад', show: true }
 
   private readonly stepConfig = {
     1: {
       mainButton: { label: 'Далее', show: true },
-      hintText: 'Введите почту, указанную в аккаунте'
+      hintText: 'Введите почту, указанную в аккаунте',
     },
     2: {
       mainButton: { label: 'Далее', show: false },
-      hintText: 'Введите код, отправленный на вашу почту'
+      hintText: 'Введите код, отправленный на вашу почту',
     },
     3: {
       mainButton: { label: 'Сменить пароль', show: true },
-      hintText: 'Придумайте новый пароль'
+      hintText: 'Придумайте новый пароль',
     },
-  };
+  }
 
   constructor() {
-    this.currentStep = INITIAL_STEP;
-    this.hintText = this.stepConfig[INITIAL_STEP].hintText;
+    this.currentStep = INITIAL_STEP
+    this.hintText = this.stepConfig[INITIAL_STEP].hintText
     this.currentButtonOpts = {
       main: { designType: 'primary', ...this.stepConfig[INITIAL_STEP].mainButton },
-      sub: this.defaultSubButton
-    };
+      sub: this.defaultSubButton,
+    }
   }
 
   get step() {
-    return this.currentStep;
+    return this.currentStep
   }
 
   get hint() {
-    return this.hintText;
+    return this.hintText
   }
 
   get buttonOptions() {
-    return this.currentButtonOpts;
+    return this.currentButtonOpts
   }
 
   update(newStep: number) {
-    this.currentStep = newStep;
+    this.currentStep = newStep
     if (Object.hasOwn(this.stepConfig, newStep)) {
-      const config = this.stepConfig[newStep as (1 | 2 | 3)] || this.stepConfig[INITIAL_STEP];
+      const config = this.stepConfig[newStep as (1 | 2 | 3)] || this.stepConfig[INITIAL_STEP]
       this.currentButtonOpts = {
         main: { designType: 'primary', ...config.mainButton },
-        sub: this.defaultSubButton
-      };
-      this.hintText = config.hintText;
+        sub: this.defaultSubButton,
+      }
+      this.hintText = config.hintText
     }
   }
 }
@@ -73,9 +73,8 @@ function handleMainAction(pageStep: number) {
     pageState.value.update(pageStep)
   }
   else {
-    sendChangePassword();
+    sendChangePassword()
   }
-
 }
 
 function handleSubAction(pageStep: number) {
@@ -111,7 +110,7 @@ function goBack() {
             </div>
             <div class="form-content__input-fields">
               <KTInput v-if="pageState.step === 1" v-model="userData.email" label="Почта" />
-              <KTInputOTP @is-full="handleMainAction(pageState.step + 1)" v-if="pageState.step === 2" v-model="userData.confirmationCode"/>
+              <KTInputOTP v-if="pageState.step === 2" v-model="userData.confirmationCode" @is-full="handleMainAction(pageState.step + 1)" />
               <KTInput v-if="pageState.step === 3" v-model="userData.password" type="password" label="Новый пароль" />
               <KTInput v-if="pageState.step === 3" v-model="userData.repeatedPassword" type="password" label="Повторите пароль" />
             </div>

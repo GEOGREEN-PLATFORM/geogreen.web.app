@@ -26,7 +26,7 @@ function sendRegister() {
   buttonOptions.value.main.loading = true
   setTimeout(() => goToMainPage(), 5000)
 }
-const colorMode = useColorMode();
+const colorMode = useColorMode()
 function goToMainPage() {
   buttonOptions.value.main.loading = false
   navigateTo({ path: '/' })
@@ -43,7 +43,7 @@ function goToLogin() {
       <AuthPageForm :button-options="buttonOptions" @main-button-click="sendRegister" @sub-button-click="goToLogin">
         <template #form-content>
           <div class="form-content">
-            <div style="width: 40px; height: 40px; background-color: var(--app-black-10);" @click="() => {colorMode.preference == 'dark' ? colorMode.preference = 'light' : colorMode.preference = 'dark'; }"></div>
+            <div style="width: 40px; height: 40px; background-color: var(--app-black-10);" @click="() => { colorMode.preference == 'dark' ? colorMode.preference = 'light' : colorMode.preference = 'dark'; }" />
             <div class="form-content__input-fields">
               <KTInput
                 v-model="userData.email!"

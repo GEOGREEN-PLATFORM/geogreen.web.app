@@ -33,6 +33,7 @@
       rgba(255, 255, 255, 0.48) 24.38%,
       rgba(255, 255, 255, 0.8) 79.95%
     ), url("/images/login_bg.png") center / cover no-repeat;
+  z-index: 1;
   box-shadow: 0px 0px 30px 0px #ffffff08;
   &::before {
   position: absolute;

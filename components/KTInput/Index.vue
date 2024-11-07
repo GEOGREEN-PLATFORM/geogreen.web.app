@@ -43,7 +43,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emits = defineEmits<{
   'update:modelValue': [string | number | null]
-}>();
+}>()
 
 const inputValue = ref(props.modelValue)
 const showPassword = ref(false)
@@ -52,9 +52,9 @@ const qInputRef = ref()
 
 function updateValue(value: string | number | null) {
   nextTick(() => {
-    qInputRef.value?.validate();
-    emits("update:modelValue", value);
-  });
+    qInputRef.value?.validate()
+    emits('update:modelValue', value)
+  })
 }
 function togglePassword() {
   showPassword.value = !showPassword.value
