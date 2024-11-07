@@ -34,8 +34,8 @@ export default defineNuxtConfig({
   quasar: {
     config: {
       brand: {
-        primary: '#6369D1',
-        dark: '#120C0A',
+        primary: 'var(--app-blue-9)',
+        dark: '',
         negative: '#FA5738',
         positive: '#BC0909',
       },
