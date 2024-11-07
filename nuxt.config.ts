@@ -7,7 +7,19 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     'nuxt-quasar-ui',
     '@nuxt/image',
+    '@nuxtjs/color-mode',
   ],
+  colorMode: {
+    preference: 'dark', // default value of $colorMode.preference
+    fallback: 'light', // fallback value if not system preference found
+    hid: 'nuxt-color-mode-script',
+    globalName: '__NUXT_COLOR_MODE__',
+    componentName: 'ColorScheme',
+    classPrefix: '',
+    classSuffix: '-mode',
+    storage: 'localStorage', // or 'sessionStorage' or 'cookie'
+    storageKey: 'nuxt-color-mode',
+  },
   eslint: {
     config: {
       standalone: false,
@@ -22,8 +34,8 @@ export default defineNuxtConfig({
   quasar: {
     config: {
       brand: {
-        primary: '#6369D1',
-        dark: '#120C0A',
+        primary: 'var(--app-blue-9)',
+        dark: '',
         negative: '#FA5738',
         positive: '#BC0909',
       },

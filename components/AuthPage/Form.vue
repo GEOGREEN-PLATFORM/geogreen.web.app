@@ -63,7 +63,7 @@ onMounted(() => {
         type="submit"
       />
       <KTButton
-         v-if="buttonOptions.sub.show !== false"
+        v-if="buttonOptions.sub.show !== false"
         :label="buttonOptions.sub.label"
         :design-type="buttonOptions.sub.designType"
         @click="sendActionEvent('sub')"
