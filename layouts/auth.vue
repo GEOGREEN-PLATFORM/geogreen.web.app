@@ -32,19 +32,21 @@
       rgba(255, 255, 255, 0) 0%,
       rgba(255, 255, 255, 0.48) 24.38%,
       rgba(255, 255, 255, 0.8) 79.95%
-    );
+    ), url("/images/login_bg.png") center / cover no-repeat;
   box-shadow: 0px 0px 30px 0px #ffffff08;
   &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    background: url("/images/login_bg.png") center / cover no-repeat;
-    opacity: 0.6;
-    z-index: -1;
-  }
+  position: absolute;
+  content: '';
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(0deg, rgba(8, 8, 8, 0.8), rgba(18, 18, 18, 0.8)),
+      linear-gradient(180deg, rgba(8, 8, 8, 0.24) 0%, rgba(8, 8, 8, 0.48) 44.64%, rgba(8, 8, 8, 0.7) 74.65%), url("/images/login_bg.png") center / cover no-repeat;
+  z-index: -1;
+  transition: opacity 0.5s linear;
+  opacity: 0;
+}
   .page-content {
     display: flex;
     justify-content: center;
@@ -74,8 +76,17 @@
         font-size: 24px;
         font-weight: 500;
         line-height: 29.26px;
+        color: var(--app-black-10);
       }
     }
+  }
+}
+
+.dark-mode {
+  .page-container {
+    &::before {
+    opacity: 1;
+  }
   }
 }
 </style>
