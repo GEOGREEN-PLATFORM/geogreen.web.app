@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -7,16 +7,17 @@ on:
     branches: [master, develop]
 
 jobs:
-  integration:
+  # 1. Install dependencies job
+  install:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
           node-version: 20
-
-      - name: Checkout master branch
-        uses: actions/checkout@v2
 
       - name: Cache node_modules
         uses: actions/cache@v3
@@ -28,6 +29,11 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
 
+  # 2. Testing and linting job, which depends on the "install" job
+  lint_test:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
       - name: Run lint
         run: npm run lint
 
@@ -36,3 +42,23 @@ jobs:
 
       - name: Code coverage
         uses: codecov/codecov-action@v3
+
+  # 3. Build and push Docker image job, which depends on "lint_test"
+  build_and_push:
+    runs-on: ubuntu-latest
+    needs: lint_test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: docker build -t Black1Rabbit/tonight:latest .
+
+      - name: Push Docker image to Docker Hub
+        run: docker push Black1Rabbit/tonight:latest
