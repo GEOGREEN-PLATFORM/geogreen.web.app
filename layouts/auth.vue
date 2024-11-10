@@ -2,12 +2,8 @@
   <div class="page-container">
     <div class="page-content">
       <div class="logo">
-        <div class="logo__main">
-          TONIGHT
-        </div>
-        <div class="logo__slogan">
-          watch. meet. enjoy
-        </div>
+        <div class="logo__main">TONIGHT</div>
+        <div class="logo__slogan">watch. meet. enjoy</div>
       </div>
       <slot />
     </div>
@@ -22,32 +18,37 @@
   padding: 16px;
   display: flex;
   align-items: center;
-  background: linear-gradient(
-      0deg,
-      rgba(249, 249, 241, 0.6),
-      rgba(249, 249, 241, 0.6)
-    ),
+  background:
+    linear-gradient(0deg, rgba(249, 249, 241, 0.6), rgba(249, 249, 241, 0.6)),
     linear-gradient(
       180deg,
       rgba(255, 255, 255, 0) 0%,
       rgba(255, 255, 255, 0.48) 24.38%,
       rgba(255, 255, 255, 0.8) 79.95%
-    ), url("/images/login_bg.png") center / cover no-repeat;
+    ),
+    url("/images/login_bg.png") center / cover no-repeat;
   z-index: 1;
   box-shadow: 0px 0px 30px 0px #ffffff08;
   &::before {
-  position: absolute;
-  content: '';
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background: linear-gradient(0deg, rgba(8, 8, 8, 0.8), rgba(18, 18, 18, 0.8)),
-      linear-gradient(180deg, rgba(8, 8, 8, 0.24) 0%, rgba(8, 8, 8, 0.48) 44.64%, rgba(8, 8, 8, 0.7) 74.65%), url("/images/login_bg.png") center / cover no-repeat;
-  z-index: -1;
-  transition: opacity 0.5s linear;
-  opacity: 0;
-}
+    position: absolute;
+    content: "";
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background:
+      linear-gradient(0deg, rgba(8, 8, 8, 0.8), rgba(18, 18, 18, 0.8)),
+      linear-gradient(
+        180deg,
+        rgba(8, 8, 8, 0.24) 0%,
+        rgba(8, 8, 8, 0.48) 44.64%,
+        rgba(8, 8, 8, 0.7) 74.65%
+      ),
+      url("/images/login_bg.png") center / cover no-repeat;
+    z-index: -1;
+    transition: opacity 0.5s linear;
+    opacity: 0;
+  }
   .page-content {
     display: flex;
     justify-content: center;
@@ -86,8 +87,8 @@
 .dark-mode {
   .page-container {
     &::before {
-    opacity: 1;
-  }
+      opacity: 1;
+    }
   }
 }
 </style>

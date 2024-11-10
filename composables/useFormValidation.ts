@@ -1,8 +1,8 @@
-import type { QForm } from 'quasar'
-import { uid } from 'quasar'
+import type { QForm } from "quasar";
+import { uid } from "quasar";
 
 // intersection type of known Quasar form components
-export type FormValidationComponent = QInput | QSelect | QField
+export type FormValidationComponent = QInput | QSelect | QField;
 
 /**
  * adds form validation aware for form components
@@ -13,53 +13,53 @@ export type FormValidationComponent = QInput | QSelect | QField
  */
 export function useFormValidation() {
   // assign this in the consumer's QForm template ref
-  const formRef = ref<QForm>()
+  const formRef = ref<QForm>();
   const formComponents = ref<
     {
-      uid: string
-      validationComponent: FormValidationComponent
-      origModel: unknown
+      uid: string;
+      validationComponent: FormValidationComponent;
+      origModel: unknown;
     }[]
-  >()
+  >();
   const formIsDirty = computed(() =>
     formComponents.value
       ? formComponents.value.some(
-        v => v.origModel !== v.validationComponent.modelValue,
-      )
+          (v) => v.origModel !== v.validationComponent.modelValue,
+        )
       : false,
-  )
+  );
 
   // Quasar form components has internal value called hasError
   // check if the components is in error state
   const formHasError = computed(
     () =>
       formComponents.value?.some(
-        v => v.validationComponent.hasError,
+        (v) => v.validationComponent.hasError,
       ) as boolean,
-  )
+  );
 
   async function formBindValidation() {
     // wait for vue nextTick before binding in case data are being updated
-    await nextTick()
+    await nextTick();
     if (formRef.value === undefined) {
       throw new Error(
-        'Failed to bind validation as formRef is not assigned to a QForm in the current page!',
-      )
+        "Failed to bind validation as formRef is not assigned to a QForm in the current page!",
+      );
     }
     // get all form components that has internal validations
     formComponents.value = (
       formRef.value.getValidationComponents() as FormValidationComponent[]
-    ).map(v => ({
+    ).map((v) => ({
       uid: uid(),
       validationComponent: v,
       origModel: v.modelValue,
-    }))
+    }));
   }
 
   function formReset() {
-    formRef.value?.resetValidation()
+    formRef.value?.resetValidation();
     // rebind form to refresh original values if it was updated
-    formBindValidation()
+    formBindValidation();
   }
 
   // watchEffect(() => {
@@ -88,5 +88,5 @@ export function useFormValidation() {
      * resets form and re-bind validation
      */
     formReset,
-  }
+  };
 }

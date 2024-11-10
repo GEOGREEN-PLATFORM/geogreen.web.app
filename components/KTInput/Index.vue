@@ -28,66 +28,68 @@
 </template>
 
 <script setup lang="ts">
-import type { ValidationRule } from 'quasar'
-import { mdiEyeOffOutline, mdiEyeOutline } from '@quasar/extras/mdi-v6'
+import type { ValidationRule } from "quasar";
+import { mdiEyeOffOutline, mdiEyeOutline } from "@quasar/extras/mdi-v6";
 
 interface Props {
-  modelValue: string
-  rounded?: boolean
-  outlined?: boolean
-  label: string
+  modelValue: string;
+  rounded?: boolean;
+  outlined?: boolean;
+  label: string;
   type?:
-    | 'number'
-    | 'password'
-    | 'search'
-    | 'textarea'
-    | 'time'
-    | 'text'
-    | 'email'
-    | 'tel'
-    | 'file'
-    | 'url'
-    | 'date'
-    | 'datetime-local'
-    | undefined
-  required?: boolean
-  rules?: ValidationRule[]
-  hideBottomSpace?: boolean
-  hideErrorIcon?: boolean
-  placeholder?: string
-  name?: string
+    | "number"
+    | "password"
+    | "search"
+    | "textarea"
+    | "time"
+    | "text"
+    | "email"
+    | "tel"
+    | "file"
+    | "url"
+    | "date"
+    | "datetime-local"
+    | undefined;
+  required?: boolean;
+  rules?: ValidationRule[];
+  hideBottomSpace?: boolean;
+  hideErrorIcon?: boolean;
+  placeholder?: string;
+  name?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
-  modelValue: '',
+  modelValue: "",
   rounded: true,
   outlined: true,
   required: true,
-  rules: () => [val => (val && val.length > 0) || 'Поле не может быть пустым'],
-  type: 'text',
-  label: 'Метка',
-  placeholder: 'Введите текст',
+  rules: () => [
+    (val) => (val && val.length > 0) || "Поле не может быть пустым",
+  ],
+  type: "text",
+  label: "Метка",
+  placeholder: "Введите текст",
   hideErrorIcon: true,
   hideBottomSpace: true,
-})
+});
 
 const emits = defineEmits<{
-  'update:modelValue': [string | number | null]
-}>()
+  "update:modelValue": [string | number | null];
+}>();
 
-const inputValue = ref(props.modelValue)
-const showPassword = ref(false)
-const currentType = ref(props.type)
-const qInputRef = ref()
+const inputValue = ref(props.modelValue);
+const showPassword = ref(false);
+const currentType = ref(props.type);
+const qInputRef = ref();
 
 function updateValue(value: string | number | null) {
   nextTick(() => {
-    qInputRef.value?.validate()
-    emits('update:modelValue', value)
-  })
+    qInputRef.value?.validate();
+    emits("update:modelValue", value);
+  });
 }
 function togglePassword() {
-  showPassword.value = !showPassword.value
-  currentType.value = showPassword.value ? 'text' : 'password'
+  showPassword.value = !showPassword.value;
+  currentType.value = showPassword.value ? "text" : "password";
 }
 </script>
 
@@ -106,7 +108,8 @@ function togglePassword() {
     border-color: var(--app-blue-9);
     border-width: 1px;
   }
-  .q-field--outlined.q-field--highlighted.q-field--error .q-field__control:after {
+  .q-field--outlined.q-field--highlighted.q-field--error
+    .q-field__control:after {
     border-color: var(--app-red-10);
   }
   .q-field--outlined.q-field--highlighted.q-field--error {
@@ -130,7 +133,8 @@ function togglePassword() {
   .q-field--float .q-field__label {
     transform: translateY(-48%) scale(0.85) skewX(0deg);
   }
-  .q-field__native:-webkit-autofill + .q-field__label, .q-field__input:-webkit-autofill + .q-field__label {
+  .q-field__native:-webkit-autofill + .q-field__label,
+  .q-field__input:-webkit-autofill + .q-field__label {
     transform: translateY(-48%) scale(0.85) skewX(0deg);
   }
   .q-field__native,
@@ -150,7 +154,7 @@ function togglePassword() {
     font-family: Verdana;
     letter-spacing: 0.1em;
     color: var(--input-label);
-}
+  }
   input {
     font-size: 16px;
   }

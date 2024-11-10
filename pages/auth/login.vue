@@ -1,8 +1,15 @@
 <template>
-  <AuthPageForm :button-options="buttonOptions" @main-button-click="sendLogin" @sub-button-click="goToRegister">
+  <AuthPageForm
+    :button-options="buttonOptions"
+    @main-button-click="sendLogin"
+    @sub-button-click="goToRegister"
+  >
     <template #form-content>
       <div class="form-content">
-        <div v-show="showAuthError" class="form-content__auth-error-block text-center">
+        <div
+          v-show="showAuthError"
+          class="form-content__auth-error-block text-center"
+        >
           <span class="form-content__info-text form-content__info-text--error">
             Логин или пароль введены неверно
           </span>
@@ -28,45 +35,45 @@
 
 <script setup lang="ts">
 definePageMeta({
-  layout: 'auth',
-})
+  layout: "auth",
+});
 
 const userData = ref<UserAuthData>({
-  login: '',
-  password: '',
-})
-const showAuthError = ref(false)
-const buttonOptions = ref<{ main: ButtonOptions, sub: ButtonOptions }>({
+  login: "",
+  password: "",
+});
+const showAuthError = ref(false);
+const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
   main: {
-    designType: 'primary',
-    label: 'Войти',
+    designType: "primary",
+    label: "Войти",
     loading: false,
   },
   sub: {
-    designType: 'secondary',
-    label: 'У меня нет аккаунта',
+    designType: "secondary",
+    label: "У меня нет аккаунта",
   },
-})
+});
 
 function sendLogin() {
   // запрос к апи
-  buttonOptions.value.main.loading = true
-  setTimeout(() => goToMainPage(), 5000)
+  buttonOptions.value.main.loading = true;
+  setTimeout(() => goToMainPage(), 5000);
 }
 
 function goToMainPage() {
-  buttonOptions.value.main.loading = false
-  showAuthError.value = true
+  buttonOptions.value.main.loading = false;
+  showAuthError.value = true;
   // navigateTo({ path: '/' });
 }
 
 function goToRegister() {
-  navigateTo({ path: '/auth/register' })
+  navigateTo({ path: "/auth/register" });
 }
 </script>
 
 <style lang="scss" scoped>
-@use '@/assets/styles/pages/auth.scss';
+@use "@/assets/styles/pages/auth.scss";
 .form-content {
   margin-top: 84px;
   margin-bottom: 56px;

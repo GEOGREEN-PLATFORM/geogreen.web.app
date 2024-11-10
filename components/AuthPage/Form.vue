@@ -1,5 +1,11 @@
 <template>
-  <q-form ref="formRef" novalidate greedy class="auth-form" @submit="checkFormValid">
+  <q-form
+    ref="formRef"
+    novalidate
+    greedy
+    class="auth-form"
+    @submit="checkFormValid"
+  >
     <slot name="form-content" />
     <div class="auth-form__action-buttons">
       <KTButton
@@ -23,51 +29,48 @@
 <script setup lang="ts">
 interface Props {
   buttonOptions: {
-    main: ButtonOptions
-    sub: ButtonOptions
-  }
+    main: ButtonOptions;
+    sub: ButtonOptions;
+  };
 }
 
 withDefaults(defineProps<Props>(), {
   buttonOptions: () => {
     return {
       main: {
-        designType: 'primary',
-        label: 'Отправить',
+        designType: "primary",
+        label: "Отправить",
         loading: false,
       },
       sub: {
-        designType: 'secondary',
-        label: 'Отменить',
+        designType: "secondary",
+        label: "Отменить",
       },
-    }
+    };
   },
-})
+});
 const emits = defineEmits<{
-  subButtonClick: []
-  mainButtonClick: []
-}>()
+  subButtonClick: [];
+  mainButtonClick: [];
+}>();
 
-const { formRef, formBindValidation, formHasError }
-  = useFormValidation()
+const { formRef, formBindValidation, formHasError } = useFormValidation();
 
-function sendActionEvent(eventType: 'sub' | 'main') {
-  eventType === 'main' ? emits('mainButtonClick') : emits('subButtonClick')
+function sendActionEvent(eventType: "sub" | "main") {
+  eventType === "main" ? emits("mainButtonClick") : emits("subButtonClick");
 }
 
 function checkFormValid() {
-  formRef.value
-    ?.validate()
-    .then((success) => {
-      if (success) {
-        sendActionEvent('main')
-      }
-    })
+  formRef.value?.validate().then((success) => {
+    if (success) {
+      sendActionEvent("main");
+    }
+  });
 }
 
 onMounted(() => {
-  formBindValidation()
-})
+  formBindValidation();
+});
 </script>
 
 <style lang="scss" scoped>

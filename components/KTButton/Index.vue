@@ -19,29 +19,29 @@
 
 <script setup lang="ts">
 interface Props {
-  label: string
-  designType: 'primary' | 'secondary' | 'tertiary'
-  disabled?: boolean
-  type?: 'submit'
-  loading?: boolean
+  label: string;
+  designType: "primary" | "secondary" | "tertiary";
+  disabled?: boolean;
+  type?: "submit";
+  loading?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
-  label: 'Зарегистрироваться',
+  label: "Зарегистрироваться",
   rounded: true,
-  designType: 'primary',
+  designType: "primary",
   disabled: false,
-})
+});
 const buttonDesignTypeSettings = ref({
   outline: false,
   rounded: true,
   flat: false,
   loading: false,
-})
+});
 
 onMounted(() => {
-  buttonDesignTypeSettings.value.outline = props.designType === 'secondary'
-  buttonDesignTypeSettings.value.flat = props.designType === 'tertiary'
-})
+  buttonDesignTypeSettings.value.outline = props.designType === "secondary";
+  buttonDesignTypeSettings.value.flat = props.designType === "tertiary";
+});
 </script>
 
 <style scoped lang="scss">
