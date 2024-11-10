@@ -5,9 +5,9 @@ export default defineVitestConfig({
     globals: true,
     environment: 'nuxt',
     environmentOptions: {
-        nuxt: {
-          domEnvironment: 'jsdom',
-        }
-      }
+      nuxt: {
+        domEnvironment: 'jsdom',
+      },
+    },
   },
 })

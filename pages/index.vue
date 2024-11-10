@@ -1,6 +1,3 @@
-<script setup lang="ts">
-</script>
-
 <template>
   <div
     style="
@@ -12,12 +9,13 @@
     "
   >
     <div style="width: 500px">
-      <KTInput />
-      <KTButton />
-      <KTInputOTP />
+      <div class="text-center" @click="navigateTo('/auth/register')">В регистрацию</div>
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+</script>
 
 <style scoped lang="scss">
 </style>

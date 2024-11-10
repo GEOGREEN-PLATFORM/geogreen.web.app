@@ -1,3 +1,27 @@
+<template>
+  <div ref="otpCont" class="otp-container">
+    <input
+      v-for="(el, ind) in digits"
+      :key="ind"
+      v-model="digits[ind]"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      type="text"
+      class="otp-box"
+      :class="{ error: isError }"
+      autocomplete="one-time-code"
+      @focus="focusInput"
+      @blur="isDigitsFull()"
+      @input="handleInput($event, ind)"
+      @paste.prevent="handlePaste($event, ind)"
+      @keydown="handleKey($event, ind)"
+    />
+    <div v-if="isError" class="otp-error-message">
+      Неверный код, попробуйте еще
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 interface Props {
   digitCount?: number
@@ -151,30 +175,6 @@ watch(
   },
 )
 </script>
-
-<template>
-  <div ref="otpCont" class="otp-container">
-    <input
-      v-for="(el, ind) in digits"
-      :key="ind"
-      v-model="digits[ind]"
-      inputmode="numeric"
-      pattern="[0-9]*"
-      type="text"
-      class="otp-box"
-      :class="{ error: isError }"
-      autocomplete="one-time-code"
-      @focus="focusInput"
-      @blur="isDigitsFull()"
-      @input="handleInput($event, ind)"
-      @paste.prevent="handlePaste($event, ind)"
-      @keydown="handleKey($event, ind)"
-    />
-    <div v-if="isError" class="otp-error-message">
-      Неверный код, попробуйте еще
-    </div>
-  </div>
-</template>
 
   <style scoped lang="scss">
   .otp-container {
