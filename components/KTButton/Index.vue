@@ -1,3 +1,22 @@
+<template>
+  <div class="kt-button-main">
+    <q-btn
+      :class="{
+        [designType]: true,
+        disabled,
+      }"
+      no-caps
+      :label="label"
+      :rounded="buttonDesignTypeSettings.rounded"
+      :outline="buttonDesignTypeSettings.outline"
+      :flat="buttonDesignTypeSettings.flat"
+      :disable="disabled"
+      :type="type"
+      :loading="loading"
+    />
+  </div>
+</template>
+
 <script setup lang="ts">
 interface Props {
   label: string
@@ -25,25 +44,6 @@ onMounted(() => {
 })
 </script>
 
-<template>
-  <div class="kt-button-main">
-    <q-btn
-      :class="{
-        [designType]: true,
-        disabled,
-      }"
-      no-caps
-      :label="label"
-      :rounded="buttonDesignTypeSettings.rounded"
-      :outline="buttonDesignTypeSettings.outline"
-      :flat="buttonDesignTypeSettings.flat"
-      :disable="disabled"
-      :type="type"
-      :loading="loading"
-    />
-  </div>
-</template>
-
 <style scoped lang="scss">
 .kt-button-main {
   .primary {
@@ -64,6 +64,25 @@ onMounted(() => {
   }
   .tertiary.disabled {
     color: var(--app-black-6);
+  }
+}
+</style>
+
+<style lang="scss">
+.kt-button-main {
+  .q-btn--rounded {
+    border-radius: 16px;
+  }
+  .q-btn {
+    height: 52px;
+    width: 100%;
+    font-size: 16px;
+    &::before {
+      box-shadow: none;
+    }
+  }
+  .q-btn.disabled {
+    opacity: 1 !important;
   }
 }
 </style>

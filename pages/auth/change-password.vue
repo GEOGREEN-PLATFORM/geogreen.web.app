@@ -1,8 +1,28 @@
+<template>
+  <AuthPageForm :button-options="pageState.buttonOptions" @main-button-click="handleMainAction(pageState.step + 1)" @sub-button-click="handleSubAction(pageState.step - 1)">
+    <template #form-content>
+      <div class="form-content">
+        <div class="form-content__page-step-hint text-center">
+          <span>{{ pageState.hint }}</span>
+        </div>
+        <div class="form-content__input-fields">
+          <KTInput v-if="pageState.step === 1" v-model="userData.email" label="Почта" />
+          <KTInputOTP v-if="pageState.step === 2" v-model="userData.confirmationCode" @is-full="handleMainAction(pageState.step + 1)" />
+          <KTInput v-if="pageState.step === 3" v-model="userData.password" type="password" label="Новый пароль" />
+          <KTInput v-if="pageState.step === 3" v-model="userData.repeatedPassword" type="password" label="Повторите пароль" />
+        </div>
+      </div>
+    </template>
+  </AuthPageForm>
+</template>
+
 <script setup lang="ts">
 definePageMeta({
   layout: 'auth',
 })
+
 const INITIAL_STEP = 1
+
 class PageState {
   private currentStep: number
   private hintText: string
@@ -90,36 +110,10 @@ function sendChangePassword() {
 
 }
 
-function goToMainPage() {
-  // navigateTo({ path: '/' });
-}
-
 function goBack() {
   router.back()
 }
 </script>
-
-<template>
-  <div>
-    <NuxtLayout name="auth">
-      <AuthPageForm :button-options="pageState.buttonOptions" @main-button-click="handleMainAction(pageState.step + 1)" @sub-button-click="handleSubAction(pageState.step - 1)">
-        <template #form-content>
-          <div class="form-content">
-            <div class="form-content__page-step-hint text-center">
-              <span>{{ pageState.hint }}</span>
-            </div>
-            <div class="form-content__input-fields">
-              <KTInput v-if="pageState.step === 1" v-model="userData.email" label="Почта" />
-              <KTInputOTP v-if="pageState.step === 2" v-model="userData.confirmationCode" @is-full="handleMainAction(pageState.step + 1)" />
-              <KTInput v-if="pageState.step === 3" v-model="userData.password" type="password" label="Новый пароль" />
-              <KTInput v-if="pageState.step === 3" v-model="userData.repeatedPassword" type="password" label="Повторите пароль" />
-            </div>
-          </div>
-        </template>
-      </AuthPageForm>
-    </NuxtLayout>
-  </div>
-</template>
 
 <style lang="scss" scoped>
 @use '@/assets/styles/pages/auth.scss';

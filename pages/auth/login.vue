@@ -1,3 +1,31 @@
+<template>
+  <AuthPageForm :button-options="buttonOptions" @main-button-click="sendLogin" @sub-button-click="goToRegister">
+    <template #form-content>
+      <div class="form-content">
+        <div v-show="showAuthError" class="form-content__auth-error-block text-center">
+          <span class="form-content__info-text form-content__info-text--error">
+            Логин или пароль введены неверно
+          </span>
+        </div>
+        <div class="form-content__input-fields">
+          <KTInput v-model="userData.login" label="Логин" name="login" />
+          <KTInput
+            v-model="userData.password"
+            label="Пароль"
+            type="password"
+            name="password"
+          />
+        </div>
+        <div class="form-content__forgot-password-block text-right">
+          <span class="form-content__info-text">
+            <NuxtLink to="/auth/change-password">Забыли пароль?</NuxtLink>
+          </span>
+        </div>
+      </div>
+    </template>
+  </AuthPageForm>
+</template>
+
 <script setup lang="ts">
 definePageMeta({
   layout: 'auth',
@@ -36,38 +64,6 @@ function goToRegister() {
   navigateTo({ path: '/auth/register' })
 }
 </script>
-
-<template>
-  <div>
-    <NuxtLayout name="auth">
-      <AuthPageForm :button-options="buttonOptions" @main-button-click="sendLogin" @sub-button-click="goToRegister">
-        <template #form-content>
-          <div class="form-content">
-            <div v-show="showAuthError" class="form-content__auth-error-block text-center">
-              <span class="form-content__info-text form-content__info-text--error">
-                Логин или пароль введены неверно
-              </span>
-            </div>
-            <div class="form-content__input-fields">
-              <KTInput v-model="userData.login" label="Логин" name="login" />
-              <KTInput
-                v-model="userData.password"
-                label="Пароль"
-                type="password"
-                name="password"
-              />
-            </div>
-            <div class="form-content__forgot-password-block text-right">
-              <span class="form-content__info-text">
-                <NuxtLink to="/auth/change-password">Забыли пароль?</NuxtLink>
-              </span>
-            </div>
-          </div>
-        </template>
-      </AuthPageForm>
-    </NuxtLayout>
-  </div>
-</template>
 
 <style lang="scss" scoped>
 @use '@/assets/styles/pages/auth.scss';

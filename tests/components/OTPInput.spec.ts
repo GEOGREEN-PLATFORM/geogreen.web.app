@@ -1,16 +1,16 @@
-import { mount } from '@vue/test-utils'
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { setup } from '@nuxt/test-utils'
+import { mount } from '@vue/test-utils'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import OTPInput from '../../components/KTInput/OTP.vue'
 
-describe('OTPInput', () => {
+describe('oTPInput', () => {
   beforeAll(async () => {
     await setup({ server: false })
   })
 
   it('renders the correct number of input fields based on digitCount', () => {
     const wrapper = mount(OTPInput, {
-      props: { digitCount: 6, modelValue: '' }
+      props: { digitCount: 6, modelValue: '' },
     })
     const inputs = wrapper.findAll('input')
     expect(inputs.length).toBe(6)
@@ -18,7 +18,7 @@ describe('OTPInput', () => {
 
   it('initializes input fields with the value from modelValue', () => {
     const wrapper = mount(OTPInput, {
-      props: { modelValue: '1234', digitCount: 4 }
+      props: { modelValue: '1234', digitCount: 4 },
     })
     const inputs = wrapper.findAll('input')
     inputs.forEach((input, index) => {
@@ -28,17 +28,17 @@ describe('OTPInput', () => {
 
   it('clears input fields when modelValue is empty', () => {
     const wrapper = mount(OTPInput, {
-      props: { modelValue: '', digitCount: 4 }
+      props: { modelValue: '', digitCount: 4 },
     })
     const inputs = wrapper.findAll('input')
-    inputs.forEach(input => {
+    inputs.forEach((input) => {
       expect(input.element.value).toBe('')
     })
   })
 
   it('correctly handles paste events at any index', async () => {
     const wrapper = mount(OTPInput, {
-      props: { digitCount: 4, modelValue: '' }
+      props: { digitCount: 4, modelValue: '' },
     })
     const pastedData = '7583'
     for (let i = 0; i < 4; i++) {
@@ -55,9 +55,9 @@ describe('OTPInput', () => {
 
   it('correctly handles input-delete event', async () => {
     const wrapper = mount(OTPInput, {
-      props: { digitCount: 4, modelValue: '7654' }
+      props: { digitCount: 4, modelValue: '7654' },
     })
-    
+
     const inputs = wrapper.findAll('input')
     const input = inputs.at(3)
 
@@ -71,11 +71,11 @@ describe('OTPInput', () => {
 
   it('emits "isFull" when all digits are entered', async () => {
     const wrapper = mount(OTPInput, {
-      props: { digitCount: 4, modelValue: '' }
+      props: { digitCount: 4, modelValue: '' },
     })
-  
+
     const inputs = wrapper.findAll('input')
-    
+
     await inputs.at(0)?.setValue('1')
     await inputs.at(1)?.setValue('2')
     await inputs.at(2)?.setValue('3')
@@ -83,7 +83,7 @@ describe('OTPInput', () => {
     await inputs.at(3)?.trigger('blur')
     expect(wrapper.emitted('isFull')).toBeTruthy()
   })
-  
+
   afterAll(() => {
   })
 })
