@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     'nuxt-quasar-ui',
     '@nuxt/image',
     '@nuxtjs/color-mode',
+    '@nuxt/test-utils/module'
   ],
   colorMode: {
     preference: 'dark', // default value of $colorMode.preference
