@@ -10,6 +10,7 @@
   >
     <div style="width: 500px">
       <div class="text-center" @click="navigateTo('/auth/register')">В регистрацию</div>
+      ТЕСТИРОВАНИЕ ACTIONS
     </div>
   </div>
 </template>
