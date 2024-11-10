@@ -33,7 +33,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm run test
+        run: npm run coverage
 
       - name: Code coverage
         uses: codecov/codecov-action@v3
