@@ -8,7 +8,8 @@
       align-items: center;
     "
   >
-    <div style="width: 500px">
+    <div style="width: 100vw; height: 100vh">
+      <TestMap></TestMap>
       <div class="text-center" @click="navigateTo('/auth/register')">
         В регистрацию
       </div>
