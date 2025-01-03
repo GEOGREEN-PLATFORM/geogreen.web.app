@@ -23,8 +23,6 @@
         @select="featureSelected"
       >
         <ol-style>
-          <ol-style-stroke color="green" :width="5" />
-          <ol-style-fill color="rgba(255,255,255,0.5)" />
           <ol-style-icon :src="markerIcon" :scale="1" />
         </ol-style>
       </ol-interaction-clusterselect>
@@ -63,6 +61,8 @@ import { GeoJSON } from "ol/format";
 import { Icon, Style } from "ol/style.js";
 import { computed, ref } from "vue";
 import markerIcon from "/icons/hogweed_icon.png";
+import type { Geometry } from "ol/geom";
+import CircleStyle from "ol/style/Circle";
 
 const count = ref(16);
 const icon = new Icon({
@@ -122,31 +122,34 @@ const geoJsonFeatures = computed(() => {
 
   return geoJson.readFeatures(providerFeatureCollection);
 });
-function clusterMemberStyle(clusterMember) {
+function clusterMemberStyle(clusterMember: FeatureLike) {
   return new Style({
-    geometry: clusterMember.getGeometry(),
+    geometry: clusterMember.getGeometry() as Geometry,
     image: icon,
   });
 }
-function overrideStyleFunction(feature: FeatureLike, style) {
+function overrideStyleFunction(feature: FeatureLike, style: Style) {
   const clusteredFeatures = feature.get("features");
   const size = clusteredFeatures.length;
-  const colorFill = size > 20 ? "#24590B" : size > 8 ? "#58943D" : "#CAE2BF";
-  const colorStroke = "#FF0022";
+  const colorFill = size >= 15 ? "#FF0022" : size > 5 ? "#FF8200" : "#55A231";
+  const colorStroke = size >= 15 ? "#55A231" : "#FF0022";
   const radius = 16;
   if (size === 1) {
-    style.getText().setText("");
-    const styleCopy = style.clone();
-    styleCopy.setImage(clusterMemberStyle(feature).getImage());
-    console.log(styleCopy);
-    return styleCopy;
+    style.getText()?.setText("");
+    const styleCopyForSingleMember = style.clone();
+    const newImage = clusterMemberStyle(feature).getImage()
+    if (newImage) {
+      styleCopyForSingleMember.setImage(newImage);
+    }
+    return styleCopyForSingleMember;
   }
-  style.getImage().getStroke().setColor(colorStroke);
-  style.getImage().getFill().setColor(colorFill);
-  style.getImage().setRadius(radius);
-  style.getText().setText(size.toString());
-
-  return style;
+  else {
+    (style.getImage() as CircleStyle)?.getStroke()?.setColor(colorStroke);
+    (style.getImage() as CircleStyle)?.getFill()?.setColor(colorFill);
+    (style.getImage() as CircleStyle)?.setRadius(radius);
+    style.getText()?.setText(size.toString());
+    return style;
+  }
 }
 
 function featureSelected(event: SelectEvent) {
