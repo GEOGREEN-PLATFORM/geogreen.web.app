@@ -5,7 +5,7 @@
       :load-tiles-while-interacting="true"
       style="height: 100%; width: 100%"
       @click="handleMapClick"
-      @rendercomplete="configureMap"
+      @rendercomplete.once="configureMap"
       class="g-green-map"
     >
       <ol-view
@@ -21,14 +21,18 @@
       <ol-control-bar ref="controlBar">
       <ol-toggle-control
         html="Добавить маркер"
-        className="g-green-control-bar__marker"
-        title="Marker"
-        :onToggle="() => gGreenOlMap.interactionType = 'marker'"
+        className="g-green-control-bar__marker g-green-control-bar__marker--add"
+        :onToggle="() => gGreenOlMap.interactionType !== 'marker_add' ? gGreenOlMap.interactionType = 'marker_add' : gGreenOlMap.interactionType = 'none'"
+      />
+      <ol-toggle-control
+        html="Удалить маркер"
+        className="g-green-control-bar__marker g-green-control-bar__marker--delete"
+        :onToggle="() => gGreenOlMap.interactionType = 'marker_delete'"
       />
     </ol-control-bar>
       <ol-interaction-clusterselect
-        :point-radius="20"
-        @select="featureSelected"
+        :point-radius="48"
+        @select="markerSelected"
       >
         <ol-style>
           <ol-style-icon :src="markerIcon" :scale="1" />
@@ -48,7 +52,7 @@
           <ol-style-stroke color="red" :width="1" />
           <ol-style-fill color="rgba(255,255,255,0.1)" />
           <ol-style-icon :src="markerIcon" :scale="1" />
-          <ol-style-circle :radius="20">
+          <ol-style-circle :radius="48">
             <ol-style-stroke color="black" :width="1" line-cap="round" />
             <ol-style-fill color="black" />
           </ol-style-circle>
@@ -71,9 +75,7 @@ import { computed, ref } from "vue";
 import markerIcon from "/icons/hogweed_icon.png";
 import type { Geometry } from "ol/geom";
 import CircleStyle from "ol/style/Circle";
-import Feature from "ol/Feature";
-import Point from "ol/geom/Point";
-import type { MapBrowserEvent, MapEvent } from "ol";
+import type { MapBrowserEvent } from "ol";
 
 const controlBar = ref();
 const icon = new Icon({
@@ -94,24 +96,7 @@ class GGreenOlMap {
   }
 }
 const gGreenOlMap = ref(new GGreenOlMap());
-const arrayWith500Points = ref([
-  [4894670.38077, 7614726.876165],
-  [4895670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-  [4890670.38077, 7615726.876165],
-]);
+const arrayWith500Points = ref<[number, number][]>([]);
 const geoJson = new GeoJSON();
 
 const geoJsonFeatures = computed(() => {
@@ -162,7 +147,7 @@ function overrideStyleFunction(feature: FeatureLike, style: Style) {
 }
 const count = computed(() => arrayWith500Points.value.length);
 function handleMapClick(event: MapBrowserEvent<UIEvent>) {
-  if (gGreenOlMap.value.interactionType === "marker") {
+  if (gGreenOlMap.value.interactionType === "marker_add") {
     const coordinates = event.coordinate;
     arrayWith500Points.value.push(coordinates);
   }
@@ -189,8 +174,10 @@ function configureMap() {
 function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle('is-active');
 }
-function featureSelected(event: SelectEvent) {
-  console.log(event);
+function markerSelected(event: SelectEvent) {
+  if (gGreenOlMap.value.interactionType === "marker_delete") {
+    console.log(event.selected?.[0]?.values_?.features?.length)
+  }
 }
 function featuresloadstart() {
   console.log("features load start");
@@ -207,31 +194,71 @@ function featuresloadend() {
 </style>
 <style lang="scss">
 .g-green-map {
-  .g-green-control-bar {
+  .ol-control.ol-bar.g-green-control-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     position: absolute;
-    left: -160px;
+    left: -180px;
     top: calc(50% - 250px / 2);
-    width: 200px;
+    width: 220px;
     height: 250px;
     transform: none;
     padding: 48px 16px;
     transition: transform 0.3s ease;
     border-radius: 0px 4px 4px 0px;
-    &__marker {
+    .ol-button.g-green-control-bar__marker {
       width: 100%;
       left: 0;
       opacity: 0;
       transition: opacity 0.3s ease;
       button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         width: inherit;
+        padding: 4px 8px;
+        height: auto;
+        line-height: normal;
         font-size: 14px;
+        font-weight: 500;
+        border-radius: 8px;
         font-family: Montserrat;
         color: var(--app-black);
         appearance: none;
+        cursor: pointer;
+        background-color: var(--app-green-050);
+        transition: background-color 0.2s ease;
+        &::after {
+          background-image: url('/icons/hogweed_icon.png');
+          background-size: 24px 24px;
+          display: inline-block;
+          width: 24px; 
+          height: 24px;
+          content:"";
+        }
+        &:hover {
+          background-color: var(--app-green-100);
+        }
+      }
+      &.ol-active {
+        button {
+          color: var(--app-black);
+          background-color: var(--app-green-500);
+        }
+      }
+      &--delete {
+        button {
+          &::after {
+            background-image: url('/icons/delete_outline.svg');
+            filter: var(--app-filter-red-500);
+          }
+        }
       }
     }
     &:has( .burger-button.is-active) {
-      transform: translateX(160px);
+      transform: translateX(180px);
       .g-green-control-bar__marker {
         opacity: 1;
       }
