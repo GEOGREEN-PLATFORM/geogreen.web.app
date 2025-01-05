@@ -5,7 +5,7 @@
       :load-tiles-while-interacting="true"
       style="height: 100%; width: 100%"
       @click="handleMapClick"
-      @rendercomplete.once="configureMap"
+      @precompose.once="configureMap"
       class="g-green-map"
     >
       <ol-view
@@ -62,6 +62,40 @@
           </ol-style-text>
         </ol-style>
       </ol-animated-clusterlayer>
+      <ol-overlay
+      :position="item"
+      v-for="item in markersPopupOpened"
+      :key="item"
+      :autoPan="true"
+      className="ol-overlay-container ol-selectable g-green-marker-popup-container"
+      positioning="bottom-center"
+    >
+      <div class="popup-marker">
+        <dl class="data-list">
+          <dt class="data-list__name">Ключ</dt>
+          <dd class="data-list__value">Значение Значение Значение Значение Значение Значение Значение Значение Значение </dd>
+          <dt class="data-list__name">Ключ</dt>
+          <dd class="data-list__value">Значение</dd>
+          <dt class="data-list__name">Ключ</dt>
+          <dd class="data-list__value">Значение</dd>
+        </dl>
+        <div class="popup-marker__divider"></div>
+        <ul class="actions-label">
+          <li class="actions-label__action">
+            <span class="actions-label__text">Удалить метку</span>
+            <img class="actions-label__icon" src="/icons/delete_outline.svg">
+          </li>
+          <li class="actions-label__action">
+            <span class="actions-label__text">Добавить зону</span>
+            <img class="actions-label__icon" src="/icons/plus.svg">
+          </li>
+          <li class="actions-label__action">
+            <span class="actions-label__text">Подробнее</span>
+            <img class="actions-label__icon" src="/icons/arrow_link_outline.svg">
+          </li>
+        </ul>
+      </div>
+    </ol-overlay>
     </ol-map>
   </ClientOnly>
 </template>
@@ -96,11 +130,12 @@ class GGreenOlMap {
   }
 }
 const gGreenOlMap = ref(new GGreenOlMap());
-const arrayWith500Points = ref<[number, number][]>([]);
+const markers = ref<[number, number][]>([]);
+const markersPopupOpened = ref<[number, number][]>([]);
 const geoJson = new GeoJSON();
 
 const geoJsonFeatures = computed(() => {
-  const features = arrayWith500Points.value.map((coordinates) => ({
+  const features = markers.value.map((coordinates) => ({
     type: "Feature",
     properties: {},
     geometry: {
@@ -145,30 +180,26 @@ function overrideStyleFunction(feature: FeatureLike, style: Style) {
     return style;
   }
 }
-const count = computed(() => arrayWith500Points.value.length);
+const count = computed(() => markers.value.length);
 function handleMapClick(event: MapBrowserEvent<UIEvent>) {
   if (gGreenOlMap.value.interactionType === "marker_add") {
     const coordinates = event.coordinate;
-    arrayWith500Points.value.push(coordinates);
+    markers.value.push(coordinates);
+    markersPopupOpened.value.push(coordinates);
   }
 }
 function configureMap() {
   const controlElement = controlBar.value.control.element;
   controlElement.classList.add('g-green-control-bar');
-
-  // Создаем div с классом burger-button
   const burgerButton = document.createElement('button');
   burgerButton.classList.add('burger-button');
   for (let i = 0; i < 3; i++) {
     const line = document.createElement('div');
     burgerButton.appendChild(line);
   }
-  // Добавляем обработчик клика для изменения состояния
   burgerButton.addEventListener('click', () => {
     toggleControlBar(burgerButton)
   });
-
-  // Добавляем кнопку в элемент панели управления
   controlElement.appendChild(burgerButton);
 }
 function toggleControlBar(targetButton: HTMLElement) {
@@ -191,6 +222,61 @@ function featuresloadend() {
 </script>
 
 <style scoped lang="scss">
+.g-green-map {
+  .popup-marker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: var(--app-white);
+    border-radius: 16px;
+    border: 1px var(--app-grey-100) solid;
+    padding: 12px 16px;
+    width: 300px;
+    &__divider {
+      height: 1px;
+      width: 80%;
+      background-color: var(--app-grey-100);
+      margin: 0 auto;
+    }
+  }
+  .data-list {
+    margin: 0;
+    &__name {
+      width: 80px;
+      padding: 12px 0px;
+      float: left;
+      clear: both;
+      &::after {
+        content: ":";
+      }
+    }
+    &__value {
+      margin: 0 0 0 80px;
+      padding: 12px 0px;
+    }
+  }
+  .actions-label {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    &__action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin: 12px 0px;
+      cursor: pointer;
+      .actions-label__text {
+
+      }
+      .actions-label__icon {
+        width: 24px;
+        height: 24px;
+        filter: var(--app-filter-grey-300);
+      }
+    }
+  }
+}
 </style>
 <style lang="scss">
 .g-green-map {
@@ -296,6 +382,9 @@ function featuresloadend() {
         }
       }
     }
+  }
+  .g-green-marker-popup-container {
+    top: -22px;
   }
 }
 

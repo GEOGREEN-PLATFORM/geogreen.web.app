@@ -14,10 +14,13 @@
         В регистрацию
       </div>
       ТЕСТИРОВАНИЕ ACTIONS
+      <GGDialogConfirm v-model="showConfirm"></GGDialogConfirm>
     </div>
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const showConfirm = ref(true);
+</script>
 
 <style scoped lang="scss"></style>

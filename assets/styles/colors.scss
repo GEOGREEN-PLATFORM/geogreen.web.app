@@ -9,6 +9,7 @@
   --app-black-8: #707070;
   --app-black-10: #333333;
   --app-grey-050: #e9e9e9;
+  --app-grey-100: #B9B9B9;
   --app-grey-300: #686868;
   --app-red-10: #fa5738;
   --app-green-050: #EEF6EA;
@@ -22,6 +23,7 @@
   --map-cluster-medium: #FF8200;
   --map-cluster-high: #FF0022;
   --app-filter-red-500: invert(12%) sepia(74%) saturate(6735%) hue-rotate(347deg) brightness(102%) contrast(111%);
+  --app-filter-grey-300: brightness(0) saturate(100%) invert(41%) sepia(0%) saturate(0%) hue-rotate(61deg) brightness(96%) contrast(90%);
 }
 .dark-mode {
   --app-blue-8: #8287da;

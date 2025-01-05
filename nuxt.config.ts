@@ -27,6 +27,7 @@ export default defineNuxtConfig({
     },
   },
   css: [
+    'normalize.css/normalize.css',
     "@/assets/styles/quasar_class_overriding.scss",
     "@/assets/styles/colors.scss",
     "@/assets/styles/fonts.scss",
