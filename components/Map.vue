@@ -7,6 +7,8 @@
       @click="handleMapClick"
       @precompose.once="configureMap"
       class="g-green-map"
+      ref="mapRef"
+      :controls="[]"
     >
       <ol-view
         :center="gGreenOlMap.center"
@@ -23,11 +25,6 @@
         html="Добавить маркер"
         className="g-green-control-bar__marker g-green-control-bar__marker--add"
         :onToggle="() => gGreenOlMap.interactionType !== 'marker_add' ? gGreenOlMap.interactionType = 'marker_add' : gGreenOlMap.interactionType = 'none'"
-      />
-      <ol-toggle-control
-        html="Удалить маркер"
-        className="g-green-control-bar__marker g-green-control-bar__marker--delete"
-        :onToggle="() => gGreenOlMap.interactionType = 'marker_delete'"
       />
     </ol-control-bar>
       <ol-interaction-clusterselect
@@ -65,9 +62,9 @@
       <ol-overlay
       :position="item"
       v-for="item in markersPopupOpened"
-      :key="item"
+      :key="item[0] + item[1]"
       :autoPan="true"
-      className="ol-overlay-container ol-selectable g-green-marker-popup-container"
+      className="g-green-marker-popup-container"
       positioning="bottom-center"
     >
       <div class="popup-marker">
@@ -110,7 +107,8 @@ import markerIcon from "/icons/hogweed_icon.png";
 import type { Geometry } from "ol/geom";
 import CircleStyle from "ol/style/Circle";
 import type { MapBrowserEvent } from "ol";
-
+const isMapConfigured = shallowRef(false);
+const mapRef = ref();
 const controlBar = ref();
 const icon = new Icon({
   src: markerIcon,
@@ -186,9 +184,12 @@ function handleMapClick(event: MapBrowserEvent<UIEvent>) {
     const coordinates = event.coordinate;
     markers.value.push(coordinates);
     markersPopupOpened.value.push(coordinates);
+    nextTick(() => mapRef.value.map.removeControl(mapRef.value.map.controls.array_[mapRef.value.map.controls.array_.length - 1]));
   }
 }
 function configureMap() {
+  console.log('called')
+  if (!isMapConfigured.value) {
   const controlElement = controlBar.value.control.element;
   controlElement.classList.add('g-green-control-bar');
   const burgerButton = document.createElement('button');
@@ -201,6 +202,9 @@ function configureMap() {
     toggleControlBar(burgerButton)
   });
   controlElement.appendChild(burgerButton);
+  isMapConfigured.value = true;
+  console.log(mapRef);
+  }
 }
 function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle('is-active');
