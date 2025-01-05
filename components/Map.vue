@@ -24,36 +24,30 @@
       <ol-toggle-control
         html="Добавить маркер"
         className="g-green-control-bar__marker g-green-control-bar__marker--add"
-        :onToggle="() => gGreenOlMap.interactionType !== 'marker_add' ? gGreenOlMap.interactionType = 'marker_add' : gGreenOlMap.interactionType = 'none'"
+        :onToggle="toggleMarkerAdd"
       />
     </ol-control-bar>
       <ol-interaction-clusterselect
         :point-radius="48"
-        @select="markerSelected"
+        @select="selectMarker"
       >
         <ol-style>
-          <ol-style-icon :src="markerIcon" :scale="1" />
+          <ol-style-icon :src="markerIconSrc" :scale="1" />
         </ol-style>
       </ol-interaction-clusterselect>
 
       <ol-animated-clusterlayer :animation-duration="500" :distance="40">
         <ol-source-vector
-          :features="geoJsonFeatures"
+          :features="markerFeatures"
           :format="geoJson"
-          @featuresloadstart="featuresloadstart"
-          @featuresloadend="featuresloadend"
-          @featuresloaderror="featuresloaderror"
         />
 
         <ol-style :override-style-function="overrideStyleFunction">
-          <ol-style-stroke color="red" :width="1" />
-          <ol-style-fill color="rgba(255,255,255,0.1)" />
-          <ol-style-icon :src="markerIcon" :scale="1" />
+          <ol-style-icon :src="markerIconSrc" :scale="1" />
           <ol-style-circle :radius="48">
-            <ol-style-stroke color="black" :width="1" line-cap="round" />
-            <ol-style-fill color="black" />
+            <ol-style-stroke color="black" :width="1" line-cap="round"/>
+            <ol-style-fill color="black"/>
           </ol-style-circle>
-
           <ol-style-text>
             <ol-style-fill color="white" />
           </ol-style-text>
@@ -103,58 +97,92 @@ import type { SelectEvent } from "ol/interaction/Select";
 import { GeoJSON } from "ol/format";
 import { Icon, Style } from "ol/style.js";
 import { computed, ref } from "vue";
-import markerIcon from "/icons/hogweed_icon.png";
+import markerIconSrc from "/icons/hogweed_icon.png";
 import type { Geometry } from "ol/geom";
 import CircleStyle from "ol/style/Circle";
 import type { MapBrowserEvent } from "ol";
-const isMapConfigured = shallowRef(false);
+import type { Coordinate } from "ol/coordinate";
+interface Marker {
+  id: string;
+  coordinates: Coordinate,
+  details?: {
+    square: number;
+    owner?: string;
+    landType?: string;
+    contractingOrganization?: string;
+    workStatus?: string;
+    eliminationMethod?: string;
+    photos?: string[];
+  } | null
+  relatedTaskId?: string | null;
+  relatedZone?: Coordinate[] | null,
+}
+interface Props {
+  markers: Marker[],
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  markers: () => [],
+})
+const emit = defineEmits<{
+  'addMarker': [coordinate: Coordinate]
+}>()
+
 const mapRef = ref();
 const controlBar = ref();
-const icon = new Icon({
-  src: markerIcon,
-});
+
 class GGreenOlMap {
   public resolution: number;
   public rotation: number;
-  public center: [number, number];
+  public center: Coordinate;
   public readonly projection = "EPSG:3857";
   public readonly url =
     "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}@2x.png";
-  public interactionType = 'none';
+  public interactionType: string;
   constructor() {
     this.center = [4890670.38077, 7615726.876165];
     this.resolution = 36;
     this.rotation = 0;
+    this.interactionType = 'none'
   }
+
 }
 const gGreenOlMap = ref(new GGreenOlMap());
-const markers = ref<[number, number][]>([]);
-const markersPopupOpened = ref<[number, number][]>([]);
-const geoJson = new GeoJSON();
 
-const geoJsonFeatures = computed(() => {
-  const features = markers.value.map((coordinates) => ({
+const markersPopupOpened = ref<[number, number][]>([]);
+
+const geoJson = new GeoJSON();
+const markerIconElement = new Icon({
+  src: markerIconSrc,
+});
+const markerFeatures = computed(() => {
+  const features = props.markers.map(({id, coordinates}) => ({
     type: "Feature",
     properties: {},
     geometry: {
       type: "Point",
       coordinates,
     },
+    id: id,
   }));
-
   const providerFeatureCollection = {
     type: "FeatureCollection",
     features,
   };
-
   return geoJson.readFeatures(providerFeatureCollection);
 });
+
 function clusterMemberStyle(clusterMember: FeatureLike) {
   return new Style({
     geometry: clusterMember.getGeometry() as Geometry,
-    image: icon,
+    image: markerIconElement,
   });
 }
+
+function toggleMarkerAdd() {
+  gGreenOlMap.value.interactionType !== 'marker_add' ? gGreenOlMap.value.interactionType = 'marker_add' : gGreenOlMap.value.interactionType = 'none';
+}
+
 function overrideStyleFunction(feature: FeatureLike, style: Style) {
   const clusteredFeatures = feature.get("features");
   const size = clusteredFeatures.length;
@@ -178,18 +206,14 @@ function overrideStyleFunction(feature: FeatureLike, style: Style) {
     return style;
   }
 }
-const count = computed(() => markers.value.length);
+
 function handleMapClick(event: MapBrowserEvent<UIEvent>) {
   if (gGreenOlMap.value.interactionType === "marker_add") {
-    const coordinates = event.coordinate;
-    markers.value.push(coordinates);
-    markersPopupOpened.value.push(coordinates);
-    nextTick(() => mapRef.value.map.removeControl(mapRef.value.map.controls.array_[mapRef.value.map.controls.array_.length - 1]));
+    emit('addMarker', event.coordinate)
   }
 }
+
 function configureMap() {
-  console.log('called')
-  if (!isMapConfigured.value) {
   const controlElement = controlBar.value.control.element;
   controlElement.classList.add('g-green-control-bar');
   const burgerButton = document.createElement('button');
@@ -202,26 +226,14 @@ function configureMap() {
     toggleControlBar(burgerButton)
   });
   controlElement.appendChild(burgerButton);
-  isMapConfigured.value = true;
-  console.log(mapRef);
-  }
 }
+
 function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle('is-active');
 }
-function markerSelected(event: SelectEvent) {
-  if (gGreenOlMap.value.interactionType === "marker_delete") {
-    console.log(event.selected?.[0]?.values_?.features?.length)
-  }
-}
-function featuresloadstart() {
-  console.log("features load start");
-}
-function featuresloaderror() {
-  console.log("features load error");
-}
-function featuresloadend() {
-  console.log("features load end");
+
+function selectMarker(event: SelectEvent) {
+  console.log(event.selected[0].get('features')[0].getId());
 }
 </script>
 
@@ -391,5 +403,4 @@ function featuresloadend() {
     top: -22px;
   }
 }
-
 </style>
