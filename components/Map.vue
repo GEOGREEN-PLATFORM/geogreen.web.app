@@ -28,6 +28,7 @@
       />
     </ol-control-bar>
       <ol-interaction-clusterselect
+        ref="featureSelect"
         :point-radius="48"
         @select="selectMarker"
       >
@@ -54,25 +55,27 @@
         </ol-style>
       </ol-animated-clusterlayer>
       <ol-overlay
-      :position="item"
-      v-for="item in markersPopupOpened"
-      :key="item[0] + item[1]"
+      :position="marker.coordinates"
+      v-for="[id, marker] in markersPopupOpened"
+      :key="id"
       :autoPan="true"
       className="g-green-marker-popup-container"
       positioning="bottom-center"
     >
       <div class="popup-marker">
-        <dl class="data-list">
-          <dt class="data-list__name">Ключ</dt>
-          <dd class="data-list__value">Значение Значение Значение Значение Значение Значение Значение Значение Значение </dd>
-          <dt class="data-list__name">Ключ</dt>
-          <dd class="data-list__value">Значение</dd>
-          <dt class="data-list__name">Ключ</dt>
-          <dd class="data-list__value">Значение</dd>
-        </dl>
+        <q-icon class="popup-marker__close-img" :name="mdiClose" size="24px" @click="closeMarkerPopup(id)"></q-icon>
+        <ul v-if="marker.details" class="data-list">
+          <li v-for="[name, value] in marker.details">
+            <div class="data-list__name">{{ name }}</div>
+            <div class="data-list__value">{{ value }}</div>
+          </li>
+        </ul>
+        <div v-else class="popup-marker__no-data">
+          Данные не найдены
+        </div>
         <div class="popup-marker__divider"></div>
         <ul class="actions-label">
-          <li class="actions-label__action">
+          <li @click="suggestDeleteMarker(id)" class="actions-label__action">
             <span class="actions-label__text">Удалить метку</span>
             <img class="actions-label__icon" src="/icons/delete_outline.svg">
           </li>
@@ -88,6 +91,7 @@
       </div>
     </ol-overlay>
     </ol-map>
+    <GGDialogConfirm @confirm="deleteMarker" v-model="confirmationDialog.isOpened" :action-main-text="confirmationDialog.mainText" :action-button-confirm-text="confirmationDialog.buttonText"></GGDialogConfirm>
   </ClientOnly>
 </template>
 
@@ -102,6 +106,7 @@ import type { Geometry } from "ol/geom";
 import CircleStyle from "ol/style/Circle";
 import type { MapBrowserEvent } from "ol";
 import type { Coordinate } from "ol/coordinate";
+import { mdiClose} from "@quasar/extras/mdi-v6";
 interface Marker {
   id: string;
   coordinates: Coordinate,
@@ -125,12 +130,29 @@ const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
 })
 const emit = defineEmits<{
-  'addMarker': [coordinate: Coordinate]
+  'addMarker': [coordinate: Coordinate],
+  'deleteMarker': [id: string]
 }>()
 
 const mapRef = ref();
 const controlBar = ref();
+const featureSelect = ref();
+class ConfirmationDialog {
+  public mainText?: string;
+  public buttonText?: string;
+  public isOpened: boolean;
 
+  constructor() {
+    this.isOpened = false;
+  }
+
+  open(mainText: string, buttonText: string) {
+    this.mainText = mainText;
+    this.buttonText = buttonText;
+    this.isOpened = true;
+  }
+}
+const confirmationDialog = ref(new ConfirmationDialog());
 class GGreenOlMap {
   public resolution: number;
   public rotation: number;
@@ -139,6 +161,7 @@ class GGreenOlMap {
   public readonly url =
     "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}@2x.png";
   public interactionType: string;
+
   constructor() {
     this.center = [4890670.38077, 7615726.876165];
     this.resolution = 36;
@@ -148,9 +171,7 @@ class GGreenOlMap {
 
 }
 const gGreenOlMap = ref(new GGreenOlMap());
-
-const markersPopupOpened = ref<[number, number][]>([]);
-
+const markersPopupOpened = ref<Map<string, Marker>>(new Map());
 const geoJson = new GeoJSON();
 const markerIconElement = new Icon({
   src: markerIconSrc,
@@ -179,10 +200,26 @@ function clusterMemberStyle(clusterMember: FeatureLike) {
   });
 }
 
+const markersDict = computed(() => 
+  new Map(props.markers.map(marker => [marker.id, marker]))
+)
+function closeMarkerPopup(id: string) {
+  markersPopupOpened.value.delete(id);
+  console.log(featureSelect.value)
+  featureSelect.value.select.getFeatures().clear();
+}
 function toggleMarkerAdd() {
   gGreenOlMap.value.interactionType !== 'marker_add' ? gGreenOlMap.value.interactionType = 'marker_add' : gGreenOlMap.value.interactionType = 'none';
 }
-
+const markerToDelete = ref("");
+function suggestDeleteMarker(id: string) {
+  confirmationDialog.value.open('удалить метку', 'Удалить');
+  markerToDelete.value = id;
+}
+function deleteMarker() {
+  emit('deleteMarker', markerToDelete.value);
+  closeMarkerPopup(markerToDelete.value);
+}
 function overrideStyleFunction(feature: FeatureLike, style: Style) {
   const clusteredFeatures = feature.get("features");
   const size = clusteredFeatures.length;
@@ -233,7 +270,12 @@ function toggleControlBar(targetButton: HTMLElement) {
 }
 
 function selectMarker(event: SelectEvent) {
-  console.log(event.selected[0].get('features')[0].getId());
+  if (event.selected[0]) {
+    const markerId = event.selected[0].get('features')[0].getId();
+  if (markerId && markersDict.value.get(markerId)) {
+    markersPopupOpened.value.set(markerId, markersDict.value.get(markerId)!)
+  }
+  }
 }
 </script>
 
@@ -246,13 +288,24 @@ function selectMarker(event: SelectEvent) {
     background-color: var(--app-white);
     border-radius: 16px;
     border: 1px var(--app-grey-100) solid;
-    padding: 12px 16px;
+    padding: 32px 16px 12px 16px;
     width: 300px;
     &__divider {
       height: 1px;
       width: 80%;
       background-color: var(--app-grey-100);
       margin: 0 auto;
+    }
+    &__no-data {
+      display: flex;
+      justify-content: center;
+    }
+    &__close-img {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      fill: var(--app-black);
+      cursor: pointer;
     }
   }
   .data-list {

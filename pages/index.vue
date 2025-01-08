@@ -9,7 +9,7 @@
     "
   >
     <div style="width: 100vw; height: 100vh">
-      <Map :markers="markers" @add-marker="addMarker"/>
+      <Map :markers="markers" @add-marker="addMarker" @delete-marker="deleteMarker"/>
       <div class="text-center" @click="navigateTo('/auth/register')">
         В регистрацию
       </div>
@@ -43,6 +43,10 @@ function addMarker(coordinate: Coordinate) {
     relatedZone: null,
   },)
 }
+function deleteMarker(id: string) {
+  markers.value = markers.value.filter(marker => marker.id !== id);
+}
+
 interface Marker {
   id: string;
   coordinates: Coordinate,

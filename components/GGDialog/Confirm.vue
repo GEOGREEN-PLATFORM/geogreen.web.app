@@ -1,5 +1,5 @@
 <template>
-    <GGDialog :model-value="modelValue">
+    <GGDialog :model-value="modelValue" @update:model-value="toggleOpenState">
         <q-card>
         <q-card-section class="row items-center">
           <q-icon/>
@@ -7,8 +7,8 @@
         </q-card-section>
 
         <q-card-actions align="right">
-            <KTButton label="Отмена" designType="tertiary" v-close-popup></KTButton>
-            <KTButton :label="actionButtonText" designType="tertiary" v-close-popup></KTButton>
+            <KTButton @click="cancelAction" label="Отмена" designType="tertiary" v-close-popup></KTButton>
+            <KTButton @click="confirmAction" :label="actionButtonConfirmText" designType="tertiary" v-close-popup></KTButton>
         </q-card-actions>
       </q-card>
     </GGDialog>
@@ -17,15 +17,27 @@
 <script setup lang="ts">
 interface Props {
     modelValue: boolean;
-    actionMainText: string;
-    actionButtonText: string;
+    actionMainText?: string;
+    actionButtonConfirmText?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
     actionMainText: "подтвердить действие",
-    actionButtonText: "Подтвердить"
+    actionButtonConfirmText: "Подтвердить"
 });
-
-
+const emit = defineEmits<{
+    cancel: [],
+    confirm: [],
+    "update:model-value": [boolean]
+}>()
+function cancelAction() {
+    emit("cancel");
+}
+function confirmAction() {
+    emit("confirm")
+}
+function toggleOpenState(newState: boolean) {
+    emit("update:model-value", newState)
+}
 onMounted(() => {
 });
 </script>
