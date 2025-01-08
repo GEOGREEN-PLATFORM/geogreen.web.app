@@ -1,14 +1,14 @@
 <template>
   <ClientOnly>
     <ol-map
+      ref="mapRef"
       :load-tiles-while-animating="true"
       :load-tiles-while-interacting="true"
       style="height: 100%; width: 100%"
+      class="g-green-map"
+      :controls="[]"
       @click="handleMapClick"
       @precompose.once="configureMap"
-      class="g-green-map"
-      ref="mapRef"
-      :controls="[]"
     >
       <ol-view
         :center="gGreenOlMap.center"
@@ -21,12 +21,12 @@
         <ol-source-xyz :url="gGreenOlMap.url" />
       </ol-tile-layer>
       <ol-control-bar ref="controlBar">
-      <ol-toggle-control
-        html="Добавить маркер"
-        className="g-green-control-bar__marker g-green-control-bar__marker--add"
-        :onToggle="toggleMarkerAdd"
-      />
-    </ol-control-bar>
+        <ol-toggle-control
+          html="Добавить маркер"
+          class-name="g-green-control-bar__marker g-green-control-bar__marker--add"
+          :on-toggle="toggleMarkerAdd"
+        />
+      </ol-control-bar>
       <ol-interaction-clusterselect
         ref="featureSelect"
         :point-radius="48"
@@ -38,16 +38,13 @@
       </ol-interaction-clusterselect>
 
       <ol-animated-clusterlayer :animation-duration="500" :distance="40">
-        <ol-source-vector
-          :features="markerFeatures"
-          :format="geoJson"
-        />
+        <ol-source-vector :features="markerFeatures" :format="geoJson" />
 
         <ol-style :override-style-function="overrideStyleFunction">
           <ol-style-icon :src="markerIconSrc" :scale="1" />
           <ol-style-circle :radius="48">
-            <ol-style-stroke color="black" :width="1" line-cap="round"/>
-            <ol-style-fill color="black"/>
+            <ol-style-stroke color="black" :width="1" line-cap="round" />
+            <ol-style-fill color="black" />
           </ol-style-circle>
           <ol-style-text>
             <ol-style-fill color="white" />
@@ -55,61 +52,76 @@
         </ol-style>
       </ol-animated-clusterlayer>
       <ol-overlay
-      :position="marker.coordinates"
-      v-for="[id, marker] in markersPopupOpened"
-      :key="id"
-      :autoPan="true"
-      className="g-green-marker-popup-container"
-      positioning="bottom-center"
-    >
-      <div class="popup-marker">
-        <q-icon class="popup-marker__close-img" :name="mdiClose" size="24px" @click="closeMarkerPopup(id)"></q-icon>
-        <ul v-if="marker.details" class="data-list">
-          <li v-for="[name, value] in marker.details">
-            <div class="data-list__name">{{ name }}</div>
-            <div class="data-list__value">{{ value }}</div>
-          </li>
-        </ul>
-        <div v-else class="popup-marker__no-data">
-          Данные не найдены
+        v-for="[id, marker] in markersPopupOpened"
+        :key="id"
+        :position="marker.coordinates"
+        :auto-pan="true"
+        class-name="g-green-marker-popup-container"
+        positioning="bottom-center"
+      >
+        <div class="popup-marker">
+          <q-icon
+            class="popup-marker__close-img"
+            :name="mdiClose"
+            size="24px"
+            @click="closeMarkerPopup(id)"
+          />
+          <ul v-if="marker.details" class="data-list">
+            <li v-for="[name, value] in marker.details" :key="name">
+              <div class="data-list__name">{{ name }}</div>
+              <div class="data-list__value">{{ value }}</div>
+            </li>
+          </ul>
+          <div v-else class="popup-marker__no-data">Данные не найдены</div>
+          <div class="popup-marker__divider" />
+          <ul class="actions-label">
+            <li class="actions-label__action" @click="suggestDeleteMarker(id)">
+              <span class="actions-label__text">Удалить метку</span>
+              <img
+                class="actions-label__icon"
+                src="/icons/delete_outline.svg"
+              />
+            </li>
+            <li class="actions-label__action">
+              <span class="actions-label__text">Добавить зону</span>
+              <img class="actions-label__icon" src="/icons/plus.svg" />
+            </li>
+            <li class="actions-label__action">
+              <span class="actions-label__text">Подробнее</span>
+              <img
+                class="actions-label__icon"
+                src="/icons/arrow_link_outline.svg"
+              />
+            </li>
+          </ul>
         </div>
-        <div class="popup-marker__divider"></div>
-        <ul class="actions-label">
-          <li @click="suggestDeleteMarker(id)" class="actions-label__action">
-            <span class="actions-label__text">Удалить метку</span>
-            <img class="actions-label__icon" src="/icons/delete_outline.svg">
-          </li>
-          <li class="actions-label__action">
-            <span class="actions-label__text">Добавить зону</span>
-            <img class="actions-label__icon" src="/icons/plus.svg">
-          </li>
-          <li class="actions-label__action">
-            <span class="actions-label__text">Подробнее</span>
-            <img class="actions-label__icon" src="/icons/arrow_link_outline.svg">
-          </li>
-        </ul>
-      </div>
-    </ol-overlay>
+      </ol-overlay>
     </ol-map>
-    <GGDialogConfirm @confirm="deleteMarker" v-model="confirmationDialog.isOpened" :action-main-text="confirmationDialog.mainText" :action-button-confirm-text="confirmationDialog.buttonText"></GGDialogConfirm>
+    <GGDialogConfirm
+      v-model="confirmationDialog.isOpened"
+      :action-main-text="confirmationDialog.mainText"
+      :action-button-confirm-text="confirmationDialog.buttonText"
+      @confirm="deleteMarker"
+    />
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
+import type { MapBrowserEvent } from "ol";
+import type { Coordinate } from "ol/coordinate";
 import type { FeatureLike } from "ol/Feature";
+import type { Geometry } from "ol/geom";
 import type { SelectEvent } from "ol/interaction/Select";
+import type CircleStyle from "ol/style/Circle";
+import { mdiClose } from "@quasar/extras/mdi-v6";
 import { GeoJSON } from "ol/format";
 import { Icon, Style } from "ol/style.js";
 import { computed, ref } from "vue";
 import markerIconSrc from "/icons/hogweed_icon.png";
-import type { Geometry } from "ol/geom";
-import CircleStyle from "ol/style/Circle";
-import type { MapBrowserEvent } from "ol";
-import type { Coordinate } from "ol/coordinate";
-import { mdiClose} from "@quasar/extras/mdi-v6";
+
 interface Marker {
   id: string;
-  coordinates: Coordinate,
+  coordinates: Coordinate;
   details?: {
     square: number;
     owner?: string;
@@ -118,21 +130,21 @@ interface Marker {
     workStatus?: string;
     eliminationMethod?: string;
     photos?: string[];
-  } | null
+  } | null;
   relatedTaskId?: string | null;
-  relatedZone?: Coordinate[] | null,
+  relatedZone?: Coordinate[] | null;
 }
 interface Props {
-  markers: Marker[],
+  markers: Marker[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
-})
+});
 const emit = defineEmits<{
-  'addMarker': [coordinate: Coordinate],
-  'deleteMarker': [id: string]
-}>()
+  addMarker: [coordinate: Coordinate];
+  deleteMarker: [id: string];
+}>();
 
 const mapRef = ref();
 const controlBar = ref();
@@ -160,15 +172,15 @@ class GGreenOlMap {
   public readonly projection = "EPSG:3857";
   public readonly url =
     "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}@2x.png";
+
   public interactionType: string;
 
   constructor() {
     this.center = [4890670.38077, 7615726.876165];
     this.resolution = 36;
     this.rotation = 0;
-    this.interactionType = 'none'
+    this.interactionType = "none";
   }
-
 }
 const gGreenOlMap = ref(new GGreenOlMap());
 const markersPopupOpened = ref<Map<string, Marker>>(new Map());
@@ -177,14 +189,14 @@ const markerIconElement = new Icon({
   src: markerIconSrc,
 });
 const markerFeatures = computed(() => {
-  const features = props.markers.map(({id, coordinates}) => ({
+  const features = props.markers.map(({ id, coordinates }) => ({
     type: "Feature",
     properties: {},
     geometry: {
       type: "Point",
       coordinates,
     },
-    id: id,
+    id,
   }));
   const providerFeatureCollection = {
     type: "FeatureCollection",
@@ -200,24 +212,25 @@ function clusterMemberStyle(clusterMember: FeatureLike) {
   });
 }
 
-const markersDict = computed(() => 
-  new Map(props.markers.map(marker => [marker.id, marker]))
-)
+const markersDict = computed(
+  () => new Map(props.markers.map((marker) => [marker.id, marker])),
+);
 function closeMarkerPopup(id: string) {
   markersPopupOpened.value.delete(id);
-  console.log(featureSelect.value)
   featureSelect.value.select.getFeatures().clear();
 }
 function toggleMarkerAdd() {
-  gGreenOlMap.value.interactionType !== 'marker_add' ? gGreenOlMap.value.interactionType = 'marker_add' : gGreenOlMap.value.interactionType = 'none';
+  gGreenOlMap.value.interactionType !== "marker_add"
+    ? (gGreenOlMap.value.interactionType = "marker_add")
+    : (gGreenOlMap.value.interactionType = "none");
 }
 const markerToDelete = ref("");
 function suggestDeleteMarker(id: string) {
-  confirmationDialog.value.open('удалить метку', 'Удалить');
+  confirmationDialog.value.open("удалить метку", "Удалить");
   markerToDelete.value = id;
 }
 function deleteMarker() {
-  emit('deleteMarker', markerToDelete.value);
+  emit("deleteMarker", markerToDelete.value);
   closeMarkerPopup(markerToDelete.value);
 }
 function overrideStyleFunction(feature: FeatureLike, style: Style) {
@@ -229,13 +242,12 @@ function overrideStyleFunction(feature: FeatureLike, style: Style) {
   if (size === 1) {
     style.getText()?.setText("");
     const styleCopyForSingleMember = style.clone();
-    const newImage = clusterMemberStyle(feature).getImage()
+    const newImage = clusterMemberStyle(feature).getImage();
     if (newImage) {
       styleCopyForSingleMember.setImage(newImage);
     }
     return styleCopyForSingleMember;
-  }
-  else {
+  } else {
     (style.getImage() as CircleStyle)?.getStroke()?.setColor(colorStroke);
     (style.getImage() as CircleStyle)?.getFill()?.setColor(colorFill);
     (style.getImage() as CircleStyle)?.setRadius(radius);
@@ -246,35 +258,35 @@ function overrideStyleFunction(feature: FeatureLike, style: Style) {
 
 function handleMapClick(event: MapBrowserEvent<UIEvent>) {
   if (gGreenOlMap.value.interactionType === "marker_add") {
-    emit('addMarker', event.coordinate)
+    emit("addMarker", event.coordinate);
   }
 }
 
 function configureMap() {
   const controlElement = controlBar.value.control.element;
-  controlElement.classList.add('g-green-control-bar');
-  const burgerButton = document.createElement('button');
-  burgerButton.classList.add('burger-button');
+  controlElement.classList.add("g-green-control-bar");
+  const burgerButton = document.createElement("button");
+  burgerButton.classList.add("burger-button");
   for (let i = 0; i < 3; i++) {
-    const line = document.createElement('div');
+    const line = document.createElement("div");
     burgerButton.appendChild(line);
   }
-  burgerButton.addEventListener('click', () => {
-    toggleControlBar(burgerButton)
+  burgerButton.addEventListener("click", () => {
+    toggleControlBar(burgerButton);
   });
   controlElement.appendChild(burgerButton);
 }
 
 function toggleControlBar(targetButton: HTMLElement) {
-  targetButton.classList.toggle('is-active');
+  targetButton.classList.toggle("is-active");
 }
 
 function selectMarker(event: SelectEvent) {
   if (event.selected[0]) {
-    const markerId = event.selected[0].get('features')[0].getId();
-  if (markerId && markersDict.value.get(markerId)) {
-    markersPopupOpened.value.set(markerId, markersDict.value.get(markerId)!)
-  }
+    const markerId = event.selected[0].get("features")[0].getId();
+    if (markerId && markersDict.value.get(markerId)) {
+      markersPopupOpened.value.set(markerId, markersDict.value.get(markerId)!);
+    }
   }
 }
 </script>
@@ -336,7 +348,6 @@ function selectMarker(event: SelectEvent) {
       margin: 12px 0px;
       cursor: pointer;
       .actions-label__text {
-
       }
       .actions-label__icon {
         width: 24px;
@@ -347,6 +358,7 @@ function selectMarker(event: SelectEvent) {
   }
 }
 </style>
+
 <style lang="scss">
 .g-green-map {
   .ol-control.ol-bar.g-green-control-bar {
@@ -386,12 +398,12 @@ function selectMarker(event: SelectEvent) {
         background-color: var(--app-green-050);
         transition: background-color 0.2s ease;
         &::after {
-          background-image: url('/icons/hogweed_icon.png');
+          background-image: url("/icons/hogweed_icon.png");
           background-size: 24px 24px;
           display: inline-block;
-          width: 24px; 
+          width: 24px;
           height: 24px;
-          content:"";
+          content: "";
         }
         &:hover {
           background-color: var(--app-green-100);
@@ -406,13 +418,13 @@ function selectMarker(event: SelectEvent) {
       &--delete {
         button {
           &::after {
-            background-image: url('/icons/delete_outline.svg');
+            background-image: url("/icons/delete_outline.svg");
             filter: var(--app-filter-red-500);
           }
         }
       }
     }
-    &:has( .burger-button.is-active) {
+    &:has(.burger-button.is-active) {
       transform: translateX(180px);
       .g-green-control-bar__marker {
         opacity: 1;
@@ -437,7 +449,9 @@ function selectMarker(event: SelectEvent) {
         width: 24px;
         height: 2px;
         background-color: var(--app-white);
-        transition: transform 0.3s ease, opacity 0.3s ease;
+        transition:
+          transform 0.3s ease,
+          opacity 0.3s ease;
       }
       &.is-active {
         div:nth-child(1) {

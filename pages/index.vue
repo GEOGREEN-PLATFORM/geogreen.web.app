@@ -9,7 +9,11 @@
     "
   >
     <div style="width: 100vw; height: 100vh">
-      <Map :markers="markers" @add-marker="addMarker" @delete-marker="deleteMarker"/>
+      <Map
+        :markers="markers"
+        @add-marker="addMarker"
+        @delete-marker="deleteMarker"
+      />
       <div class="text-center" @click="navigateTo('/auth/register')">
         В регистрацию
       </div>
@@ -20,36 +24,34 @@
 </template>
 
 <script setup lang="ts">
-import type { Coordinate } from 'ol/coordinate';
+import type { Coordinate } from "ol/coordinate";
 
-const showConfirm = ref(true);
 const markers = ref<Marker[]>([
   {
-    id: 'gfaefasfefdsf23424',
+    id: "gfaefasfefdsf23424",
     coordinates: [4890670.38077, 7615726.876165 + 5000],
     details: null,
     relatedTaskId: null,
     relatedZone: null,
   },
-
-])
+]);
 function addMarker(coordinate: Coordinate) {
-  //mock api req
+  // mock api req
   markers.value.push({
     id: Math.random().toString(),
     coordinates: coordinate,
     details: null,
     relatedTaskId: null,
     relatedZone: null,
-  },)
+  });
 }
 function deleteMarker(id: string) {
-  markers.value = markers.value.filter(marker => marker.id !== id);
+  markers.value = markers.value.filter((marker) => marker.id !== id);
 }
 
 interface Marker {
   id: string;
-  coordinates: Coordinate,
+  coordinates: Coordinate;
   details?: {
     square: number;
     owner?: string;
@@ -58,9 +60,9 @@ interface Marker {
     workStatus?: string;
     eliminationMethod?: string;
     photos?: string[];
-  } | null
+  } | null;
   relatedTaskId?: string | null;
-  relatedZone?: Coordinate[] | null,
+  relatedZone?: Coordinate[] | null;
 }
 </script>
 
