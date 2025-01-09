@@ -1,10 +1,9 @@
 <template>
   <ClientOnly>
     <ol-map
-      ref="mapRef"
+      ref="gGMap"
       :load-tiles-while-animating="true"
       :load-tiles-while-interacting="true"
-      style="height: 100%; width: 100%"
       class="g-green-map"
       :controls="[]"
       @click="handleMapClick"
@@ -16,7 +15,6 @@
         :resolution="gGreenOlMap.resolution"
         :projection="gGreenOlMap.projection"
       />
-
       <ol-tile-layer>
         <ol-source-xyz :url="gGreenOlMap.url" />
       </ol-tile-layer>
@@ -38,7 +36,7 @@
       </ol-interaction-clusterselect>
 
       <ol-animated-clusterlayer :animation-duration="500" :distance="40">
-        <ol-source-vector :features="markerFeatures" :format="geoJson" />
+        <ol-source-vector :features="gGreenCluster.markerFeatures" :format="gGreenCluster.geoJSON" />
 
         <ol-style :override-style-function="overrideStyleFunction">
           <ol-style-icon :src="markerIconSrc" :scale="1" />
@@ -52,7 +50,7 @@
         </ol-style>
       </ol-animated-clusterlayer>
       <ol-overlay
-        v-for="[id, marker] in markersPopupOpened"
+        v-for="[id, marker] in gGreenCluster.markersPopupOpened"
         :key="id"
         :position="marker.coordinates"
         :auto-pan="true"
@@ -107,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import type { MapBrowserEvent } from "ol";
+import type { Feature, MapBrowserEvent } from "ol";
 import type { Coordinate } from "ol/coordinate";
 import type { FeatureLike } from "ol/Feature";
 import type { Geometry } from "ol/geom";
@@ -118,6 +116,10 @@ import { GeoJSON } from "ol/format";
 import { Icon, Style } from "ol/style.js";
 import { computed, ref } from "vue";
 import markerIconSrc from "/icons/hogweed_icon.png";
+
+interface Props {
+  markers: Marker[];
+}
 
 interface Marker {
   id: string;
@@ -134,9 +136,6 @@ interface Marker {
   relatedTaskId?: string | null;
   relatedZone?: Coordinate[] | null;
 }
-interface Props {
-  markers: Marker[];
-}
 
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
@@ -146,9 +145,10 @@ const emit = defineEmits<{
   deleteMarker: [id: string];
 }>();
 
-const mapRef = ref();
-const controlBar = ref();
-const featureSelect = ref();
+const mapRef = useTemplateRef('gGMap');
+const controlBarRef = useTemplateRef('controlBar');
+const featureSelectRef = useTemplateRef('featureSelect');
+
 class ConfirmationDialog {
   public mainText?: string;
   public buttonText?: string;
@@ -165,6 +165,7 @@ class ConfirmationDialog {
   }
 }
 const confirmationDialog = ref(new ConfirmationDialog());
+
 class GGreenOlMap {
   public resolution: number;
   public rotation: number;
@@ -183,56 +184,89 @@ class GGreenOlMap {
   }
 }
 const gGreenOlMap = ref(new GGreenOlMap());
-const markersPopupOpened = ref<Map<string, Marker>>(new Map());
-const geoJson = new GeoJSON();
-const markerIconElement = new Icon({
-  src: markerIconSrc,
-});
-const markerFeatures = computed(() => {
-  const features = props.markers.map(({ id, coordinates }) => ({
-    type: "Feature",
-    properties: {},
-    geometry: {
-      type: "Point",
-      coordinates,
-    },
-    id,
-  }));
-  const providerFeatureCollection = {
-    type: "FeatureCollection",
-    features,
-  };
-  return geoJson.readFeatures(providerFeatureCollection);
-});
 
-function clusterMemberStyle(clusterMember: FeatureLike) {
-  return new Style({
-    geometry: clusterMember.getGeometry() as Geometry,
-    image: markerIconElement,
-  });
+class GGreenCluster {
+  public markerIcon: Icon;
+  public markersPopupOpened: Map<string, Marker>;
+  public markerFeatures: Feature<Geometry>[];
+  public markersDict: Map<string, Marker>;
+  public geoJSON = new GeoJSON(); 
+  public markerIdToDelete: string;
+
+  constructor(markerIconSrc: string, markers: Marker[]) {
+    this.markersPopupOpened = new Map();
+    this.markerIcon = new Icon({
+      src: markerIconSrc,
+    });
+    this.markerIdToDelete = "";
+    this.markersDict = this.convertMarkersToDictionary(markers)
+    this.markerFeatures = this.convertMarkersToFeatures(markers)
+  }
+
+  convertMarkersToFeatures(markers: Marker[]) {
+    const features = markers.map(({ id, coordinates }) => ({
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "Point",
+        coordinates,
+      },
+      id,
+    }));
+    const providerFeatureCollection = {
+      type: "FeatureCollection",
+      features,
+    };
+    return this.geoJSON.readFeatures(providerFeatureCollection);
+  }
+
+  convertMarkersToDictionary(markers: Marker[]) {
+    return new Map(markers.map((marker) => [marker.id, marker]))
+  }
+
+  getMemberStyle(clusterMember: FeatureLike) {
+    return new Style({
+      geometry: clusterMember.getGeometry() as Geometry,
+      image: this.markerIcon,
+    });
+  }
+
+  openMarkerPopup() {
+
+  }
+  selectMarker(event: SelectEvent) {
+    if (event.selected[0]) {
+      const markerId = event.selected[0].get("features")[0].getId();
+      if (markerId && this.markersDict.get(markerId)) {
+        this.markersPopupOpened.set(markerId, gGreenCluster.value.markersDict.get(markerId)!);
+      }
+    }
+  }
+  closeMarkerPopup(id: string) {
+    gGreenCluster.value.markersPopupOpened.delete(id);
+  }
 }
+const gGreenCluster = ref(new GGreenCluster(markerIconSrc, props.markers))
 
-const markersDict = computed(
-  () => new Map(props.markers.map((marker) => [marker.id, marker])),
-);
-function closeMarkerPopup(id: string) {
-  markersPopupOpened.value.delete(id);
-  featureSelect.value.select.getFeatures().clear();
+function deselectFeatures() {
+  featureSelectRef.value.select.getFeatures().clear();
 }
 function toggleMarkerAdd() {
   gGreenOlMap.value.interactionType !== "marker_add"
     ? (gGreenOlMap.value.interactionType = "marker_add")
     : (gGreenOlMap.value.interactionType = "none");
 }
-const markerToDelete = ref("");
+
 function suggestDeleteMarker(id: string) {
   confirmationDialog.value.open("удалить метку", "Удалить");
-  markerToDelete.value = id;
+  gGreenCluster.value.markerIdToDelete = id;
 }
+
 function deleteMarker() {
-  emit("deleteMarker", markerToDelete.value);
-  closeMarkerPopup(markerToDelete.value);
+  emit("deleteMarker", gGreenCluster.value.markerIdToDelete);
+  closeMarkerPopup(gGreenCluster.value.markerIdToDelete);
 }
+
 function overrideStyleFunction(feature: FeatureLike, style: Style) {
   const clusteredFeatures = feature.get("features");
   const size = clusteredFeatures.length;
@@ -242,7 +276,7 @@ function overrideStyleFunction(feature: FeatureLike, style: Style) {
   if (size === 1) {
     style.getText()?.setText("");
     const styleCopyForSingleMember = style.clone();
-    const newImage = clusterMemberStyle(feature).getImage();
+    const newImage = gGreenCluster.value.getMemberStyle(feature).getImage();
     if (newImage) {
       styleCopyForSingleMember.setImage(newImage);
     }
@@ -263,7 +297,7 @@ function handleMapClick(event: MapBrowserEvent<UIEvent>) {
 }
 
 function configureMap() {
-  const controlElement = controlBar.value.control.element;
+  const controlElement = controlBarRef.value.control.element;
   controlElement.classList.add("g-green-control-bar");
   const burgerButton = document.createElement("button");
   burgerButton.classList.add("burger-button");
@@ -281,18 +315,18 @@ function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle("is-active");
 }
 
-function selectMarker(event: SelectEvent) {
-  if (event.selected[0]) {
-    const markerId = event.selected[0].get("features")[0].getId();
-    if (markerId && markersDict.value.get(markerId)) {
-      markersPopupOpened.value.set(markerId, markersDict.value.get(markerId)!);
-    }
-  }
-}
+watch(() => props.markers, (newMarkers) => {
+  gGreenCluster.value.markerFeatures = gGreenCluster.value.convertMarkersToFeatures(newMarkers)
+  gGreenCluster.value.markersDict = gGreenCluster.value.convertMarkersToDictionary(newMarkers)
+}, {
+  deep: true
+})
 </script>
 
 <style scoped lang="scss">
 .g-green-map {
+  height: 100%;
+  width: 100%;
   .popup-marker {
     display: flex;
     flex-direction: column;
