@@ -8,11 +8,12 @@
       :controls="[]"
       @click="handleMapClick"
       @precompose.once="configureMap"
+      @pointermove="handleMapPointerMove"
     >
       <ol-view
         :center="gGreenOlMap.center"
-        :rotation="gGreenOlMap.rotation"
-        :resolution="gGreenOlMap.resolution"
+        :rotation="gGreenOlMap.rotation.value"
+        :resolution="gGreenOlMap.resolution.value"
         :projection="gGreenOlMap.projection"
       />
       <ol-tile-layer>
@@ -27,8 +28,13 @@
       </ol-control-bar>
       <ol-interaction-clusterselect
         ref="featureSelect"
-        :point-radius="48"
-        @select="selectMarker"
+        :point-radius="64"
+        @select="
+          (event: SelectEvent) => {
+            console.log('wtf');
+            gGreenCluster.selectMarker.call(gGreenCluster, event);
+          }
+        "
       >
         <ol-style>
           <ol-style-icon :src="markerIconSrc" :scale="1" />
@@ -36,9 +42,14 @@
       </ol-interaction-clusterselect>
 
       <ol-animated-clusterlayer :animation-duration="500" :distance="40">
-        <ol-source-vector :features="gGreenCluster.markerFeatures" :format="gGreenCluster.geoJSON" />
+        <ol-source-vector
+          :features="gGreenCluster.markerFeatures.value"
+          :format="gGreenCluster.geoJSON"
+        />
 
-        <ol-style :override-style-function="overrideStyleFunction">
+        <ol-style
+          :override-style-function="gGreenCluster.overrideStyleFunction"
+        >
           <ol-style-icon :src="markerIconSrc" :scale="1" />
           <ol-style-circle :radius="48">
             <ol-style-stroke color="black" :width="1" line-cap="round" />
@@ -50,7 +61,7 @@
         </ol-style>
       </ol-animated-clusterlayer>
       <ol-overlay
-        v-for="[id, marker] in gGreenCluster.markersPopupOpened"
+        v-for="[id, marker] in gGreenCluster.markersPopupOpened.value"
         :key="id"
         :position="marker.coordinates"
         :auto-pan="true"
@@ -62,7 +73,7 @@
             class="popup-marker__close-img"
             :name="mdiClose"
             size="24px"
-            @click="closeMarkerPopup(id)"
+            @click="handleCloseMarkerPopup(id)"
           />
           <ul v-if="marker.details" class="data-list">
             <li v-for="[name, value] in marker.details" :key="name">
@@ -99,7 +110,7 @@
       v-model="confirmationDialog.isOpened"
       :action-main-text="confirmationDialog.mainText"
       :action-button-confirm-text="confirmationDialog.buttonText"
-      @confirm="deleteMarker"
+      @confirm="gGreenCluster.deleteMarker.call(gGreenCluster)"
     />
   </ClientOnly>
 </template>
@@ -114,7 +125,7 @@ import type CircleStyle from "ol/style/Circle";
 import { mdiClose } from "@quasar/extras/mdi-v6";
 import { GeoJSON } from "ol/format";
 import { Icon, Style } from "ol/style.js";
-import { computed, ref } from "vue";
+import { type Reactive, type ShallowRef } from "vue";
 import markerIconSrc from "/icons/hogweed_icon.png";
 
 interface Props {
@@ -145,9 +156,9 @@ const emit = defineEmits<{
   deleteMarker: [id: string];
 }>();
 
-const mapRef = useTemplateRef('gGMap');
-const controlBarRef = useTemplateRef('controlBar');
-const featureSelectRef = useTemplateRef('featureSelect');
+const mapRef = useTemplateRef("gGMap");
+const controlBarRef = useTemplateRef("controlBar");
+const featureSelectRef = useTemplateRef("featureSelect");
 
 class ConfirmationDialog {
   public mainText?: string;
@@ -164,43 +175,42 @@ class ConfirmationDialog {
     this.isOpened = true;
   }
 }
-const confirmationDialog = ref(new ConfirmationDialog());
+const confirmationDialog = shallowRef(new ConfirmationDialog());
 
 class GGreenOlMap {
-  public resolution: number;
-  public rotation: number;
+  public resolution: ShallowRef<number>;
+  public rotation: ShallowRef<number>;
   public center: Coordinate;
+  public interactionType: ShallowRef<string>;
   public readonly projection = "EPSG:3857";
   public readonly url =
     "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}@2x.png";
 
-  public interactionType: string;
-
   constructor() {
-    this.center = [4890670.38077, 7615726.876165];
-    this.resolution = 36;
-    this.rotation = 0;
-    this.interactionType = "none";
+    this.center = reactive([4890670.38077, 7615726.876165]);
+    this.resolution = shallowRef(36);
+    this.rotation =  shallowRef(0);
+    this.interactionType = shallowRef("none");
   }
 }
-const gGreenOlMap = ref(new GGreenOlMap());
+const gGreenOlMap = shallowRef(new GGreenOlMap());
 
 class GGreenCluster {
-  public markerIcon: Icon;
-  public markersPopupOpened: Map<string, Marker>;
-  public markerFeatures: Feature<Geometry>[];
+  public readonly markerIcon: Icon;
+  public markersPopupOpened: Ref<Map<string, Marker>>;
+  public markerFeatures: Ref<Feature<Geometry>[]>;
   public markersDict: Map<string, Marker>;
-  public geoJSON = new GeoJSON(); 
-  public markerIdToDelete: string;
+  public geoJSON = new GeoJSON();
+  public markerIdToDelete: ShallowRef<string>;
 
   constructor(markerIconSrc: string, markers: Marker[]) {
-    this.markersPopupOpened = new Map();
+    this.markersPopupOpened = ref(new Map());
     this.markerIcon = new Icon({
       src: markerIconSrc,
     });
-    this.markerIdToDelete = "";
-    this.markersDict = this.convertMarkersToDictionary(markers)
-    this.markerFeatures = this.convertMarkersToFeatures(markers)
+    this.markerIdToDelete = shallowRef("");
+    this.markersDict = this.convertMarkersToDictionary(markers);
+    this.markerFeatures = ref(this.convertMarkersToFeatures(markers)) as Ref<Feature<Geometry>[]>;
   }
 
   convertMarkersToFeatures(markers: Marker[]) {
@@ -221,7 +231,7 @@ class GGreenCluster {
   }
 
   convertMarkersToDictionary(markers: Marker[]) {
-    return new Map(markers.map((marker) => [marker.id, marker]))
+    return new Map(markers.map((marker) => [marker.id, marker]));
   }
 
   getMemberStyle(clusterMember: FeatureLike) {
@@ -231,68 +241,86 @@ class GGreenCluster {
     });
   }
 
-  openMarkerPopup() {
-
-  }
   selectMarker(event: SelectEvent) {
-    if (event.selected[0]) {
+    console.log(event);
+    if (event.selected[0] && event.selected[0].get("features").length === 1) {
       const markerId = event.selected[0].get("features")[0].getId();
       if (markerId && this.markersDict.get(markerId)) {
-        this.markersPopupOpened.set(markerId, gGreenCluster.value.markersDict.get(markerId)!);
+        this.openMarkerPopup(markerId);
       }
     }
   }
-  closeMarkerPopup(id: string) {
-    gGreenCluster.value.markersPopupOpened.delete(id);
+
+  deleteMarker() {
+    emit("deleteMarker", this.markerIdToDelete.value);
+    this.closeMarkerPopup(this.markerIdToDelete.value);
+  }
+
+  addMakrer(coordinate: Coordinate) {
+    emit("addMarker", coordinate);
+  }
+
+  openMarkerPopup(markerId: string) {
+    this.markersPopupOpened.value.set(markerId, this.markersDict.get(markerId)!);
+  }
+
+  closeMarkerPopup(markerId: string) {
+   this.markersPopupOpened.value.delete(markerId);
+  }
+
+  overrideStyleFunction(feature: FeatureLike, style: Style) {
+    const clusteredFeatures = feature.get("features");
+    const size = clusteredFeatures.length;
+    const colorFill = size >= 15 ? "#FF0022" : size > 5 ? "#FF8200" : "#55A231";
+    const colorStroke = size >= 15 ? "#55A231" : "#FF0022";
+    const radius = 16;
+    if (size === 1) {
+      style.getText()?.setText("");
+      const styleCopyForSingleMember = style.clone();
+      const newImage = gGreenCluster.value.getMemberStyle(feature).getImage();
+      if (newImage) {
+        styleCopyForSingleMember.setImage(newImage);
+      }
+      return styleCopyForSingleMember;
+    } else {
+      (style.getImage() as CircleStyle)?.getStroke()?.setColor(colorStroke);
+      (style.getImage() as CircleStyle)?.getFill()?.setColor(colorFill);
+      (style.getImage() as CircleStyle)?.setRadius(radius);
+      style.getText()?.setText(size.toString());
+      return style;
+    }
   }
 }
-const gGreenCluster = ref(new GGreenCluster(markerIconSrc, props.markers))
+const gGreenCluster = shallowRef(new GGreenCluster(markerIconSrc, props.markers));
 
+function handleCloseMarkerPopup(markerId: string) {
+  gGreenCluster.value.closeMarkerPopup(markerId);
+  deselectFeatures();
+}
+function handleMapPointerMove(event: MapBrowserEvent<UIEvent>) {
+  const hit = event.target.hasFeatureAtPixel(event.pixel);
+  event.target.getTargetElement().style.cursor = hit ? "pointer" : "";
+}
 function deselectFeatures() {
   featureSelectRef.value.select.getFeatures().clear();
 }
+
 function toggleMarkerAdd() {
-  gGreenOlMap.value.interactionType !== "marker_add"
-    ? (gGreenOlMap.value.interactionType = "marker_add")
-    : (gGreenOlMap.value.interactionType = "none");
+  if (gGreenOlMap.value.interactionType.value !== "marker_add") {
+    gGreenOlMap.value.interactionType.value = "marker_add";
+  } else {
+    gGreenOlMap.value.interactionType.value = "none";
+  }
 }
 
 function suggestDeleteMarker(id: string) {
   confirmationDialog.value.open("удалить метку", "Удалить");
-  gGreenCluster.value.markerIdToDelete = id;
-}
-
-function deleteMarker() {
-  emit("deleteMarker", gGreenCluster.value.markerIdToDelete);
-  closeMarkerPopup(gGreenCluster.value.markerIdToDelete);
-}
-
-function overrideStyleFunction(feature: FeatureLike, style: Style) {
-  const clusteredFeatures = feature.get("features");
-  const size = clusteredFeatures.length;
-  const colorFill = size >= 15 ? "#FF0022" : size > 5 ? "#FF8200" : "#55A231";
-  const colorStroke = size >= 15 ? "#55A231" : "#FF0022";
-  const radius = 16;
-  if (size === 1) {
-    style.getText()?.setText("");
-    const styleCopyForSingleMember = style.clone();
-    const newImage = gGreenCluster.value.getMemberStyle(feature).getImage();
-    if (newImage) {
-      styleCopyForSingleMember.setImage(newImage);
-    }
-    return styleCopyForSingleMember;
-  } else {
-    (style.getImage() as CircleStyle)?.getStroke()?.setColor(colorStroke);
-    (style.getImage() as CircleStyle)?.getFill()?.setColor(colorFill);
-    (style.getImage() as CircleStyle)?.setRadius(radius);
-    style.getText()?.setText(size.toString());
-    return style;
-  }
+  gGreenCluster.value.markerIdToDelete.value = id;
 }
 
 function handleMapClick(event: MapBrowserEvent<UIEvent>) {
-  if (gGreenOlMap.value.interactionType === "marker_add") {
-    emit("addMarker", event.coordinate);
+  if (gGreenOlMap.value.interactionType.value === "marker_add") {
+    gGreenCluster.value.addMakrer(event.coordinate);
   }
 }
 
@@ -315,12 +343,18 @@ function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle("is-active");
 }
 
-watch(() => props.markers, (newMarkers) => {
-  gGreenCluster.value.markerFeatures = gGreenCluster.value.convertMarkersToFeatures(newMarkers)
-  gGreenCluster.value.markersDict = gGreenCluster.value.convertMarkersToDictionary(newMarkers)
-}, {
-  deep: true
-})
+watch(
+  () => props.markers,
+  (newMarkers) => {
+    gGreenCluster.value.markerFeatures.value =
+      gGreenCluster.value.convertMarkersToFeatures(newMarkers);
+    gGreenCluster.value.markersDict =
+      gGreenCluster.value.convertMarkersToDictionary(newMarkers);
+  },
+  {
+    deep: true,
+  },
+);
 </script>
 
 <style scoped lang="scss">
