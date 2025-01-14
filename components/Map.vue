@@ -1,7 +1,6 @@
 <template>
   <ClientOnly>
     <ol-map
-      ref="gGMap"
       :load-tiles-while-animating="true"
       :load-tiles-while-interacting="true"
       class="g-green-map"
@@ -30,10 +29,8 @@
         ref="featureSelect"
         :point-radius="64"
         @select="
-          (event: SelectEvent) => {
-            console.log('wtf');
-            gGreenCluster.selectMarker.call(gGreenCluster, event);
-          }
+          (event: SelectEvent) =>
+            gGreenCluster.selectMarker.call(gGreenCluster, event)
         "
       >
         <ol-style>
@@ -46,9 +43,15 @@
           :features="gGreenCluster.markerFeatures.value"
           :format="gGreenCluster.geoJSON"
         />
-
         <ol-style
-          :override-style-function="gGreenCluster.overrideStyleFunction"
+          :override-style-function="
+            (feature: FeatureLike, style: Style) =>
+              gGreenCluster.overrideStyleFunction.call(
+                gGreenCluster,
+                feature,
+                style,
+              )
+          "
         >
           <ol-style-icon :src="markerIconSrc" :scale="1" />
           <ol-style-circle :radius="48">
@@ -76,9 +79,14 @@
             @click="handleCloseMarkerPopup(id)"
           />
           <ul v-if="marker.details" class="data-list">
-            <li v-for="[name, value] in marker.details" :key="name">
+            <li
+              v-for="[name, value] in Object.entries(marker.details || {})"
+              :key="name"
+            >
               <div class="data-list__name">{{ name }}</div>
-              <div class="data-list__value">{{ value }}</div>
+              <div class="data-list__value">
+                {{ Array.isArray(value) ? value.join(", ") : value }}
+              </div>
             </li>
           </ul>
           <div v-else class="popup-marker__no-data">Данные не найдены</div>
@@ -107,9 +115,9 @@
       </ol-overlay>
     </ol-map>
     <GGDialogConfirm
-      v-model="confirmationDialog.isOpened"
-      :action-main-text="confirmationDialog.mainText"
-      :action-button-confirm-text="confirmationDialog.buttonText"
+      v-model="confirmationDialog.isOpened.value"
+      :action-main-text="confirmationDialog.mainText.value"
+      :action-button-confirm-text="confirmationDialog.buttonText.value"
       @confirm="gGreenCluster.deleteMarker.call(gGreenCluster)"
     />
   </ClientOnly>
@@ -117,15 +125,16 @@
 
 <script setup lang="ts">
 import type { Feature, MapBrowserEvent } from "ol";
+import type { MapControls, SelectCluster } from "ol-ext";
 import type { Coordinate } from "ol/coordinate";
 import type { FeatureLike } from "ol/Feature";
 import type { Geometry } from "ol/geom";
 import type { SelectEvent } from "ol/interaction/Select";
 import type CircleStyle from "ol/style/Circle";
+import type { ShallowRef } from "vue";
 import { mdiClose } from "@quasar/extras/mdi-v6";
 import { GeoJSON } from "ol/format";
 import { Icon, Style } from "ol/style.js";
-import { type Reactive, type ShallowRef } from "vue";
 import markerIconSrc from "/icons/hogweed_icon.png";
 
 interface Props {
@@ -156,23 +165,24 @@ const emit = defineEmits<{
   deleteMarker: [id: string];
 }>();
 
-const mapRef = useTemplateRef("gGMap");
-const controlBarRef = useTemplateRef("controlBar");
-const featureSelectRef = useTemplateRef("featureSelect");
+const controlBarRef = useTemplateRef<MapControls>("controlBar");
+const featureSelectRef = useTemplateRef<SelectCluster>("featureSelect");
 
 class ConfirmationDialog {
-  public mainText?: string;
-  public buttonText?: string;
-  public isOpened: boolean;
+  public mainText: ShallowRef<string>;
+  public buttonText: ShallowRef<string>;
+  public isOpened: ShallowRef<boolean>;
 
   constructor() {
-    this.isOpened = false;
+    this.isOpened = shallowRef(false);
+    this.mainText = shallowRef("");
+    this.buttonText = shallowRef("");
   }
 
   open(mainText: string, buttonText: string) {
-    this.mainText = mainText;
-    this.buttonText = buttonText;
-    this.isOpened = true;
+    this.mainText.value = mainText;
+    this.buttonText.value = buttonText;
+    this.isOpened.value = true;
   }
 }
 const confirmationDialog = shallowRef(new ConfirmationDialog());
@@ -189,7 +199,7 @@ class GGreenOlMap {
   constructor() {
     this.center = reactive([4890670.38077, 7615726.876165]);
     this.resolution = shallowRef(36);
-    this.rotation =  shallowRef(0);
+    this.rotation = shallowRef(0);
     this.interactionType = shallowRef("none");
   }
 }
@@ -210,7 +220,9 @@ class GGreenCluster {
     });
     this.markerIdToDelete = shallowRef("");
     this.markersDict = this.convertMarkersToDictionary(markers);
-    this.markerFeatures = ref(this.convertMarkersToFeatures(markers)) as Ref<Feature<Geometry>[]>;
+    this.markerFeatures = ref(this.convertMarkersToFeatures(markers)) as Ref<
+      Feature<Geometry>[]
+    >;
   }
 
   convertMarkersToFeatures(markers: Marker[]) {
@@ -242,7 +254,6 @@ class GGreenCluster {
   }
 
   selectMarker(event: SelectEvent) {
-    console.log(event);
     if (event.selected[0] && event.selected[0].get("features").length === 1) {
       const markerId = event.selected[0].get("features")[0].getId();
       if (markerId && this.markersDict.get(markerId)) {
@@ -261,11 +272,14 @@ class GGreenCluster {
   }
 
   openMarkerPopup(markerId: string) {
-    this.markersPopupOpened.value.set(markerId, this.markersDict.get(markerId)!);
+    this.markersPopupOpened.value.set(
+      markerId,
+      this.markersDict.get(markerId)!,
+    );
   }
 
   closeMarkerPopup(markerId: string) {
-   this.markersPopupOpened.value.delete(markerId);
+    this.markersPopupOpened.value.delete(markerId);
   }
 
   overrideStyleFunction(feature: FeatureLike, style: Style) {
@@ -277,7 +291,7 @@ class GGreenCluster {
     if (size === 1) {
       style.getText()?.setText("");
       const styleCopyForSingleMember = style.clone();
-      const newImage = gGreenCluster.value.getMemberStyle(feature).getImage();
+      const newImage = this.getMemberStyle(feature).getImage();
       if (newImage) {
         styleCopyForSingleMember.setImage(newImage);
       }
@@ -291,7 +305,9 @@ class GGreenCluster {
     }
   }
 }
-const gGreenCluster = shallowRef(new GGreenCluster(markerIconSrc, props.markers));
+const gGreenCluster = shallowRef(
+  new GGreenCluster(markerIconSrc, props.markers),
+);
 
 function handleCloseMarkerPopup(markerId: string) {
   gGreenCluster.value.closeMarkerPopup(markerId);
