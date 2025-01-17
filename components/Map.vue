@@ -63,6 +63,66 @@
           </ol-style-text>
         </ol-style>
       </ol-animated-clusterlayer>
+      <ol-vector-layer>
+      <ol-source-vector>
+        <ol-feature>
+          <ol-geom-multi-polygon
+            :coordinates="[
+              [
+                [
+                [4890670.38077 + 1000, 7615726.876165],
+                [4890670.38077, 7615726.876165 + 1000],
+                [4890670.38077 + 1000, 7615726.876165 + 1000],
+                [4890670.38077 + 2000, 7615726.876165],
+                [4890670.38077, 7615726.876165 + 2000],
+                ],
+              ],
+              [
+                [
+                [4890670.38077, 7615726.876165],
+                [4890670.38077, 7615726.876165],
+                [4890670.38077, 7615726.876165],
+                [4890670.38077, 7615726.876165],
+                [4890670.38077, 7615726.876165],
+                ],
+              ],
+            ]"
+          ></ol-geom-multi-polygon>
+          <ol-style>
+            <ol-style-stroke
+              color="10"
+              width="red"
+            ></ol-style-stroke>
+          </ol-style>
+        </ol-feature>
+      </ol-source-vector>
+    </ol-vector-layer>
+    <ol-vector-layer>
+      <ol-source-vector>
+        <ol-interaction-draw
+          type="Polygon"
+          @drawend="drawend"
+          @drawstart="drawstart"
+        >
+          <ol-style>
+            <ol-style-stroke color="blue" :width="2"></ol-style-stroke>
+            <ol-style-fill color="rgba(255, 255, 0, 0.4)"></ol-style-fill>
+            <ol-style-circle :radius="5">
+              <ol-style-fill color="#00dd11" />
+              <ol-style-stroke color="blue" :width="2" />
+            </ol-style-circle>
+          </ol-style>
+        </ol-interaction-draw>
+      </ol-source-vector>
+
+      <ol-style>
+        <ol-style-stroke color="red" :width="2"></ol-style-stroke>
+        <ol-style-fill color="rgba(255,255,255,0.1)"></ol-style-fill>
+        <ol-style-circle :radius="7">
+          <ol-style-fill color="red"></ol-style-fill>
+        </ol-style-circle>
+      </ol-style>
+    </ol-vector-layer>
       <ol-overlay
         v-for="[id, marker] in gGreenCluster.markersPopupOpened.value"
         :key="id"
@@ -136,10 +196,20 @@ import { mdiClose } from "@quasar/extras/mdi-v6";
 import { GeoJSON } from "ol/format";
 import { Icon, Style } from "ol/style.js";
 import markerIconSrc from "/icons/hogweed_icon.png";
+const drawstart = (event) => {
+  console.log(event);
+};
 
+const drawend = (event) => {
+  console.log(event.feature.getGeometry().getCoordinates());
+};
 interface Props {
   markers: Marker[];
 }
+//TODO
+//ПОЛИГОН В КОНТРОЛ БАР
+//ЦВЕТОКОДИРОВКА И ВЫБОР
+//ДОБАВЛЕНИЕ В МАРКЕР И СРАЗУ С МАРКЕРОМ
 
 interface Marker {
   id: string;
