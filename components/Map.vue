@@ -21,12 +21,12 @@
       <ol-control-bar ref="controlBar">
         <ol-toggle-control
           html="Добавить маркер"
-          class-name="g-green-control-bar__marker g-green-control-bar__marker--add"
+          class-name="g-green-control-bar__item g-green-control-bar__marker"
           :on-toggle="toggleMarkerAdd"
         />
         <ol-toggle-control
           html="Добавить зону"
-          class-name="g-green-control-bar__marker g-green-control-bar__marker--add"
+          class-name="g-green-control-bar__item g-green-control-bar__zone"
           :on-toggle="toggleZoneAdd"
         />
       </ol-control-bar>
@@ -39,68 +39,102 @@
             gGreenCluster.selectMarker.call(gGreenCluster, event)
         "
       >
-        <ol-style>
-          <ol-style-icon :src="markerIconSrc" :scale="1" />
-        </ol-style>
+        <ol-style v-if="gGreenZone.density.value === 'low'">
+        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
+        <ol-style-fill color="rgba(85, 162, 49, 0.5)"></ol-style-fill>
+        <ol-style-icon :src="markerIconSrc" :scale="1" />
+      </ol-style>
+      <ol-style v-if="gGreenZone.density.value === 'medium'">
+        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
+        <ol-style-fill color="rgba(255, 130, 0, 0.5)"></ol-style-fill>
+        <ol-style-icon :src="markerIconSrc" :scale="1" />
+      </ol-style>
+      <ol-style v-if="gGreenZone.density.value === 'high'">
+        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
+        <ol-style-fill color="rgba(255, 0, 34, 0.5)"></ol-style-fill>
+        <ol-style-icon :src="markerIconSrc" :scale="1" />
+      </ol-style>
       </ol-interaction-clusterselect>
 
       
-      <ol-vector-layer>
-      <ol-source-vector>
-        <ol-feature>
-          <ol-geom-multi-polygon
-            :coordinates="[
+      <ol-vector-layer :styles="setStyle">
+    <ol-source-vector>
+      <ol-feature>
+        <ol-geom-polygon
+          :coordinates="[ 
               [
-                [
                 [4890670.38077 + 1000, 7615726.876165],
                 [4890670.38077, 7615726.876165 + 1000],
                 [4890670.38077 + 1000, 7615726.876165 + 1000],
                 [4890670.38077 + 2000, 7615726.876165],
                 [4890670.38077, 7615726.876165 + 2000],
-                ],
               ],
+          ]"
+        ></ol-geom-polygon>
+      </ol-feature>
+      <ol-feature>
+        <ol-geom-polygon
+          :coordinates="[ 
               [
-                [
-                [4890670.38077, 7615726.876165],
-                [4890670.38077, 7615726.876165],
-                [4890670.38077, 7615726.876165],
-                [4890670.38077, 7615726.876165],
-                [4890670.38077, 7615726.876165],
-                ],
+                [4890670.38077 + 11000, 7615726.876165 + 11000],
+                [4890670.38077, 7615726.876165 + 1000],
+                [4890670.38077 + 12000, 7615726.876165 + 1000],
+                [4890670.38077 + 22000, 7615726.876165],
+                [4890670.38077, 7615726.876165 + 2000],
               ],
-            ]"
-          ></ol-geom-multi-polygon>
-          <ol-style>
-            <ol-style-stroke
-              color="red"
-              width="2"
-            ></ol-style-stroke>
-          </ol-style>
-        </ol-feature>
-      </ol-source-vector>
-    </ol-vector-layer>
+          ]"
+        ></ol-geom-polygon>
+      </ol-feature>
+    </ol-source-vector>
+  </ol-vector-layer>
     <ol-vector-layer>
       <ol-source-vector>
         <ol-interaction-draw
           v-if="gGreenOlMap.interactionType.value === 'zone_add'"
           type="Polygon"
-          @drawend="drawend"
-          @drawstart="drawstart"
+          @drawend="gGreenZone.create"
         >
-          <ol-style>
-            <ol-style-stroke color="blue" :width="2"></ol-style-stroke>
-            <ol-style-fill color="green"></ol-style-fill>
-            <ol-style-circle :radius="5">
-              <ol-style-fill color="#00dd11" />
-              <ol-style-stroke color="blue" :width="2" />
-            </ol-style-circle>
-          </ol-style>
+        <ol-style v-if="gGreenZone.density.value === 'low'">
+        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
+        <ol-style-fill color="rgba(85, 162, 49, 0.5)"></ol-style-fill>
+        <ol-style-circle :radius="7">
+          <ol-style-fill color="red"></ol-style-fill>
+        </ol-style-circle>
+      </ol-style>
+      <ol-style v-if="gGreenZone.density.value === 'medium'">
+        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
+        <ol-style-fill color="rgba(255, 130, 0, 0.5)"></ol-style-fill>
+        <ol-style-circle :radius="7">
+          <ol-style-fill color="red"></ol-style-fill>
+        </ol-style-circle>
+      </ol-style>
+      <ol-style v-if="gGreenZone.density.value === 'high'">
+        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
+        <ol-style-fill color="rgba(255, 0, 34, 0.5)"></ol-style-fill>
+        <ol-style-circle :radius="7">
+          <ol-style-fill color="red"></ol-style-fill>
+        </ol-style-circle>
+      </ol-style>
         </ol-interaction-draw>
       </ol-source-vector>
 
-      <ol-style>
-        <ol-style-stroke color="red" :width="2"></ol-style-stroke>
-        <ol-style-fill color="green"></ol-style-fill>
+      <ol-style v-if="gGreenZone.density.value === 'low'">
+        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
+        <ol-style-fill color="rgba(85, 162, 49, 0.5)"></ol-style-fill>
+        <ol-style-circle :radius="7">
+          <ol-style-fill color="red"></ol-style-fill>
+        </ol-style-circle>
+      </ol-style>
+      <ol-style v-if="gGreenZone.density.value === 'medium'">
+        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
+        <ol-style-fill color="rgba(255, 130, 0, 0.5)"></ol-style-fill>
+        <ol-style-circle :radius="7">
+          <ol-style-fill color="red"></ol-style-fill>
+        </ol-style-circle>
+      </ol-style>
+      <ol-style v-if="gGreenZone.density.value === 'high'">
+        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
+        <ol-style-fill color="rgba(255, 0, 34, 0.5)"></ol-style-fill>
         <ol-style-circle :radius="7">
           <ol-style-fill color="red"></ol-style-fill>
         </ol-style-circle>
@@ -162,20 +196,25 @@
           <ul class="actions-label">
             <li class="actions-label__action" @click="suggestDeleteMarker(id)">
               <span class="actions-label__text">Удалить метку</span>
-              <img
+              <q-icon
                 class="actions-label__icon"
-                src="/icons/delete_outline.svg"
+                :name="mdiDeleteOutline"
               />
             </li>
             <li class="actions-label__action">
+              <q-icon class="actions-label__icon actions-label__icon--blue" :name="mdiInformation" size="24px">
+                <GGHint>
+                  Выбранный маркер будет автоматически перемещён внутрь добавленной зоны
+                </GGHint>
+              </q-icon>
               <span class="actions-label__text" @click="gGreenCluster.addZone(id)">Добавить зону</span>
-              <img class="actions-label__icon" src="/icons/plus.svg" />
+              <q-icon class="actions-label__icon" :name="mdiPlus" />
             </li>
             <li class="actions-label__action">
               <span class="actions-label__text">Подробнее</span>
-              <img
+              <q-icon
                 class="actions-label__icon"
-                src="/icons/arrow_link_outline.svg"
+                :name="mdiArrowTopRightThinCircleOutline"
               />
             </li>
           </ul>
@@ -200,52 +239,43 @@ import type { Geometry } from "ol/geom";
 import type { SelectEvent } from "ol/interaction/Select";
 import type CircleStyle from "ol/style/Circle";
 import type { ShallowRef } from "vue";
-import { mdiClose } from "@quasar/extras/mdi-v6";
+import { mdiArrowTopRightThinCircleOutline, mdiClose, mdiDeleteOutline, mdiInformation, mdiPlus } from "@quasar/extras/mdi-v6";
 import { GeoJSON } from "ol/format";
-import { Icon, Style } from "ol/style.js";
+import { Icon, Stroke, Style } from "ol/style.js";
 import markerIconSrc from "/icons/hogweed_icon.png";
 import {getCenter} from 'ol/extent';
+import type { DrawEvent } from "ol/interaction/Draw";
 
-const drawstart = (event) => {
-  console.log(event);
-};
-
-const drawend = (event) => {
-  console.log(event.feature.getGeometry());
-  console.log(isPointInPolygon(gGreenCluster.value.markersDict.get(gGreenCluster.value.currentSelectedMarkerId.value)?.coordinates!, event.feature.getGeometry()))
-  toggleZoneAdd();
-  gGreenCluster.value.addMakrer(getCenter(event.feature.getGeometry().getExtent()))
-};
 interface Props {
   markers: Marker[];
 }
-//TODO
-//ПОЛИГОН В КОНТРОЛ БАР
 //ЦВЕТОКОДИРОВКА И ВЫБОР
 //ДОБАВЛЕНИЕ В МАРКЕР И СРАЗУ С МАРКЕРОМ
-// добавление к текущему маркеру удаляет его и ставит новый(т.е меняет координаты старого) в зависимости от зоны
-interface Marker {
-  id: string;
-  coordinates: Coordinate;
-  details?: {
-    square: number;
-    owner?: string;
-    landType?: string;
-    contractingOrganization?: string;
-    workStatus?: string;
-    eliminationMethod?: string;
-    photos?: string[];
-  } | null;
-  relatedTaskId?: string | null;
-  relatedZone?: Coordinate[] | null;
-}
 
+function setStyle(feature) {
+      const coordinates = feature.getGeometry().getCoordinates();
+  console.log(coordinates)
+      // Стили для первого и второго полигона
+      const styles = [
+
+        new Style({
+          stroke: new Stroke({
+            color: 'red',
+            width: 2,
+          }),
+        }),
+      ];
+        console.log(coordinates.map((_, index) => styles[index] || styles[0]))
+      // Пример: выбор стиля по индексу полигона
+      return coordinates.map((_, index) => styles[index] || styles[0]);
+    }
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
 });
 const emit = defineEmits<{
-  addMarker: [coordinate: Coordinate];
+  addMarker: [coordinate: Coordinate, relatedZone?: Zone];
   deleteMarker: [id: string];
+  editMarker: [id: string, marker: Marker]
 }>();
 
 const controlBarRef = useTemplateRef<MapControls>("controlBar");
@@ -351,8 +381,8 @@ class GGreenCluster {
     this.closeMarkerPopup(this.currentSelectedMarkerId.value);
   }
 
-  addMakrer(coordinate: Coordinate) {
-    emit("addMarker", coordinate);
+  addMakrer(coordinate: Coordinate, zoneCoordinates?: Coordinate[]) {
+    emit("addMarker", coordinate, zoneCoordinates);
   }
 
   openMarkerPopup(markerId: string) {
@@ -398,6 +428,36 @@ class GGreenCluster {
 const gGreenCluster = shallowRef(
   new GGreenCluster(markerIconSrc, props.markers),
 );
+
+class GGreenZone {
+  public density: ShallowRef<'low' | 'medium' | 'high'>;
+
+  constructor() {
+    this.density = shallowRef('high');
+  }
+
+  create(event: DrawEvent) {
+    if (gGreenCluster.value.currentSelectedMarkerId.value && event.feature) {
+      gGreenCluster.value.markersDict.set(gGreenCluster.value.currentSelectedMarkerId.value, {
+      ...gGreenCluster.value.markersDict.get(gGreenCluster.value.currentSelectedMarkerId.value)!,
+      coordinates: getCenter(event.feature.getGeometry().getExtent()),
+      relatedZone: {
+        coordinates: event.feature.getGeometry().getCoordinates(),
+        density: gGreenZone.value.density.value,
+      }
+    })
+    emit('editMarker', gGreenCluster.value.currentSelectedMarkerId.value, gGreenCluster.value.markersDict.get(gGreenCluster.value.currentSelectedMarkerId.value))
+    } else {
+    gGreenCluster.value.addMakrer(getCenter(event.feature.getGeometry().getExtent()), {
+        coordinates: event.feature.getGeometry().getCoordinates(),
+        density: gGreenZone.value.density.value,
+      })
+    }
+    toggleZoneAdd();
+  }
+}
+
+const gGreenZone = shallowRef(new GGreenZone());
 
 function handleCloseMarkerPopup(markerId: string) {
   gGreenCluster.value.closeMarkerPopup(markerId);
@@ -455,10 +515,6 @@ function configureMap() {
 
 function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle("is-active");
-}
-
-function isPointInPolygon(markerCoords: Coordinate, polygonGeometry: Geometry) {
-  return polygonGeometry.intersectsCoordinate(markerCoords)
 }
 
 watch(
@@ -530,7 +586,7 @@ watch(
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 8px;
       margin: 12px 0px;
       cursor: pointer;
       .actions-label__text {
@@ -539,6 +595,13 @@ watch(
         width: 24px;
         height: 24px;
         filter: var(--app-filter-grey-300);
+        .actions-label__icon-hint {
+          font-size: 14px;
+        }
+      }
+      .actions-label__icon--blue {
+        filter: unset;
+        fill: var(--app-blue-300);
       }
     }
   }
@@ -560,7 +623,7 @@ watch(
     padding: 48px 16px;
     transition: transform 0.3s ease;
     border-radius: 0px 4px 4px 0px;
-    .ol-button.g-green-control-bar__marker {
+    .ol-button.g-green-control-bar__item {
       width: 100%;
       left: 0;
       opacity: 0;
@@ -584,7 +647,6 @@ watch(
         background-color: var(--app-green-050);
         transition: background-color 0.2s ease;
         &::after {
-          background-image: url("/icons/hogweed_icon.png");
           background-size: 24px 24px;
           display: inline-block;
           width: 24px;
@@ -601,18 +663,20 @@ watch(
           background-color: var(--app-green-500);
         }
       }
-      &--delete {
-        button {
-          &::after {
-            background-image: url("/icons/delete_outline.svg");
-            filter: var(--app-filter-red-500);
-          }
+    }
+    .ol-button.g-green-control-bar__marker {
+      button::after {
+          background-image: url("/icons/hogweed_icon.png");
         }
-      }
+    }
+    .ol-button.g-green-control-bar__zone {
+      button::after {
+          content: url("/icons/polygon.svg");
+        }
     }
     &:has(.burger-button.is-active) {
       transform: translateX(180px);
-      .g-green-control-bar__marker {
+      .g-green-control-bar__item {
         opacity: 1;
       }
     }

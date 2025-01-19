@@ -13,6 +13,7 @@
         :markers="markers"
         @add-marker="addMarker"
         @delete-marker="deleteMarker"
+        @edit-marker="editMarker"
       />
       <div class="text-center" @click="navigateTo('/auth/register')">
         В регистрацию
@@ -35,34 +36,21 @@ const markers = ref<Marker[]>([
     relatedZone: null,
   },
 ]);
-function addMarker(coordinate: Coordinate) {
+function addMarker(coordinate: Coordinate, relatedZone?: Zone) {
   // mock api req
   markers.value.push({
     id: Math.random().toString(),
     coordinates: coordinate,
     details: null,
     relatedTaskId: null,
-    relatedZone: null,
+    relatedZone: relatedZone || null,
   });
 }
 function deleteMarker(id: string) {
   markers.value = markers.value.filter((marker) => marker.id !== id);
 }
-
-interface Marker {
-  id: string;
-  coordinates: Coordinate;
-  details?: {
-    square: number;
-    owner?: string;
-    landType?: string;
-    contractingOrganization?: string;
-    workStatus?: string;
-    eliminationMethod?: string;
-    photos?: string[];
-  } | null;
-  relatedTaskId?: string | null;
-  relatedZone?: Coordinate[] | null;
+function editMarker(id: string, marker: Marker) {
+  markers.value[markers.value.findIndex((marker) => marker.id === id)] = marker;
 }
 </script>
 
