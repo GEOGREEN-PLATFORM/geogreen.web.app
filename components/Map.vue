@@ -24,8 +24,14 @@
           class-name="g-green-control-bar__marker g-green-control-bar__marker--add"
           :on-toggle="toggleMarkerAdd"
         />
+        <ol-toggle-control
+          html="Добавить зону"
+          class-name="g-green-control-bar__marker g-green-control-bar__marker--add"
+          :on-toggle="toggleZoneAdd"
+        />
       </ol-control-bar>
       <ol-interaction-clusterselect
+        v-if="gGreenOlMap.interactionType.value !== 'zone_add'"
         ref="featureSelect"
         :point-radius="64"
         @select="
@@ -38,31 +44,7 @@
         </ol-style>
       </ol-interaction-clusterselect>
 
-      <ol-animated-clusterlayer :animation-duration="500" :distance="40">
-        <ol-source-vector
-          :features="gGreenCluster.markerFeatures.value"
-          :format="gGreenCluster.geoJSON"
-        />
-        <ol-style
-          :override-style-function="
-            (feature: FeatureLike, style: Style) =>
-              gGreenCluster.overrideStyleFunction.call(
-                gGreenCluster,
-                feature,
-                style,
-              )
-          "
-        >
-          <ol-style-icon :src="markerIconSrc" :scale="1" />
-          <ol-style-circle :radius="48">
-            <ol-style-stroke color="black" :width="1" line-cap="round" />
-            <ol-style-fill color="black" />
-          </ol-style-circle>
-          <ol-style-text>
-            <ol-style-fill color="white" />
-          </ol-style-text>
-        </ol-style>
-      </ol-animated-clusterlayer>
+      
       <ol-vector-layer>
       <ol-source-vector>
         <ol-feature>
@@ -90,8 +72,8 @@
           ></ol-geom-multi-polygon>
           <ol-style>
             <ol-style-stroke
-              color="10"
-              width="red"
+              color="red"
+              width="2"
             ></ol-style-stroke>
           </ol-style>
         </ol-feature>
@@ -100,13 +82,14 @@
     <ol-vector-layer>
       <ol-source-vector>
         <ol-interaction-draw
+          v-if="gGreenOlMap.interactionType.value === 'zone_add'"
           type="Polygon"
           @drawend="drawend"
           @drawstart="drawstart"
         >
           <ol-style>
             <ol-style-stroke color="blue" :width="2"></ol-style-stroke>
-            <ol-style-fill color="rgba(255, 255, 0, 0.4)"></ol-style-fill>
+            <ol-style-fill color="green"></ol-style-fill>
             <ol-style-circle :radius="5">
               <ol-style-fill color="#00dd11" />
               <ol-style-stroke color="blue" :width="2" />
@@ -117,12 +100,37 @@
 
       <ol-style>
         <ol-style-stroke color="red" :width="2"></ol-style-stroke>
-        <ol-style-fill color="rgba(255,255,255,0.1)"></ol-style-fill>
+        <ol-style-fill color="green"></ol-style-fill>
         <ol-style-circle :radius="7">
           <ol-style-fill color="red"></ol-style-fill>
         </ol-style-circle>
       </ol-style>
     </ol-vector-layer>
+    <ol-animated-clusterlayer :animation-duration="500" :distance="40">
+        <ol-source-vector
+          :features="gGreenCluster.markerFeatures.value"
+          :format="gGreenCluster.geoJSON"
+        />
+        <ol-style
+          :override-style-function="
+            (feature: FeatureLike, style: Style) =>
+              gGreenCluster.overrideStyleFunction.call(
+                gGreenCluster,
+                feature,
+                style,
+              )
+          "
+        >
+          <ol-style-icon :src="markerIconSrc" :scale="1" />
+          <ol-style-circle :radius="48">
+            <ol-style-stroke color="black" :width="1" line-cap="round" />
+            <ol-style-fill color="black" />
+          </ol-style-circle>
+          <ol-style-text>
+            <ol-style-fill color="white" />
+          </ol-style-text>
+        </ol-style>
+      </ol-animated-clusterlayer>
       <ol-overlay
         v-for="[id, marker] in gGreenCluster.markersPopupOpened.value"
         :key="id"
@@ -160,7 +168,7 @@
               />
             </li>
             <li class="actions-label__action">
-              <span class="actions-label__text">Добавить зону</span>
+              <span class="actions-label__text" @click="gGreenCluster.addZone(id)">Добавить зону</span>
               <img class="actions-label__icon" src="/icons/plus.svg" />
             </li>
             <li class="actions-label__action">
@@ -196,12 +204,17 @@ import { mdiClose } from "@quasar/extras/mdi-v6";
 import { GeoJSON } from "ol/format";
 import { Icon, Style } from "ol/style.js";
 import markerIconSrc from "/icons/hogweed_icon.png";
+import {getCenter} from 'ol/extent';
+
 const drawstart = (event) => {
   console.log(event);
 };
 
 const drawend = (event) => {
-  console.log(event.feature.getGeometry().getCoordinates());
+  console.log(event.feature.getGeometry());
+  console.log(isPointInPolygon(gGreenCluster.value.markersDict.get(gGreenCluster.value.currentSelectedMarkerId.value)?.coordinates!, event.feature.getGeometry()))
+  toggleZoneAdd();
+  gGreenCluster.value.addMakrer(getCenter(event.feature.getGeometry().getExtent()))
 };
 interface Props {
   markers: Marker[];
@@ -210,7 +223,7 @@ interface Props {
 //ПОЛИГОН В КОНТРОЛ БАР
 //ЦВЕТОКОДИРОВКА И ВЫБОР
 //ДОБАВЛЕНИЕ В МАРКЕР И СРАЗУ С МАРКЕРОМ
-
+// добавление к текущему маркеру удаляет его и ставит новый(т.е меняет координаты старого) в зависимости от зоны
 interface Marker {
   id: string;
   coordinates: Coordinate;
@@ -281,14 +294,14 @@ class GGreenCluster {
   public markerFeatures: Ref<Feature<Geometry>[]>;
   public markersDict: Map<string, Marker>;
   public geoJSON = new GeoJSON();
-  public markerIdToDelete: ShallowRef<string>;
+  public currentSelectedMarkerId: ShallowRef<string>;
 
   constructor(markerIconSrc: string, markers: Marker[]) {
     this.markersPopupOpened = ref(new Map());
     this.markerIcon = new Icon({
       src: markerIconSrc,
     });
-    this.markerIdToDelete = shallowRef("");
+    this.currentSelectedMarkerId = shallowRef("");
     this.markersDict = this.convertMarkersToDictionary(markers);
     this.markerFeatures = ref(this.convertMarkersToFeatures(markers)) as Ref<
       Feature<Geometry>[]
@@ -324,7 +337,8 @@ class GGreenCluster {
   }
 
   selectMarker(event: SelectEvent) {
-    if (event.selected[0] && event.selected[0].get("features").length === 1) {
+    console.log(event);
+    if (event.selected[0] && event.selected[0].get("features")?.length === 1) {
       const markerId = event.selected[0].get("features")[0].getId();
       if (markerId && this.markersDict.get(markerId)) {
         this.openMarkerPopup(markerId);
@@ -333,8 +347,8 @@ class GGreenCluster {
   }
 
   deleteMarker() {
-    emit("deleteMarker", this.markerIdToDelete.value);
-    this.closeMarkerPopup(this.markerIdToDelete.value);
+    emit("deleteMarker", this.currentSelectedMarkerId.value);
+    this.closeMarkerPopup(this.currentSelectedMarkerId.value);
   }
 
   addMakrer(coordinate: Coordinate) {
@@ -350,6 +364,12 @@ class GGreenCluster {
 
   closeMarkerPopup(markerId: string) {
     this.markersPopupOpened.value.delete(markerId);
+  }
+
+  addZone(markerId: string) {
+    gGreenOlMap.value.interactionType.value = 'zone_add';
+    this.closeMarkerPopup(markerId);
+    this.currentSelectedMarkerId.value = markerId;
   }
 
   overrideStyleFunction(feature: FeatureLike, style: Style) {
@@ -399,9 +419,17 @@ function toggleMarkerAdd() {
   }
 }
 
+function toggleZoneAdd() {
+  if (gGreenOlMap.value.interactionType.value !== "zone_add") {
+    gGreenOlMap.value.interactionType.value = "zone_add";
+  } else {
+    gGreenOlMap.value.interactionType.value = "none";
+  }
+}
+
 function suggestDeleteMarker(id: string) {
   confirmationDialog.value.open("удалить метку", "Удалить");
-  gGreenCluster.value.markerIdToDelete.value = id;
+  gGreenCluster.value.currentSelectedMarkerId.value = id;
 }
 
 function handleMapClick(event: MapBrowserEvent<UIEvent>) {
@@ -427,6 +455,10 @@ function configureMap() {
 
 function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle("is-active");
+}
+
+function isPointInPolygon(markerCoords: Coordinate, polygonGeometry: Geometry) {
+  return polygonGeometry.intersectsCoordinate(markerCoords)
 }
 
 watch(
