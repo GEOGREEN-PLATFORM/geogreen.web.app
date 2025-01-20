@@ -57,35 +57,22 @@
       </ol-interaction-clusterselect>
 
       
-      <ol-vector-layer :styles="setStyle">
-    <ol-source-vector>
-      <ol-feature>
-        <ol-geom-polygon
-          :coordinates="[ 
-              [
-                [4890670.38077 + 1000, 7615726.876165],
-                [4890670.38077, 7615726.876165 + 1000],
-                [4890670.38077 + 1000, 7615726.876165 + 1000],
-                [4890670.38077 + 2000, 7615726.876165],
-                [4890670.38077, 7615726.876165 + 2000],
-              ],
-          ]"
-        ></ol-geom-polygon>
-      </ol-feature>
-      <ol-feature>
-        <ol-geom-polygon
-          :coordinates="[ 
-              [
-                [4890670.38077 + 11000, 7615726.876165 + 11000],
-                [4890670.38077, 7615726.876165 + 1000],
-                [4890670.38077 + 12000, 7615726.876165 + 1000],
-                [4890670.38077 + 22000, 7615726.876165],
-                [4890670.38077, 7615726.876165 + 2000],
-              ],
-          ]"
-        ></ol-geom-polygon>
-      </ol-feature>
-    </ol-source-vector>
+    <ol-vector-layer>
+      <ol-source-vector
+          :features="gGreenCluster.zonesFeatures.value"
+          :format="gGreenCluster.geoJSON"
+        />
+        <ol-style
+          :override-style-function="
+            (feature: FeatureLike, style: Style) =>
+              gGreenCluster.overrideZoneStyleFunction.call(
+                gGreenCluster,
+                feature,
+                style,
+              )
+          "
+        >
+        </ol-style>
   </ol-vector-layer>
     <ol-vector-layer>
       <ol-source-vector>
@@ -148,7 +135,7 @@
         <ol-style
           :override-style-function="
             (feature: FeatureLike, style: Style) =>
-              gGreenCluster.overrideStyleFunction.call(
+              gGreenCluster.overrideMarkerStyleFunction.call(
                 gGreenCluster,
                 feature,
                 style,
@@ -241,7 +228,7 @@ import type CircleStyle from "ol/style/Circle";
 import type { ShallowRef } from "vue";
 import { mdiArrowTopRightThinCircleOutline, mdiClose, mdiDeleteOutline, mdiInformation, mdiPlus } from "@quasar/extras/mdi-v6";
 import { GeoJSON } from "ol/format";
-import { Icon, Stroke, Style } from "ol/style.js";
+import { Fill, Icon, Stroke, Style } from "ol/style.js";
 import markerIconSrc from "/icons/hogweed_icon.png";
 import {getCenter} from 'ol/extent';
 import type { DrawEvent } from "ol/interaction/Draw";
@@ -249,26 +236,7 @@ import type { DrawEvent } from "ol/interaction/Draw";
 interface Props {
   markers: Marker[];
 }
-//ЦВЕТОКОДИРОВКА И ВЫБОР
-//ДОБАВЛЕНИЕ В МАРКЕР И СРАЗУ С МАРКЕРОМ
 
-function setStyle(feature) {
-      const coordinates = feature.getGeometry().getCoordinates();
-  console.log(coordinates)
-      // Стили для первого и второго полигона
-      const styles = [
-
-        new Style({
-          stroke: new Stroke({
-            color: 'red',
-            width: 2,
-          }),
-        }),
-      ];
-        console.log(coordinates.map((_, index) => styles[index] || styles[0]))
-      // Пример: выбор стиля по индексу полигона
-      return coordinates.map((_, index) => styles[index] || styles[0]);
-    }
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
 });
@@ -322,6 +290,7 @@ class GGreenCluster {
   public readonly markerIcon: Icon;
   public markersPopupOpened: Ref<Map<string, Marker>>;
   public markerFeatures: Ref<Feature<Geometry>[]>;
+  public zonesFeatures: Ref<Feature<Geometry>[]>;
   public markersDict: Map<string, Marker>;
   public geoJSON = new GeoJSON();
   public currentSelectedMarkerId: ShallowRef<string>;
@@ -336,6 +305,28 @@ class GGreenCluster {
     this.markerFeatures = ref(this.convertMarkersToFeatures(markers)) as Ref<
       Feature<Geometry>[]
     >;
+    this.zonesFeatures = ref(this.convertZonesToFeatures(markers)) as Ref<
+      Feature<Geometry>[]
+    >;
+  }
+  
+  convertZonesToFeatures(markers: Marker[]) {
+    const features = markers.filter(marker => marker.relatedZone).map(({ id, relatedZone }) => ({
+      type: "Feature",
+      properties: {
+        density: relatedZone!.density
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: relatedZone!.coordinates,
+      },
+      id,
+    }));
+    const providerFeatureCollection = {
+      type: "FeatureCollection",
+      features,
+    };
+    return this.geoJSON.readFeatures(providerFeatureCollection);
   }
 
   convertMarkersToFeatures(markers: Marker[]) {
@@ -401,8 +392,19 @@ class GGreenCluster {
     this.closeMarkerPopup(markerId);
     this.currentSelectedMarkerId.value = markerId;
   }
-
-  overrideStyleFunction(feature: FeatureLike, style: Style) {
+  overrideZoneStyleFunction(feature: FeatureLike, style: Style) {
+    console.log(feature.getProperties().density)
+    return new Style({
+      stroke: new Stroke({
+        color: 'red',
+        width: 2,
+      }),
+      fill: new Fill({
+        color: 'red',
+      })
+    })
+  }
+  overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
     const clusteredFeatures = feature.get("features");
     const size = clusteredFeatures.length;
     const colorFill = size >= 15 ? "#FF0022" : size > 5 ? "#FF8200" : "#55A231";
@@ -522,6 +524,8 @@ watch(
   (newMarkers) => {
     gGreenCluster.value.markerFeatures.value =
       gGreenCluster.value.convertMarkersToFeatures(newMarkers);
+      gGreenCluster.value.zonesFeatures.value =
+      gGreenCluster.value.convertZonesToFeatures(newMarkers);
     gGreenCluster.value.markersDict =
       gGreenCluster.value.convertMarkersToDictionary(newMarkers);
   },

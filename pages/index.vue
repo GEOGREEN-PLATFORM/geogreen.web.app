@@ -33,7 +33,15 @@ const markers = ref<Marker[]>([
     coordinates: [4890670.38077, 7615726.876165 + 5000],
     details: null,
     relatedTaskId: null,
-    relatedZone: null,
+    relatedZone: {
+      coordinates: [[
+      [4890670.38077 + 20000, 7615726.876165 + 5000],
+      [4890670.38077 + 1000, 7615726.876165 + 5000],
+      [4890670.38077, 7615726.876165 + 5000],
+      [4890670.38077 + 20000, 7615726.876165 + 5000]
+    ]],
+    density: 'medium',
+    },
   },
 ]);
 function addMarker(coordinate: Coordinate, relatedZone?: Zone) {
