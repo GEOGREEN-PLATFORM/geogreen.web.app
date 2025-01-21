@@ -75,57 +75,16 @@
         </ol-style>
   </ol-vector-layer>
     <ol-vector-layer>
-      <ol-source-vector>
+      <ol-source-vector :key="props.markers.length">
         <ol-interaction-draw
           v-if="gGreenOlMap.interactionType.value === 'zone_add'"
           type="Polygon"
           @drawend="gGreenZone.create"
         >
-        <ol-style v-if="gGreenZone.density.value === 'low'">
-        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
-        <ol-style-fill color="rgba(85, 162, 49, 0.5)"></ol-style-fill>
-        <ol-style-circle :radius="7">
-          <ol-style-fill color="red"></ol-style-fill>
-        </ol-style-circle>
-      </ol-style>
-      <ol-style v-if="gGreenZone.density.value === 'medium'">
-        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
-        <ol-style-fill color="rgba(255, 130, 0, 0.5)"></ol-style-fill>
-        <ol-style-circle :radius="7">
-          <ol-style-fill color="red"></ol-style-fill>
-        </ol-style-circle>
-      </ol-style>
-      <ol-style v-if="gGreenZone.density.value === 'high'">
-        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
-        <ol-style-fill color="rgba(255, 0, 34, 0.5)"></ol-style-fill>
-        <ol-style-circle :radius="7">
-          <ol-style-fill color="red"></ol-style-fill>
-        </ol-style-circle>
-      </ol-style>
+        <ol-style :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density.value)">
+        </ol-style>
         </ol-interaction-draw>
       </ol-source-vector>
-
-      <ol-style v-if="gGreenZone.density.value === 'low'">
-        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
-        <ol-style-fill color="rgba(85, 162, 49, 0.5)"></ol-style-fill>
-        <ol-style-circle :radius="7">
-          <ol-style-fill color="red"></ol-style-fill>
-        </ol-style-circle>
-      </ol-style>
-      <ol-style v-if="gGreenZone.density.value === 'medium'">
-        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
-        <ol-style-fill color="rgba(255, 130, 0, 0.5)"></ol-style-fill>
-        <ol-style-circle :radius="7">
-          <ol-style-fill color="red"></ol-style-fill>
-        </ol-style-circle>
-      </ol-style>
-      <ol-style v-if="gGreenZone.density.value === 'high'">
-        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
-        <ol-style-fill color="rgba(255, 0, 34, 0.5)"></ol-style-fill>
-        <ol-style-circle :radius="7">
-          <ol-style-fill color="red"></ol-style-fill>
-        </ol-style-circle>
-      </ol-style>
     </ol-vector-layer>
     <ol-animated-clusterlayer :animation-duration="500" :distance="40">
         <ol-source-vector
@@ -228,11 +187,15 @@ import type CircleStyle from "ol/style/Circle";
 import type { ShallowRef } from "vue";
 import { mdiArrowTopRightThinCircleOutline, mdiClose, mdiDeleteOutline, mdiInformation, mdiPlus } from "@quasar/extras/mdi-v6";
 import { GeoJSON } from "ol/format";
-import { Fill, Icon, Stroke, Style } from "ol/style.js";
+import { Circle, Fill, Icon, Stroke, Style } from "ol/style.js";
 import markerIconSrc from "/icons/hogweed_icon.png";
 import {getCenter} from 'ol/extent';
 import type { DrawEvent } from "ol/interaction/Draw";
 
+
+//TODO
+//1) Сделать показ/скрытие зон в контрол баре и маркере
+//2) Исправить баги(в ч. неправильное отображение контролбарских тоглов по активности, ошибка с добавлением после удаления)
 interface Props {
   markers: Marker[];
 }
@@ -393,16 +356,7 @@ class GGreenCluster {
     this.currentSelectedMarkerId.value = markerId;
   }
   overrideZoneStyleFunction(feature: FeatureLike, style: Style) {
-    console.log(feature.getProperties().density)
-    return new Style({
-      stroke: new Stroke({
-        color: 'red',
-        width: 2,
-      }),
-      fill: new Fill({
-        color: 'red',
-      })
-    })
+    return getPolygonStyleByDensity(feature.getProperties().density)
   }
   overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
     const clusteredFeatures = feature.get("features");
@@ -499,7 +453,39 @@ function handleMapClick(event: MapBrowserEvent<UIEvent>) {
     gGreenCluster.value.addMakrer(event.coordinate);
   }
 }
-
+function getPolygonStyleByDensity(density: 'low' | 'medium' | 'high') {
+  let fillColor = "";
+  switch (density) {
+    case ('low'):
+      fillColor = 'rgba(85, 162, 49, 0.5)';
+      break;
+    case ('medium'):
+      fillColor = 'rgba(255, 130, 0, 0.5)';
+      break;
+    case ('high'):
+      fillColor = 'rgba(255, 0, 34, 0.5)';
+      break;
+  }
+  return  new Style({
+    stroke: new Stroke({
+      color: '#1E1E1E',
+      width: 1,
+    }),
+    fill: new Fill({
+      color: fillColor,
+    }),
+    image: new Circle({
+      radius: 6,
+      fill: new Fill({
+        color: fillColor,
+      }),
+      stroke: new Stroke({
+        color: '#1E1E1E',
+        width: 1,
+      }),
+    })
+  })
+}
 function configureMap() {
   const controlElement = controlBarRef.value.control.element;
   controlElement.classList.add("g-green-control-bar");
