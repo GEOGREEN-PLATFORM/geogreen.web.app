@@ -29,6 +29,10 @@
           class-name="g-green-control-bar__item g-green-control-bar__zone"
           :on-toggle="toggleZoneAdd"
         />
+        <ol-toggle-control
+          class-name="g-green-control-bar__item g-green-control-bar__zones-visible"
+          :on-toggle="toggleAllZonesVisibility"
+        />
       </ol-control-bar>
       <ol-interaction-clusterselect
         v-if="gGreenOlMap.interactionType.value !== 'zone_add'"
@@ -75,7 +79,7 @@
         </ol-style>
   </ol-vector-layer>
     <ol-vector-layer>
-      <ol-source-vector :key="props.markers.length">
+      <ol-source-vector :key="upKey">
         <ol-interaction-draw
           v-if="gGreenOlMap.interactionType.value === 'zone_add'"
           type="Polygon"
@@ -84,6 +88,8 @@
         <ol-style :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density.value)">
         </ol-style>
         </ol-interaction-draw>
+        <ol-style :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density.value)">
+        </ol-style>
       </ol-source-vector>
     </ol-vector-layer>
     <ol-animated-clusterlayer :animation-duration="500" :distance="40">
@@ -195,7 +201,9 @@ import type { DrawEvent } from "ol/interaction/Draw";
 
 //TODO
 //1) Сделать показ/скрытие зон в контрол баре и маркере
-//2) Исправить баги(в ч. неправильное отображение контролбарских тоглов по активности, ошибка с добавлением после удаления)
+//2) Сделать через ключ сброс активности показать скрыть(т.к логика будет в переключения)
+//3) в дизайне отразить заполнение данных по точкам - через диалог
+
 interface Props {
   markers: Marker[];
 }
@@ -209,6 +217,8 @@ const emit = defineEmits<{
   editMarker: [id: string, marker: Marker]
 }>();
 
+const isAllZonesVisible = ref(false);
+const upKey = ref(0);
 const controlBarRef = useTemplateRef<MapControls>("controlBar");
 const featureSelectRef = useTemplateRef<SelectCluster>("featureSelect");
 
@@ -274,7 +284,7 @@ class GGreenCluster {
   }
   
   convertZonesToFeatures(markers: Marker[]) {
-    const features = markers.filter(marker => marker.relatedZone).map(({ id, relatedZone }) => ({
+    const features = markers.filter(marker => marker.relatedZone && isAllZonesVisible.value).map(({ id, relatedZone }) => ({
       type: "Feature",
       properties: {
         density: relatedZone!.density
@@ -402,18 +412,26 @@ class GGreenZone {
         density: gGreenZone.value.density.value,
       }
     })
+    toggleZoneAdd();
     emit('editMarker', gGreenCluster.value.currentSelectedMarkerId.value, gGreenCluster.value.markersDict.get(gGreenCluster.value.currentSelectedMarkerId.value))
+    gGreenCluster.value.currentSelectedMarkerId.value = "";
     } else {
     gGreenCluster.value.addMakrer(getCenter(event.feature.getGeometry().getExtent()), {
         coordinates: event.feature.getGeometry().getCoordinates(),
         density: gGreenZone.value.density.value,
       })
     }
-    toggleZoneAdd();
+    upKey.value++;
   }
 }
 
 const gGreenZone = shallowRef(new GGreenZone());
+
+function toggleAllZonesVisibility() {
+  isAllZonesVisible.value = !isAllZonesVisible.value;
+  gGreenCluster.value.zonesFeatures.value =
+  gGreenCluster.value.convertZonesToFeatures(props.markers);
+}
 
 function handleCloseMarkerPopup(markerId: string) {
   gGreenCluster.value.closeMarkerPopup(markerId);
@@ -646,6 +664,9 @@ watch(
         &:hover {
           background-color: var(--app-green-100);
         }
+        &:active {
+          background-color: var(--app-green-500);
+        }
       }
       &.ol-active {
         button {
@@ -663,6 +684,24 @@ watch(
       button::after {
           content: url("/icons/polygon.svg");
         }
+    }
+    .ol-button.g-green-control-bar__zones-visible {
+      button::before {
+        content: 'Показать все зоны';
+      }
+      button::after {
+        content: url("/icons/eye_off_outline.svg");
+        filter: var(--app-filter-grey-300);
+      }
+      &.ol-active {
+          button::after {
+            content: url("/icons/eye_outline.svg");
+            filter: var(--app-filter-grey-300);
+          }
+          button::before {
+            content: 'Скрыть все зоны'
+          }
+      }
     }
     &:has(.burger-button.is-active) {
       transform: translateX(180px);
