@@ -84,7 +84,9 @@
           <ol-interaction-draw
             v-if="gGreenOlMap.interactionType.value === 'zone_add'"
             type="Polygon"
-            @drawend="gGreenZone.create"
+            @drawend="
+              (event: DrawEvent) => gGreenZone.create.call(gGreenZone, event)
+            "
           >
             <ol-style
               :override-style-function="
@@ -335,7 +337,23 @@ class GGreenCluster {
   }
 
   convertMarkersToDictionary(markers: Marker[]) {
-    return new Map(markers.map((marker) => [marker.id, marker]));
+    return new Map(
+      markers.map((marker) => [
+        marker.id,
+        {
+          ...marker,
+          relatedZone: marker.relatedZone
+            ? {
+                ...marker.relatedZone,
+                visible:
+                  typeof this.markersDict?.get(marker.id)?.relatedZone?.visible === "boolean"
+                    ? this.markersDict?.get(marker.id)?.relatedZone?.visible
+                    : this.markersDict?.size !== 0,
+              }
+            : null,
+        },
+      ]),
+    );
   }
 
   getMemberStyle(clusterMember: FeatureLike) {
@@ -370,7 +388,7 @@ class GGreenCluster {
     emit("deleteMarker", this.currentSelectedMarkerId.value);
     this.closeMarkerPopup(this.currentSelectedMarkerId.value);
   }
-//26.01 fix emits according to real api's
+
   addMakrer(coordinate: Coordinate, zoneCoordinates?: Coordinate[]) {
     emit("addMarker", coordinate, zoneCoordinates);
   }
@@ -442,11 +460,12 @@ class GGreenZone {
           relatedZone: {
             coordinates: event.feature.getGeometry().getCoordinates(),
             density: this.density.value,
+            visible: true,
           },
         },
       );
       toggleZoneAdd();
-      //26.01 fix emits according to real api's
+
       emit(
         "editMarker",
         gGreenCluster.value.currentSelectedMarkerId.value,
@@ -584,12 +603,14 @@ function toggleControlBar(targetButton: HTMLElement) {
 watch(
   () => props.markers,
   (newMarkers) => {
+    gGreenCluster.value.markersDict =
+      gGreenCluster.value.convertMarkersToDictionary(newMarkers);
     gGreenCluster.value.markerFeatures.value =
       gGreenCluster.value.convertMarkersToFeatures(newMarkers);
     gGreenCluster.value.zonesFeatures.value =
-      gGreenCluster.value.convertZonesToFeatures(newMarkers);
-    gGreenCluster.value.markersDict =
-      gGreenCluster.value.convertMarkersToDictionary(newMarkers);
+      gGreenCluster.value.convertZonesToFeatures([
+        ...gGreenCluster.value.markersDict.values(),
+      ]);
   },
   {
     deep: true,
