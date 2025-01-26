@@ -20,7 +20,7 @@ export default withNuxt(antfu({}), eslintPluginPrettierRecommended, {
       },
     ],
     "prettier/prettier": [
-      "warn",
+      "off",
       {
         endOfLine: "auto",
       },
