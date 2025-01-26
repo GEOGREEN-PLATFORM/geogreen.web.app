@@ -1,46 +1,74 @@
 :root {
-  --app-blue-8: #8287da;
-  --app-blue-9: #6369d1;
-  --app-white: #ffffff;
-  --app-white-1: #f9f9f1;
-  --app-black: #000000;
-  --app-black-5: #adadad;
-  --app-black-6: #999999;
-  --app-black-8: #707070;
-  --app-black-10: #333333;
-  --app-grey-050: #e9e9e9;
-  --app-grey-100: #b9b9b9;
-  --app-grey-300: #686868;
-  --app-red-10: #fa5738;
+  --app-orange-050: #fff3e6;
+  --app-orange-100: #ffd8b0;
+  --app-orange-200: #ffc68a;
+  --app-orange-300: #ffab54;
+  --app-orange-400: #ff9b33;
+  --app-orange-500: #ff8200;
+  --app-orange-600: #e87600;
+  --app-orange-700: #b55c00;
+  --app-orange-800: #b55c00;
+  --app-orange-900: #6b3700;
+
   --app-green-050: #eef6ea;
   --app-green-100: #cae2bf;
+  --app-green-200: #b1d4a0;
+  --app-green-300: #8dc175;
+  --app-green-400: #77b55a;
   --app-green-500: #55a231;
-  --app-red-500: #ff0022;
+  --app-green-600: #4d932d;
+  --app-green-700: #3c7323;
+  --app-green-800: #2f591b;
+  --app-green-900: #244415;
 
+  --app-blue-050: #e6f5fc;
   --app-blue-100: #b0e1f4;
+  --app-blue-200: #8ad2ef;
   --app-blue-300: #54bde8;
+  --app-blue-400: #33b1e3;
+  --app-blue-500: #009ddc;
+  --app-blue-600: #008fc8;
+  --app-blue-700: #006f9c;
+  --app-blue-800: #005679;
+  --app-blue-900: #00425c;
+
+  --app-red-050: #ffe6e9;
+  --app-red-100: #ffb0ba;
+  --app-red-200: #ff8a99;
+  --app-red-300: #ff546b;
+  --app-red-400: #ff334e;
+  --app-red-500: #ff0022;
+  --app-red-600: #e8001f;
+  --app-red-700: #b50018;
+  --app-red-800: #8c0013;
+  --app-red-900: #6b000e;
+
+  --app-grey-050: #e9e9e9;
+  --app-grey-100: #b9b9b9;
+  --app-grey-200: #989898;
+  --app-grey-300: #686868;
+  --app-grey-400: #4b4b4b;
+  --app-grey-500: #1e1e1e;
+  --app-grey-600: #1b1b1b;
+  --app-grey-700: #151515;
+  --app-grey-800: #111111;
+  --app-grey-900: #0d0d0d;
+
+  --app-black: #000000;
+  --app-white: #ffffff;
+
   --input-label: rgba(0, 0, 0, 0.7);
 
   --map-cluster-low: #55a231;
   --map-cluster-medium: #ff8200;
   --map-cluster-high: #ff0022;
+
   --app-filter-red-500: invert(12%) sepia(74%) saturate(6735%)
     hue-rotate(347deg) brightness(102%) contrast(111%);
   --app-filter-grey-300: brightness(0) saturate(100%) invert(41%) sepia(0%)
     saturate(0%) hue-rotate(61deg) brightness(96%) contrast(90%);
 }
+
 .dark-mode {
-  --app-blue-8: #8287da;
-  --app-blue-9: #6369d1;
-
-  --app-white-1: #f9f9f1;
-
-  --app-black-5: #adadad;
-  --app-black-6: #adadad;
-  --app-black-8: #707070;
-  --app-black-10: #f9f9f1;
-
-  --app-red-10: #fa5738;
-
   --input-label: rgba(255, 255, 255, 0.7);
 }
