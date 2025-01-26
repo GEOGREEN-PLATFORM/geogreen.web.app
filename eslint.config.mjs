@@ -19,12 +19,6 @@ export default withNuxt(antfu({}), eslintPluginPrettierRecommended, {
         math: "always",
       },
     ],
-    "prettier/prettier": [
-      "off",
-      {
-        endOfLine: "auto",
-      },
-    ],
     "style/member-delimiter-style": [
       "error",
       {

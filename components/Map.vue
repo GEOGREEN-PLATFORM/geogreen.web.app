@@ -346,9 +346,9 @@ class GGreenCluster {
             ? {
                 ...marker.relatedZone,
                 visible:
-                  typeof this.markersDict?.get(marker.id)?.relatedZone
-                    ?.visible === "boolean"
-                    ? this.markersDict?.get(marker.id)?.relatedZone?.visible
+                  typeof this.markersDict?.get(marker.id)?.relatedZone!
+                    .visible === "boolean"
+                    ? this.markersDict?.get(marker.id)?.relatedZone!.visible
                     : this.markersDict?.size !== 0,
               }
             : null,
