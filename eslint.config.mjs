@@ -33,6 +33,7 @@ export default withNuxt(antfu({}), eslintPluginPrettierRecommended, {
         multilineDetection: "brackets",
       },
     ],
+    "node/prefer-global/process": ["off"],
     "style/html-indent": ["off"],
     "style/indent": ["off"],
     "style/semi": ["error", "always"],
