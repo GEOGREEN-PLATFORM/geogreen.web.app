@@ -44,6 +44,6 @@ export default defineNuxtConfig({
     },
   },
   build: {
-    transpile: ["vue3-openlayers", "ol"],
+    transpile: process.env.NODE_ENV === 'test' ? ["vue3-openlayers", "ol"] : [],
   },
 });
