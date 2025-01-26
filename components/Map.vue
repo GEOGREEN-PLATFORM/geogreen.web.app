@@ -32,7 +32,7 @@
         <ol-toggle-control
           :key="isAllZonesVisible"
           :html="`${isAllZonesVisible ? 'Скрыть' : 'Показать'} все зоны`"
-          :class-name="`g-green-control-bar__item g-green-control-bar__zones-visible 
+          :class-name="`g-green-control-bar__item g-green-control-bar__zones-visible
           ${isAllZonesVisible ? 'g-green-control-bar__zones-visible--off' : ''}`"
           :on-toggle="toggleAllZonesVisibility"
         />
@@ -47,25 +47,24 @@
         "
       >
         <ol-style v-if="gGreenZone.density.value === 'low'">
-        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
-        <ol-style-fill color="rgba(85, 162, 49, 0.5)"></ol-style-fill>
-        <ol-style-icon :src="markerIconSrc" :scale="1" />
-      </ol-style>
-      <ol-style v-if="gGreenZone.density.value === 'medium'">
-        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
-        <ol-style-fill color="rgba(255, 130, 0, 0.5)"></ol-style-fill>
-        <ol-style-icon :src="markerIconSrc" :scale="1" />
-      </ol-style>
-      <ol-style v-if="gGreenZone.density.value === 'high'">
-        <ol-style-stroke color="#1E1E1E" :width="1"></ol-style-stroke>
-        <ol-style-fill color="rgba(255, 0, 34, 0.5)"></ol-style-fill>
-        <ol-style-icon :src="markerIconSrc" :scale="1" />
-      </ol-style>
+          <ol-style-stroke color="#1E1E1E" :width="1" />
+          <ol-style-fill color="rgba(85, 162, 49, 0.5)" />
+          <ol-style-icon :src="markerIconSrc" :scale="1" />
+        </ol-style>
+        <ol-style v-if="gGreenZone.density.value === 'medium'">
+          <ol-style-stroke color="#1E1E1E" :width="1" />
+          <ol-style-fill color="rgba(255, 130, 0, 0.5)" />
+          <ol-style-icon :src="markerIconSrc" :scale="1" />
+        </ol-style>
+        <ol-style v-if="gGreenZone.density.value === 'high'">
+          <ol-style-stroke color="#1E1E1E" :width="1" />
+          <ol-style-fill color="rgba(255, 0, 34, 0.5)" />
+          <ol-style-icon :src="markerIconSrc" :scale="1" />
+        </ol-style>
       </ol-interaction-clusterselect>
 
-      
-    <ol-vector-layer>
-      <ol-source-vector
+      <ol-vector-layer>
+        <ol-source-vector
           :features="gGreenCluster.zonesFeatures.value"
           :format="gGreenCluster.geoJSON"
         />
@@ -78,24 +77,29 @@
                 style,
               )
           "
-        >
-        </ol-style>
-  </ol-vector-layer>
-    <ol-vector-layer>
-      <ol-source-vector :key="upKey">
-        <ol-interaction-draw
-          v-if="gGreenOlMap.interactionType.value === 'zone_add'"
-          type="Polygon"
-          @drawend="gGreenZone.create"
-        >
-        <ol-style :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density.value)">
-        </ol-style>
-        </ol-interaction-draw>
-        <ol-style :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density.value)">
-        </ol-style>
-      </ol-source-vector>
-    </ol-vector-layer>
-    <ol-animated-clusterlayer :animation-duration="500" :distance="40">
+        />
+      </ol-vector-layer>
+      <ol-vector-layer>
+        <ol-source-vector :key="upKey">
+          <ol-interaction-draw
+            v-if="gGreenOlMap.interactionType.value === 'zone_add'"
+            type="Polygon"
+            @drawend="gGreenZone.create"
+          >
+            <ol-style
+              :override-style-function="
+                () => getPolygonStyleByDensity(gGreenZone.density.value)
+              "
+            />
+          </ol-interaction-draw>
+          <ol-style
+            :override-style-function="
+              () => getPolygonStyleByDensity(gGreenZone.density.value)
+            "
+          />
+        </ol-source-vector>
+      </ol-vector-layer>
+      <ol-animated-clusterlayer :animation-duration="500" :distance="40">
         <ol-source-vector
           :features="gGreenCluster.markerFeatures.value"
           :format="gGreenCluster.geoJSON"
@@ -151,18 +155,24 @@
           <ul class="actions-label">
             <li class="actions-label__action" @click="suggestDeleteMarker(id)">
               <span class="actions-label__text">Удалить метку</span>
-              <q-icon
-                class="actions-label__icon"
-                :name="mdiDeleteOutline"
-              />
+              <q-icon class="actions-label__icon" :name="mdiDeleteOutline" />
             </li>
             <li class="actions-label__action">
-              <q-icon class="actions-label__icon actions-label__icon--blue" :name="mdiInformation" size="24px">
+              <q-icon
+                class="actions-label__icon actions-label__icon--blue"
+                :name="mdiInformation"
+                size="24px"
+              >
                 <GGHint>
-                  Выбранный маркер будет автоматически перемещён внутрь добавленной зоны
+                  Выбранный маркер будет автоматически перемещён внутрь
+                  добавленной зоны
                 </GGHint>
               </q-icon>
-              <span class="actions-label__text" @click="gGreenCluster.addZone(id)">Добавить зону</span>
+              <span
+                class="actions-label__text"
+                @click="gGreenCluster.addZone(id)"
+                >Добавить зону</span
+              >
               <q-icon class="actions-label__icon" :name="mdiPlus" />
             </li>
             <li class="actions-label__action">
@@ -191,15 +201,21 @@ import type { MapControls, SelectCluster } from "ol-ext";
 import type { Coordinate } from "ol/coordinate";
 import type { FeatureLike } from "ol/Feature";
 import type { Geometry } from "ol/geom";
+import type { DrawEvent } from "ol/interaction/Draw";
 import type { SelectEvent } from "ol/interaction/Select";
 import type CircleStyle from "ol/style/Circle";
 import type { ShallowRef } from "vue";
-import { mdiArrowTopRightThinCircleOutline, mdiClose, mdiDeleteOutline, mdiInformation, mdiPlus } from "@quasar/extras/mdi-v6";
+import {
+  mdiArrowTopRightThinCircleOutline,
+  mdiClose,
+  mdiDeleteOutline,
+  mdiInformation,
+  mdiPlus,
+} from "@quasar/extras/mdi-v6";
+import { getCenter } from "ol/extent";
 import { GeoJSON } from "ol/format";
 import { Circle, Fill, Icon, Stroke, Style } from "ol/style.js";
 import markerIconSrc from "/icons/hogweed_icon.png";
-import {getCenter} from 'ol/extent';
-import type { DrawEvent } from "ol/interaction/Draw";
 
 interface Props {
   markers: Marker[];
@@ -211,7 +227,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   addMarker: [coordinate: Coordinate, relatedZone?: Zone];
   deleteMarker: [id: string];
-  editMarker: [id: string, marker: Marker]
+  editMarker: [id: string, marker: Marker];
 }>();
 
 const isAllZonesVisible = ref(false);
@@ -279,20 +295,21 @@ class GGreenCluster {
       Feature<Geometry>[]
     >;
   }
-  
+
   convertZonesToFeatures(markers: Marker[]) {
-    console.log(markers);
-    const features = markers.filter(marker => marker.relatedZone && marker.relatedZone.visible).map(({ id, relatedZone }) => ({
-      type: "Feature",
-      properties: {
-        density: relatedZone!.density
-      },
-      geometry: {
-        type: "Polygon",
-        coordinates: relatedZone!.coordinates,
-      },
-      id,
-    }));
+    const features = markers
+      .filter((marker) => marker.relatedZone && marker.relatedZone.visible)
+      .map(({ id, relatedZone }) => ({
+        type: "Feature",
+        properties: {
+          density: relatedZone!.density,
+        },
+        geometry: {
+          type: "Polygon",
+          coordinates: relatedZone!.coordinates,
+        },
+        id,
+      }));
     const providerFeatureCollection = {
       type: "FeatureCollection",
       features,
@@ -329,19 +346,21 @@ class GGreenCluster {
   }
 
   selectMarker(event: SelectEvent) {
-    console.log(event);
     if (event.selected[0] && event.selected[0].get("features")?.length === 1) {
       const markerId = event.selected[0].get("features")[0].getId();
       if (markerId && this.markersDict.get(markerId)) {
-        if (this.markersDict.get(markerId)!.relatedZone)
-        this.markersDict.set(markerId, {
-          ...this.markersDict.get(markerId)!,
-          relatedZone: {
-            ...this.markersDict.get(markerId)!.relatedZone!,
-            visible: true,
-          }
-        })
-        this.zonesFeatures.value = this.convertZonesToFeatures([...this.markersDict.values()])
+        if (this.markersDict.get(markerId)!.relatedZone) {
+          this.markersDict.set(markerId, {
+            ...this.markersDict.get(markerId)!,
+            relatedZone: {
+              ...this.markersDict.get(markerId)!.relatedZone!,
+              visible: true,
+            },
+          });
+        }
+        this.zonesFeatures.value = this.convertZonesToFeatures([
+          ...this.markersDict.values(),
+        ]);
         this.openMarkerPopup(markerId);
       }
     }
@@ -351,7 +370,7 @@ class GGreenCluster {
     emit("deleteMarker", this.currentSelectedMarkerId.value);
     this.closeMarkerPopup(this.currentSelectedMarkerId.value);
   }
-
+//26.01 fix emits according to real api's
   addMakrer(coordinate: Coordinate, zoneCoordinates?: Coordinate[]) {
     emit("addMarker", coordinate, zoneCoordinates);
   }
@@ -368,13 +387,15 @@ class GGreenCluster {
   }
 
   addZone(markerId: string) {
-    gGreenOlMap.value.interactionType.value = 'zone_add';
+    gGreenOlMap.value.interactionType.value = "zone_add";
     this.closeMarkerPopup(markerId);
     this.currentSelectedMarkerId.value = markerId;
   }
-  overrideZoneStyleFunction(feature: FeatureLike, style: Style) {
-    return getPolygonStyleByDensity(feature.getProperties().density)
+
+  overrideZoneStyleFunction(feature: FeatureLike, _: Style) {
+    return getPolygonStyleByDensity(feature.getProperties().density);
   }
+
   overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
     const clusteredFeatures = feature.get("features");
     const size = clusteredFeatures.length;
@@ -403,30 +424,45 @@ const gGreenCluster = shallowRef(
 );
 
 class GGreenZone {
-  public density: ShallowRef<'low' | 'medium' | 'high'>;
+  public density: ShallowRef<"low" | "medium" | "high">;
 
   constructor() {
-    this.density = shallowRef('high');
+    this.density = shallowRef("high");
   }
 
   create(event: DrawEvent) {
     if (gGreenCluster.value.currentSelectedMarkerId.value && event.feature) {
-      gGreenCluster.value.markersDict.set(gGreenCluster.value.currentSelectedMarkerId.value, {
-      ...gGreenCluster.value.markersDict.get(gGreenCluster.value.currentSelectedMarkerId.value)!,
-      coordinates: getCenter(event.feature.getGeometry().getExtent()),
-      relatedZone: {
-        coordinates: event.feature.getGeometry().getCoordinates(),
-        density: gGreenZone.value.density.value,
-      }
-    })
-    toggleZoneAdd();
-    emit('editMarker', gGreenCluster.value.currentSelectedMarkerId.value, gGreenCluster.value.markersDict.get(gGreenCluster.value.currentSelectedMarkerId.value))
-    gGreenCluster.value.currentSelectedMarkerId.value = "";
+      gGreenCluster.value.markersDict.set(
+        gGreenCluster.value.currentSelectedMarkerId.value,
+        {
+          ...gGreenCluster.value.markersDict.get(
+            gGreenCluster.value.currentSelectedMarkerId.value,
+          )!,
+          coordinates: getCenter(event.feature.getGeometry().getExtent()),
+          relatedZone: {
+            coordinates: event.feature.getGeometry().getCoordinates(),
+            density: this.density.value,
+          },
+        },
+      );
+      toggleZoneAdd();
+      //26.01 fix emits according to real api's
+      emit(
+        "editMarker",
+        gGreenCluster.value.currentSelectedMarkerId.value,
+        gGreenCluster.value.markersDict.get(
+          gGreenCluster.value.currentSelectedMarkerId.value,
+        ),
+      );
+      gGreenCluster.value.currentSelectedMarkerId.value = "";
     } else {
-    gGreenCluster.value.addMakrer(getCenter(event.feature.getGeometry().getExtent()), {
-        coordinates: event.feature.getGeometry().getCoordinates(),
-        density: gGreenZone.value.density.value,
-      })
+      gGreenCluster.value.addMakrer(
+        getCenter(event.feature.getGeometry().getExtent()),
+        {
+          coordinates: event.feature.getGeometry().getCoordinates(),
+          density: this.density.value,
+        },
+      );
     }
     upKey.value++;
   }
@@ -436,16 +472,23 @@ const gGreenZone = shallowRef(new GGreenZone());
 
 function toggleAllZonesVisibility() {
   isAllZonesVisible.value = !isAllZonesVisible.value;
-  gGreenOlMap.value.interactionType.value = 'none';
+  gGreenOlMap.value.interactionType.value = "none";
   gGreenCluster.value.zonesFeatures.value =
-  gGreenCluster.value.convertZonesToFeatures(props.markers.map(marker => {
-    if (marker.relatedZone) {
-      return {...marker, relatedZone: {...marker.relatedZone, visible: isAllZonesVisible.value}}
-    }
-    else {
-      return marker;
-    }
-  }));
+    gGreenCluster.value.convertZonesToFeatures(
+      props.markers.map((marker) => {
+        if (marker.relatedZone) {
+          return {
+            ...marker,
+            relatedZone: {
+              ...marker.relatedZone,
+              visible: isAllZonesVisible.value,
+            },
+          };
+        } else {
+          return marker;
+        }
+      }),
+    );
 }
 
 function handleCloseMarkerPopup(markerId: string) {
@@ -486,22 +529,22 @@ function handleMapClick(event: MapBrowserEvent<UIEvent>) {
     gGreenCluster.value.addMakrer(event.coordinate);
   }
 }
-function getPolygonStyleByDensity(density: 'low' | 'medium' | 'high') {
+function getPolygonStyleByDensity(density: "low" | "medium" | "high") {
   let fillColor = "";
   switch (density) {
-    case ('low'):
-      fillColor = 'rgba(85, 162, 49, 0.5)';
+    case "low":
+      fillColor = "rgba(85, 162, 49, 0.5)";
       break;
-    case ('medium'):
-      fillColor = 'rgba(255, 130, 0, 0.5)';
+    case "medium":
+      fillColor = "rgba(255, 130, 0, 0.5)";
       break;
-    case ('high'):
-      fillColor = 'rgba(255, 0, 34, 0.5)';
+    case "high":
+      fillColor = "rgba(255, 0, 34, 0.5)";
       break;
   }
-  return  new Style({
+  return new Style({
     stroke: new Stroke({
-      color: '#1E1E1E',
+      color: "#1E1E1E",
       width: 1,
     }),
     fill: new Fill({
@@ -513,11 +556,11 @@ function getPolygonStyleByDensity(density: 'low' | 'medium' | 'high') {
         color: fillColor,
       }),
       stroke: new Stroke({
-        color: '#1E1E1E',
+        color: "#1E1E1E",
         width: 1,
       }),
-    })
-  })
+    }),
+  });
 }
 function configureMap() {
   const controlElement = controlBarRef.value.control.element;
@@ -543,7 +586,7 @@ watch(
   (newMarkers) => {
     gGreenCluster.value.markerFeatures.value =
       gGreenCluster.value.convertMarkersToFeatures(newMarkers);
-      gGreenCluster.value.zonesFeatures.value =
+    gGreenCluster.value.zonesFeatures.value =
       gGreenCluster.value.convertZonesToFeatures(newMarkers);
     gGreenCluster.value.markersDict =
       gGreenCluster.value.convertMarkersToDictionary(newMarkers);
@@ -692,13 +735,13 @@ watch(
     }
     .ol-button.g-green-control-bar__marker {
       button::after {
-          background-image: url("/icons/hogweed_icon.png");
-        }
+        background-image: url("/icons/hogweed_icon.png");
+      }
     }
     .ol-button.g-green-control-bar__zone {
       button::after {
-          content: url("/icons/polygon.svg");
-        }
+        content: url("/icons/polygon.svg");
+      }
     }
     .ol-button.g-green-control-bar__zones-visible {
       button::after {

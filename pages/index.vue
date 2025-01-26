@@ -29,16 +29,25 @@ import type { Coordinate } from "ol/coordinate";
 
 const markers = ref<Marker[]>([]);
 function getMarkers() {
-  markers.value =   [{
-    id: "gfaefasfefdsf23424",
-    coordinates: [4890670.38077, 7615726.876165 + 5000],
-    details: null,
-    relatedTaskId: null,
-    relatedZone: {
-      coordinates: [[[4885375.1307334015,7618459.590018971],[4883818.244237658,7615742.875328411],[4887245.484308826,7615492.101664667],[4885375.1307334015,7618459.590018971]]],
-    density: 'high',
+  markers.value = [
+    {
+      id: "gfaefasfefdsf23424",
+      coordinates: [4890670.38077, 7615726.876165 + 5000],
+      details: null,
+      relatedTaskId: null,
+      relatedZone: {
+        coordinates: [
+          [
+            [4885375.1307334015, 7618459.590018971],
+            [4883818.244237658, 7615742.875328411],
+            [4887245.484308826, 7615492.101664667],
+            [4885375.1307334015, 7618459.590018971],
+          ],
+        ],
+        density: "high",
+      },
     },
-  }]
+  ];
 }
 function addMarker(coordinate: Coordinate, relatedZone?: Zone) {
   // mock api req
@@ -58,7 +67,7 @@ function editMarker(id: string, marker: Marker) {
 }
 onMounted(() => {
   getMarkers();
-})
+});
 </script>
 
 <style scoped lang="scss"></style>
