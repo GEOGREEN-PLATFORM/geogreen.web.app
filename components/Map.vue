@@ -30,7 +30,10 @@
           :on-toggle="toggleZoneAdd"
         />
         <ol-toggle-control
-          class-name="g-green-control-bar__item g-green-control-bar__zones-visible"
+          :key="isAllZonesVisible"
+          :html="`${isAllZonesVisible ? 'Скрыть' : 'Показать'} все зоны`"
+          :class-name="`g-green-control-bar__item g-green-control-bar__zones-visible 
+          ${isAllZonesVisible ? 'g-green-control-bar__zones-visible--off' : ''}`"
           :on-toggle="toggleAllZonesVisibility"
         />
       </ol-control-bar>
@@ -198,12 +201,6 @@ import markerIconSrc from "/icons/hogweed_icon.png";
 import {getCenter} from 'ol/extent';
 import type { DrawEvent } from "ol/interaction/Draw";
 
-
-//TODO
-//1) Сделать показ/скрытие зон в контрол баре и маркере
-//2) Сделать через ключ сброс активности показать скрыть(т.к логика будет в переключения)
-//3) в дизайне отразить заполнение данных по точкам - через диалог
-
 interface Props {
   markers: Marker[];
 }
@@ -284,7 +281,8 @@ class GGreenCluster {
   }
   
   convertZonesToFeatures(markers: Marker[]) {
-    const features = markers.filter(marker => marker.relatedZone && isAllZonesVisible.value).map(({ id, relatedZone }) => ({
+    console.log(markers);
+    const features = markers.filter(marker => marker.relatedZone && marker.relatedZone.visible).map(({ id, relatedZone }) => ({
       type: "Feature",
       properties: {
         density: relatedZone!.density
@@ -335,6 +333,15 @@ class GGreenCluster {
     if (event.selected[0] && event.selected[0].get("features")?.length === 1) {
       const markerId = event.selected[0].get("features")[0].getId();
       if (markerId && this.markersDict.get(markerId)) {
+        if (this.markersDict.get(markerId)!.relatedZone)
+        this.markersDict.set(markerId, {
+          ...this.markersDict.get(markerId)!,
+          relatedZone: {
+            ...this.markersDict.get(markerId)!.relatedZone!,
+            visible: true,
+          }
+        })
+        this.zonesFeatures.value = this.convertZonesToFeatures([...this.markersDict.values()])
         this.openMarkerPopup(markerId);
       }
     }
@@ -429,8 +436,16 @@ const gGreenZone = shallowRef(new GGreenZone());
 
 function toggleAllZonesVisibility() {
   isAllZonesVisible.value = !isAllZonesVisible.value;
+  gGreenOlMap.value.interactionType.value = 'none';
   gGreenCluster.value.zonesFeatures.value =
-  gGreenCluster.value.convertZonesToFeatures(props.markers);
+  gGreenCluster.value.convertZonesToFeatures(props.markers.map(marker => {
+    if (marker.relatedZone) {
+      return {...marker, relatedZone: {...marker.relatedZone, visible: isAllZonesVisible.value}}
+    }
+    else {
+      return marker;
+    }
+  }));
 }
 
 function handleCloseMarkerPopup(markerId: string) {
@@ -686,21 +701,15 @@ watch(
         }
     }
     .ol-button.g-green-control-bar__zones-visible {
-      button::before {
-        content: 'Показать все зоны';
-      }
       button::after {
         content: url("/icons/eye_off_outline.svg");
         filter: var(--app-filter-grey-300);
       }
-      &.ol-active {
-          button::after {
-            content: url("/icons/eye_outline.svg");
-            filter: var(--app-filter-grey-300);
-          }
-          button::before {
-            content: 'Скрыть все зоны'
-          }
+    }
+    .ol-button.g-green-control-bar__zones-visible--off {
+      button::after {
+        content: url("/icons/eye_outline.svg");
+        filter: var(--app-filter-grey-300);
       }
     }
     &:has(.burger-button.is-active) {

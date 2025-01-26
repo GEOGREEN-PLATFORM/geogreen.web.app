@@ -27,8 +27,9 @@
 <script setup lang="ts">
 import type { Coordinate } from "ol/coordinate";
 
-const markers = ref<Marker[]>([
-  {
+const markers = ref<Marker[]>([]);
+function getMarkers() {
+  markers.value =   [{
     id: "gfaefasfefdsf23424",
     coordinates: [4890670.38077, 7615726.876165 + 5000],
     details: null,
@@ -37,8 +38,8 @@ const markers = ref<Marker[]>([
       coordinates: [[[4885375.1307334015,7618459.590018971],[4883818.244237658,7615742.875328411],[4887245.484308826,7615492.101664667],[4885375.1307334015,7618459.590018971]]],
     density: 'high',
     },
-  },
-]);
+  }]
+}
 function addMarker(coordinate: Coordinate, relatedZone?: Zone) {
   // mock api req
   markers.value.push({
@@ -55,6 +56,9 @@ function deleteMarker(id: string) {
 function editMarker(id: string, marker: Marker) {
   markers.value[markers.value.findIndex((marker) => marker.id === id)] = marker;
 }
+onMounted(() => {
+  getMarkers();
+})
 </script>
 
 <style scoped lang="scss"></style>

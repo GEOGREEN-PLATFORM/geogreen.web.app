@@ -28,6 +28,7 @@ declare global {
   interface Zone {
     coordinates: Coordinate[];
     density: 'low' | 'medium' | 'high';
+    visible?: boolean;
   }
 }
 
