@@ -7,13 +7,13 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <KTButton
+        <GGButton
           v-close-popup
           label="Отмена"
           design-type="tertiary"
           @click="cancelAction"
         />
-        <KTButton
+        <GGButton
           v-close-popup
           :label="actionButtonConfirmText"
           design-type="tertiary"

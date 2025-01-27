@@ -177,6 +177,10 @@
               >
               <q-icon class="actions-label__icon" :name="mdiPlus" />
             </li>
+            <li v-if="marker.relatedZone" class="actions-label__action">
+              <span class="actions-label__text">Плотность:</span>
+              <GGOptions inline :options="densityOptions" v-model="marker.relatedZone.density" @update:modelValue="updateZoneFeatures"></GGOptions>
+            </li>
             <li class="actions-label__action">
               <span class="actions-label__text">Подробнее</span>
               <q-icon
@@ -219,6 +223,7 @@ import { GeoJSON } from "ol/format";
 import { Circle, Fill, Icon, Stroke, Style } from "ol/style.js";
 import markerIconSrc from "/icons/hogweed_icon.png";
 
+
 interface Props {
   markers: Marker[];
 }
@@ -231,7 +236,23 @@ const emit = defineEmits<{
   deleteMarker: [id: string];
   editMarker: [id: string, marker: Marker];
 }>();
-
+const densityOptions = [
+  {
+    value: 'low',
+    color: 'green-500',
+    keepColor: true,
+  },
+  {
+    value: 'medium',
+    color: 'orange-500',
+    keepColor: true,
+  },
+  {
+    value: 'high',
+    color: 'red-500',
+    keepColor: true,
+  }
+];
 const isAllZonesVisible = ref(false);
 const upKey = ref(0);
 const controlBarRef = useTemplateRef<MapControls>("controlBar");
@@ -437,6 +458,10 @@ class GGreenCluster {
       return style;
     }
   }
+}
+
+function updateZoneFeatures() {
+  gGreenCluster.value.zonesFeatures.value = gGreenCluster.value.convertZonesToFeatures([...gGreenCluster.value.markersDict.values()])
 }
 const gGreenCluster = shallowRef(
   new GGreenCluster(markerIconSrc, props.markers),
