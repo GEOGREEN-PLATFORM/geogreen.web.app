@@ -1,13 +1,13 @@
 <template>
-    <div>
-        <q-option-group
-        :model-value="modelValue"
-        @update:model-value="updateValue"
-        :options="options"
-        :color="color"
-        :inline="inline"
+  <div>
+    <q-option-group
+      :model-value="modelValue"
+      :options="options"
+      :color="color"
+      :inline="inline"
+      @update:model-value="updateValue"
     />
-    </div>
+  </div>
 </template>
 
 <script setup lang="ts" generic="T">
@@ -23,16 +23,14 @@ interface Option {
 }
 type Group = T | T[];
 
-const props = withDefaults(defineProps<Props>(), {});
+withDefaults(defineProps<Props>(), {});
 const emits = defineEmits<{
-  "update:modelValue": [Group]
-}>()
+  "update:modelValue": [Group];
+}>();
 
 function updateValue(group: Group) {
-  emits("update:modelValue", group)
+  emits("update:modelValue", group);
 }
 </script>
 
-<style scoped lang="scss">
-
-</style>
+<style scoped lang="scss"></style>

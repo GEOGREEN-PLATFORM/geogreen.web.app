@@ -28,7 +28,6 @@
 import type { Coordinate } from "ol/coordinate";
 
 const markers = ref<Marker[]>([]);
-const radio = ref(false);
 function getMarkers() {
   markers.value = [
     {
