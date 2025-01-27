@@ -8,7 +8,7 @@
   >
     <slot name="form-content" />
     <div class="auth-form__action-buttons">
-      <KTButton
+      <GGButton
         v-if="buttonOptions.main.show !== false"
         :disabled="formHasError"
         :label="buttonOptions.main.label"
@@ -16,7 +16,7 @@
         :loading="buttonOptions.main.loading"
         type="submit"
       />
-      <KTButton
+      <GGButton
         v-if="buttonOptions.sub.show !== false"
         :label="buttonOptions.sub.label"
         :design-type="buttonOptions.sub.designType"
