@@ -35,8 +35,8 @@ withDefaults(defineProps<Props>(), {
   actionButtonConfirmText: "Подтвердить",
 });
 const emit = defineEmits<{
-  "cancel": [];
-  "confirm": [];
+  cancel: [];
+  confirm: [];
   "update:model-value": [boolean];
 }>();
 function cancelAction() {

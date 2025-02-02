@@ -1,4 +1,4 @@
-import type { QForm } from "quasar";
+import type { QField, QForm, QInput, QSelect } from "quasar";
 import { uid } from "quasar";
 
 // intersection type of known Quasar form components
@@ -14,13 +14,14 @@ export type FormValidationComponent = QInput | QSelect | QField;
 export function useFormValidation() {
   // assign this in the consumer's QForm template ref
   const formRef = ref<QForm>();
-  const formComponents = ref<
-    {
-      uid: string;
-      validationComponent: FormValidationComponent;
-      origModel: unknown;
-    }[]
-  >();
+  const formComponents =
+    ref<
+      {
+        uid: string;
+        validationComponent: FormValidationComponent;
+        origModel: unknown;
+      }[]
+    >();
   const formIsDirty = computed(() =>
     formComponents.value
       ? formComponents.value.some(

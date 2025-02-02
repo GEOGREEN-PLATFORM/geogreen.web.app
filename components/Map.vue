@@ -211,15 +211,6 @@
 </template>
 
 <script setup lang="ts">
-import type { Feature, MapBrowserEvent } from "ol";
-import type { MapControls, SelectCluster } from "ol-ext";
-import type { Coordinate } from "ol/coordinate";
-import type { FeatureLike } from "ol/Feature";
-import type { Geometry } from "ol/geom";
-import type { DrawEvent } from "ol/interaction/Draw";
-import type { SelectEvent } from "ol/interaction/Select";
-import type CircleStyle from "ol/style/Circle";
-import type { ShallowRef } from "vue";
 import {
   mdiArrowTopRightThinCircleOutline,
   mdiClose,
@@ -227,9 +218,18 @@ import {
   mdiInformation,
   mdiPlus,
 } from "@quasar/extras/mdi-v6";
+import type { Feature, MapBrowserEvent } from "ol";
+import type { MapControls, SelectCluster } from "ol-ext";
+import type { FeatureLike } from "ol/Feature";
+import type { Coordinate } from "ol/coordinate";
 import { getCenter } from "ol/extent";
 import { GeoJSON } from "ol/format";
+import type { Geometry } from "ol/geom";
+import type { DrawEvent } from "ol/interaction/Draw";
+import type { SelectEvent } from "ol/interaction/Select";
 import { Circle, Fill, Icon, Stroke, Style } from "ol/style.js";
+import type CircleStyle from "ol/style/Circle";
+import type { ShallowRef } from "vue";
 import markerIconDefaultSrc from "/icons/map_marker_default.png";
 import markerIconGreenSrc from "/icons/map_marker_green.png";
 import markerIconOrangeSrc from "/icons/map_marker_orange.png";
@@ -337,7 +337,7 @@ class GGreenCluster {
 
   convertZonesToFeatures(markers: Marker[]) {
     const features = markers
-      .filter((marker) => marker.relatedZone && marker.relatedZone.visible)
+      .filter((marker) => marker.relatedZone?.visible)
       .map(({ id, relatedZone }) => ({
         type: "Feature",
         properties: {
@@ -476,13 +476,12 @@ class GGreenCluster {
         styleCopyForSingleMember.setImage(newImage);
       }
       return styleCopyForSingleMember;
-    } else {
-      (style.getImage() as CircleStyle)?.getStroke()?.setColor(colorStroke);
-      (style.getImage() as CircleStyle)?.getFill()?.setColor(colorFill);
-      (style.getImage() as CircleStyle)?.setRadius(radius);
-      style.getText()?.setText(size.toString());
-      return style;
     }
+    (style.getImage() as CircleStyle)?.getStroke()?.setColor(colorStroke);
+    (style.getImage() as CircleStyle)?.getFill()?.setColor(colorFill);
+    (style.getImage() as CircleStyle)?.setRadius(radius);
+    style.getText()?.setText(size.toString());
+    return style;
   }
 }
 const gGreenCluster = shallowRef(new GGreenCluster(props.markers));
@@ -566,9 +565,8 @@ function toggleAllZonesVisibility() {
               visible: isAllZonesVisible.value,
             },
           };
-        } else {
-          return marker;
         }
+        return marker;
       }),
     );
 }
