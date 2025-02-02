@@ -46,20 +46,24 @@
             gGreenCluster.selectMarker.call(gGreenCluster, event)
         "
       >
-        <ol-style v-if="gGreenZone.density.value === 'low'">
-          <ol-style-stroke color="#1E1E1E" :width="1" />
-          <ol-style-fill color="rgba(85, 162, 49, 0.5)" />
-          <ol-style-icon :src="markerIconSrc" :scale="1" />
-        </ol-style>
-        <ol-style v-if="gGreenZone.density.value === 'medium'">
-          <ol-style-stroke color="#1E1E1E" :width="1" />
-          <ol-style-fill color="rgba(255, 130, 0, 0.5)" />
-          <ol-style-icon :src="markerIconSrc" :scale="1" />
-        </ol-style>
-        <ol-style v-if="gGreenZone.density.value === 'high'">
-          <ol-style-stroke color="#1E1E1E" :width="1" />
-          <ol-style-fill color="rgba(255, 0, 34, 0.5)" />
-          <ol-style-icon :src="markerIconSrc" :scale="1" />
+        <ol-style
+          :override-style-function="
+            (feature: FeatureLike, style: Style) =>
+              gGreenCluster.overrideMarkerStyleFunction.call(
+                gGreenCluster,
+                feature,
+                style,
+              )
+          "
+        >
+          <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
+          <ol-style-circle :radius="48">
+            <ol-style-stroke color="black" :width="1" line-cap="round" />
+            <ol-style-fill color="black" />
+          </ol-style-circle>
+          <ol-style-text>
+            <ol-style-fill color="white" />
+          </ol-style-text>
         </ol-style>
       </ol-interaction-clusterselect>
 
@@ -116,7 +120,7 @@
               )
           "
         >
-          <ol-style-icon :src="markerIconSrc" :scale="1" />
+          <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
           <ol-style-circle :radius="48">
             <ol-style-stroke color="black" :width="1" line-cap="round" />
             <ol-style-fill color="black" />
@@ -183,7 +187,7 @@
                 v-model="marker.relatedZone.density"
                 inline
                 :options="densityOptions"
-                @update:model-value="updateZoneFeatures"
+                @update:model-value="updateFeatures"
               />
             </li>
             <li class="actions-label__action">
@@ -226,12 +230,16 @@ import {
 import { getCenter } from "ol/extent";
 import { GeoJSON } from "ol/format";
 import { Circle, Fill, Icon, Stroke, Style } from "ol/style.js";
-import markerIconSrc from "/icons/hogweed_icon.png";
+import markerIconDefaultSrc from "/icons/map_marker_default.png";
+import markerIconGreenSrc from "/icons/map_marker_green.png";
+import markerIconOrangeSrc from "/icons/map_marker_orange.png";
+import markerIconRedSrc from "/icons/map_marker_red.png";
 
 interface Props {
   markers: Marker[];
 }
-
+// Баг с исчезновением полигона при нажатии на него
+// Баг с неправильной цветокодировкой полигонов при нажатии показать скрыть все
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
 });
@@ -240,6 +248,14 @@ const emit = defineEmits<{
   deleteMarker: [id: string];
   editMarker: [id: string, marker: Marker];
 }>();
+
+const markersSrcByDensity = ref({
+  default: markerIconDefaultSrc,
+  low: markerIconGreenSrc,
+  medium: markerIconOrangeSrc,
+  high: markerIconRedSrc,
+});
+
 const densityOptions = [
   {
     value: "low",
@@ -300,7 +316,6 @@ class GGreenOlMap {
 const gGreenOlMap = shallowRef(new GGreenOlMap());
 
 class GGreenCluster {
-  public readonly markerIcon: Icon;
   public markersPopupOpened: Ref<Map<string, Marker>>;
   public markerFeatures: Ref<Feature<Geometry>[]>;
   public zonesFeatures: Ref<Feature<Geometry>[]>;
@@ -308,11 +323,8 @@ class GGreenCluster {
   public geoJSON = new GeoJSON();
   public currentSelectedMarkerId: ShallowRef<string>;
 
-  constructor(markerIconSrc: string, markers: Marker[]) {
+  constructor(markers: Marker[]) {
     this.markersPopupOpened = ref(new Map());
-    this.markerIcon = new Icon({
-      src: markerIconSrc,
-    });
     this.currentSelectedMarkerId = shallowRef("");
     this.markersDict = this.convertMarkersToDictionary(markers);
     this.markerFeatures = ref(this.convertMarkersToFeatures(markers)) as Ref<
@@ -385,13 +397,17 @@ class GGreenCluster {
   getMemberStyle(clusterMember: FeatureLike) {
     return new Style({
       geometry: clusterMember.getGeometry() as Geometry,
-      image: this.markerIcon,
+      image: getMarkerIconByDensity(
+        this.markersDict.get(clusterMember.get("features")[0].getId())
+          ?.relatedZone?.density,
+      ),
     });
   }
 
   selectMarker(event: SelectEvent) {
     if (event.selected[0] && event.selected[0].get("features")?.length === 1) {
       const markerId = event.selected[0].get("features")[0].getId();
+      this.currentSelectedMarkerId.value = markerId;
       if (markerId && this.markersDict.get(markerId)) {
         if (this.markersDict.get(markerId)!.relatedZone) {
           this.markersDict.set(markerId, {
@@ -407,6 +423,8 @@ class GGreenCluster {
         ]);
         this.openMarkerPopup(markerId);
       }
+    } else {
+      this.currentSelectedMarkerId.value = "";
     }
   }
 
@@ -434,6 +452,9 @@ class GGreenCluster {
     gGreenOlMap.value.interactionType.value = "zone_add";
     this.closeMarkerPopup(markerId);
     this.currentSelectedMarkerId.value = markerId;
+    // eslint-disable-next-line ts/no-use-before-define
+    gGreenZone.value.density.value =
+      this.markersDict.get(markerId)?.relatedZone?.density;
   }
 
   overrideZoneStyleFunction(feature: FeatureLike, _: Style) {
@@ -442,6 +463,7 @@ class GGreenCluster {
 
   overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
     const clusteredFeatures = feature.get("features");
+    if (!clusteredFeatures) return;
     const size = clusteredFeatures.length;
     const colorFill = size >= 15 ? "#FF0022" : size > 5 ? "#FF8200" : "#55A231";
     const colorStroke = size >= 15 ? "#55A231" : "#FF0022";
@@ -463,22 +485,30 @@ class GGreenCluster {
     }
   }
 }
-const gGreenCluster = shallowRef(
-  new GGreenCluster(markerIconSrc, props.markers),
-);
+const gGreenCluster = shallowRef(new GGreenCluster(props.markers));
 
-function updateZoneFeatures() {
+function getMarkerIconByDensity(density?: "low" | "medium" | "high") {
+  return new Icon({
+    src: markersSrcByDensity.value[density || "default"],
+  });
+}
+
+function updateFeatures() {
   gGreenCluster.value.zonesFeatures.value =
     gGreenCluster.value.convertZonesToFeatures([
+      ...gGreenCluster.value.markersDict.values(),
+    ]);
+  gGreenCluster.value.markerFeatures.value =
+    gGreenCluster.value.convertMarkersToFeatures([
       ...gGreenCluster.value.markersDict.values(),
     ]);
 }
 
 class GGreenZone {
-  public density: ShallowRef<"low" | "medium" | "high">;
+  public density: ShallowRef<"low" | "medium" | "high" | undefined>;
 
   constructor() {
-    this.density = shallowRef("high");
+    this.density = shallowRef();
   }
 
   create(event: DrawEvent) {
@@ -565,6 +595,8 @@ function toggleMarkerAdd() {
 
 function toggleZoneAdd() {
   if (gGreenOlMap.value.interactionType.value !== "zone_add") {
+    gGreenCluster.value.currentSelectedMarkerId.value = "";
+    gGreenZone.value.density.value = "default";
     gGreenOlMap.value.interactionType.value = "zone_add";
   } else {
     gGreenOlMap.value.interactionType.value = "none";
@@ -592,6 +624,9 @@ function getPolygonStyleByDensity(density: "low" | "medium" | "high") {
       break;
     case "high":
       fillColor = "rgba(255, 0, 34, 0.5)";
+      break;
+    default:
+      fillColor = "rgba(104, 104, 104, 0.5)";
       break;
   }
   return new Style({
@@ -789,7 +824,10 @@ watch(
     }
     .ol-button.g-green-control-bar__marker {
       button::after {
-        background-image: url("/icons/hogweed_icon.png");
+        background-image: url("/icons/map_marker_default.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center center;
       }
     }
     .ol-button.g-green-control-bar__zone {
