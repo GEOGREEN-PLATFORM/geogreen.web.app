@@ -238,7 +238,8 @@ import markerIconRedSrc from "/icons/map_marker_red.png";
 interface Props {
   markers: Marker[];
 }
-
+// Баг с исчезновением полигона при нажатии на него
+// Баг с неправильной цветокодировкой полигонов при нажатии показать скрыть все
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
 });
@@ -398,8 +399,7 @@ class GGreenCluster {
       geometry: clusterMember.getGeometry() as Geometry,
       image: getMarkerIconByDensity(
         this.markersDict.get(clusterMember.get("features")[0].getId())
-          ?.relatedZone
-?.density,
+          ?.relatedZone?.density,
       ),
     });
   }
@@ -452,6 +452,9 @@ class GGreenCluster {
     gGreenOlMap.value.interactionType.value = "zone_add";
     this.closeMarkerPopup(markerId);
     this.currentSelectedMarkerId.value = markerId;
+    // eslint-disable-next-line ts/no-use-before-define
+    gGreenZone.value.density.value =
+      this.markersDict.get(markerId)?.relatedZone?.density;
   }
 
   overrideZoneStyleFunction(feature: FeatureLike, _: Style) {
@@ -592,6 +595,8 @@ function toggleMarkerAdd() {
 
 function toggleZoneAdd() {
   if (gGreenOlMap.value.interactionType.value !== "zone_add") {
+    gGreenCluster.value.currentSelectedMarkerId.value = "";
+    gGreenZone.value.density.value = "default";
     gGreenOlMap.value.interactionType.value = "zone_add";
   } else {
     gGreenOlMap.value.interactionType.value = "none";

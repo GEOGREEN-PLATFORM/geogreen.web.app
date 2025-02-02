@@ -41,6 +41,7 @@ export default withNuxt(antfu({}), eslintPluginPrettierRecommended, {
     "style/arrow-parens": ["error", "always"],
     "style/brace-style": ["error", "1tbs"],
     "antfu/if-newline": ["off"],
+    "antfu/consistent-chaining": ["off"],
     "style/operator-linebreak": ["off"],
     "vue/singleline-html-element-content-newline": "off",
   },
