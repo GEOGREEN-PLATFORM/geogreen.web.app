@@ -28,8 +28,8 @@
 </template>
 
 <script setup lang="ts">
-import type { ValidationRule } from "quasar";
 import { mdiEyeOffOutline, mdiEyeOutline } from "@quasar/extras/mdi-v6";
+import type { ValidationRule } from "quasar";
 
 interface Props {
   modelValue: string;

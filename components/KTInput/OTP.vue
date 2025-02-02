@@ -37,7 +37,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emits = defineEmits<{
   "update:modelValue": [string];
   "update:isError": [boolean];
-  "isFull": [];
+  isFull: [];
 }>();
 const otpCont = ref<HTMLElement>();
 const digits = reactive<string[]>([]);
@@ -142,9 +142,8 @@ function checkIphone(): boolean {
   const userAgent: string = navigator.userAgent;
   if (/iPhone/i.test(userAgent)) {
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 function isDigit(value: string) {
