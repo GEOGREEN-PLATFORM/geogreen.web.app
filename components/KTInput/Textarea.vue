@@ -1,12 +1,13 @@
 <template>
-    <div class="kt-input-main">
-      <q-input
-        ref="qInputRef"
+    <div class="kt-textarea-wrapper">
+      <KTInput
+        ref="gGInput"
         v-model="inputValue"
         :rounded="rounded"
         :outlined="outlined"
         :label="label"
         type="textarea"
+        :autogrow="autogrow"
         :rules="rules"
         lazy-rules
         :no-error-icon="hideErrorIcon"
@@ -15,21 +16,14 @@
         :name="name"
         @update:model-value="updateValue"
       >
-        <template #append>
-          <q-icon
-            v-if="type === 'password'"
-            :name="showPassword ? mdiEyeOutline : mdiEyeOffOutline"
-            class="cursor-pointer"
-            @click="togglePassword"
-          />
-        </template>
-      </q-input>
+      </KTInput>
     </div>
   </template>
   
   <script setup lang="ts">
 import { mdiEyeOffOutline, mdiEyeOutline } from "@quasar/extras/mdi-v6";
 import type { ValidationRule } from "quasar";
+import { KTInput } from "#components";
 
 interface Props {
   modelValue: string;
@@ -42,6 +36,7 @@ interface Props {
   hideErrorIcon?: boolean;
   placeholder?: string;
   name?: string;
+  autogrow?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -56,6 +51,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: "Введите текст",
   hideErrorIcon: true,
   hideBottomSpace: true,
+  autogrow: true,
 });
 
 const emits = defineEmits<{
@@ -64,7 +60,6 @@ const emits = defineEmits<{
 
 const inputValue = ref(props.modelValue);
 const showPassword = ref(false);
-const currentType = ref(props.type);
 const qInputRef = ref();
 
 function updateValue(value: string | number | null) {
@@ -73,84 +68,14 @@ function updateValue(value: string | number | null) {
     emits("update:modelValue", value);
   });
 }
-function togglePassword() {
-  showPassword.value = !showPassword.value;
-  currentType.value = showPassword.value ? "text" : "password";
-}
 </script>
   
   <style lang="scss">
-  .kt-input-main {
-    .q-field--outlined.q-field--rounded .q-field__control {
-      border-radius: 16px;
-    }
-    .q-field--outlined .q-field__control:before {
-      border: 1px solid var(--app-black-6);
-    }
-    .q-field--outlined .q-field__control:after {
-      border: 1px solid transparent;
-    }
-    .q-field--outlined.q-field--highlighted .q-field__control:after {
-      border-color: var(--app-blue-9);
-      border-width: 1px;
-    }
-    .q-field--outlined.q-field--highlighted.q-field--error
-      .q-field__control:after {
-      border-color: var(--app-red-10);
-    }
-    .q-field--outlined.q-field--highlighted.q-field--error {
-      .q-field__label {
-        color: var(--input-label);
-      }
-    }
-    .q-field--outlined.q-field--highlighted.q-field--error.q-field--focused {
-      .q-field__label {
-        color: var(--app-blue-9);
-      }
-    }
-    .q-field__label {
-      transform: skewX(-10deg);
-      top: 22px;
-      color: var(--input-label);
-    }
-    .q-field--highlighted .q-field__label {
-      color: currentColor;
-    }
-    .q-field--float .q-field__label {
-      transform: translateY(-48%) scale(0.85) skewX(0deg);
-    }
-    .q-field__native:-webkit-autofill + .q-field__label,
-    .q-field__input:-webkit-autofill + .q-field__label {
-      transform: translateY(-48%) scale(0.85) skewX(0deg);
-    }
-    .q-field__native,
-    .q-field__input {
-      color: var(--app-black-10);
-    }
-    .q-field--labeled .q-field__native {
-      line-height: 20px;
-    }
-    .q-field__control {
-      height: 64px;
-    }
-    .q-field__marginal {
-      height: 64px;
-    }
-    input[type="password"]:not(:placeholder-shown) {
-      font-family: Verdana;
-      letter-spacing: 0.1em;
-      color: var(--input-label);
-    }
-    input {
-      font-size: 16px;
-    }
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    input:-webkit-autofill:active {
-      background-clip: text !important;
-      -webkit-text-fill-color: var(--app-black-10);
-      box-shadow: inset 0 0 20px 20px transparent;
+  .kt-textarea-wrapper {
+    .kt-input-main .q-field__control {
+      height: auto;
+      min-height: 96px;
+      background-color: var(--app-green-050);
     }
   }
   </style>

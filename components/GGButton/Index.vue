@@ -81,6 +81,7 @@ onMounted(() => {
   }
   .small {
     height: 40px;
+    font-size: 14px;
   }
 }
 </style>

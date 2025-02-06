@@ -14,6 +14,7 @@
       :placeholder="placeholder"
       :name="name"
       @update:model-value="updateValue"
+      :autogrow="autogrow"
     >
       <template #append>
         <q-icon
@@ -43,6 +44,7 @@ interface Props {
     | "time"
     | "text"
     | "email"
+    | "textarea"
     | "tel"
     | "file"
     | "url"
@@ -55,6 +57,7 @@ interface Props {
   hideErrorIcon?: boolean;
   placeholder?: string;
   name?: string;
+  autogrow?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -69,6 +72,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: "Введите текст",
   hideErrorIcon: true,
   hideBottomSpace: true,
+  autogrow: false,
 });
 
 const emits = defineEmits<{

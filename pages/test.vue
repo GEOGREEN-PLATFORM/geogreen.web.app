@@ -1,6 +1,7 @@
 <template>
 <GGButton designType="secondary" stretch="hug" size="small" :icon="mdiDeleteOutline"></GGButton>
-<KTInput></KTInput>
+<KTInputTextarea></KTInputTextarea>
+<DragDrop></DragDrop>
 </template>
 
 <script setup lang="ts">
