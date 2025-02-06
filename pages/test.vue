@@ -2,6 +2,7 @@
 <GGButton designType="secondary" stretch="hug" size="small" :icon="mdiDeleteOutline"></GGButton>
 <KTInputTextarea></KTInputTextarea>
 <DragDrop></DragDrop>
+<LightDarkToggle></LightDarkToggle>
 </template>
 
 <script setup lang="ts">
