@@ -4,15 +4,18 @@
       :class="{
         [designType]: true,
         disabled,
+        [stretch]: true,
+        [size]: true,
       }"
       no-caps
-      :label="label"
+      :label="!props.icon ? label : ''"
       :rounded="buttonDesignTypeSettings.rounded"
       :outline="buttonDesignTypeSettings.outline"
       :flat="buttonDesignTypeSettings.flat"
       :disable="disabled"
       :type="type"
       :loading="loading"
+      :icon="icon"
     />
   </div>
 </template>
@@ -20,16 +23,21 @@
 <script setup lang="ts">
 interface Props {
   label: string;
-  designType: "primary" | "secondary" | "tertiary";
+  designType?: "primary" | "secondary" | "tertiary";
+  stretch?: "fill" | "hug";
   disabled?: boolean;
   type?: "submit";
   loading?: boolean;
+  size?: "large" | "medium" | "small";
+  icon?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
-  label: "Зарегистрироваться",
+  label: "Метка",
   rounded: true,
   designType: "primary",
+  stretch: "fill",
   disabled: false,
+  size: "large",
 });
 const buttonDesignTypeSettings = ref({
   outline: false,
@@ -39,7 +47,6 @@ const buttonDesignTypeSettings = ref({
 });
 
 onMounted(() => {
-  buttonDesignTypeSettings.value.outline = props.designType === "secondary";
   buttonDesignTypeSettings.value.flat = props.designType === "tertiary";
 });
 </script>
@@ -47,17 +54,18 @@ onMounted(() => {
 <style scoped lang="scss">
 .kt-button-main {
   .primary {
-    background: var(--app-blue-9);
-    color: var(--app-white-1);
+    background: var(--app-green-500);
+    color: var(--app-white);
   }
   .secondary {
-    color: var(--app-blue-9);
+    background: var(--app-green-050);
+    color: var(--app-grey-500);
   }
   .tertiary {
-    color: var(--app-blue-9);
+    color: var(--app-green-500);
   }
   .primary.disabled {
-    background: var(--app-black-5);
+    background: var(--app-grey-050);
   }
   .secondary.disabled {
     color: var(--app-black-6);
@@ -65,13 +73,22 @@ onMounted(() => {
   .tertiary.disabled {
     color: var(--app-black-6);
   }
+  .large {
+    height: 56px;
+  }
+  .medium {
+    height: 48px;
+  }
+  .small {
+    height: 40px;
+  }
 }
 </style>
 
 <style lang="scss">
 .kt-button-main {
   .q-btn--rounded {
-    border-radius: 16px;
+    border-radius: 12px;
   }
   .q-btn {
     height: 52px;
@@ -80,6 +97,9 @@ onMounted(() => {
     &::before {
       box-shadow: none;
     }
+  }
+  .q-btn.hug {
+    width: fit-content;
   }
   .q-btn.disabled {
     opacity: 1 !important;
