@@ -30,6 +30,11 @@ declare global {
     density: "low" | "medium" | "high";
     visible?: boolean;
   }
+  interface Tab {
+    key: string;
+    name: string;
+    disabled?: boolean;
+  }
 }
 
 export {};

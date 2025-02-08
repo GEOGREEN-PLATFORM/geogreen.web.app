@@ -6,6 +6,7 @@
         disabled,
         [stretch]: true,
         [size]: true,
+        icon: icon,
       }"
       no-caps
       :label="!props.icon ? label : ''"
@@ -22,7 +23,7 @@
 
 <script setup lang="ts">
 interface Props {
-  label: string;
+  label?: string;
   designType?: "primary" | "secondary" | "tertiary";
   stretch?: "fill" | "hug";
   disabled?: boolean;
@@ -30,6 +31,7 @@ interface Props {
   loading?: boolean;
   size?: "large" | "medium" | "small";
   icon?: string;
+  iconColor?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
   label: "Метка",
@@ -82,6 +84,12 @@ onMounted(() => {
   .small {
     height: 40px;
     font-size: 14px;
+    border-radius: 8px;
+  }
+  .icon {
+    height: 40px;
+    padding: 8px 10px;
+    border-radius: 12px;
   }
 }
 </style>
@@ -104,6 +112,9 @@ onMounted(() => {
   }
   .q-btn.disabled {
     opacity: 1 !important;
+  }
+  .q-icon {
+    fill: v-bind(iconColor);
   }
 }
 </style>
