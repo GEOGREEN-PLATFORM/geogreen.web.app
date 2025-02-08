@@ -1,6 +1,6 @@
 <template>
     <div class="c-tabs-container">
-        <q-tabs :shrink="shrink" active-bg-color="green-050" v-model="currentTab" @update:model-value="updateTab" indicator-color="green-500" class="tabs">
+        <q-tabs :vertical="vertical" :shrink="shrink" active-bg-color="green-050" v-model="currentTab" @update:model-value="updateTab" indicator-color="green-500" class="tabs">
             <q-tab  
             content-class="tabs__content" :ripple="{ color: 'green-200'}" class="tabs__item text-grey-500" no-caps v-for="tab in props.tabs" 
             :name="tab.key" :key="tab.key" :label="tab.name">
@@ -15,11 +15,13 @@ interface Props {
   modelValue: string;
   tabs: Tab[];
   shrink?: boolean;
+  vertical?: boolean;
 }
 const currentTab = shallowRef("");
 
 const props = withDefaults(defineProps<Props>(), {
   shrink: false,
+  vertical: false,
 });
 const emits = defineEmits<{
   "update:modelValue": [string];
