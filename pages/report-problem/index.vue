@@ -49,7 +49,11 @@
           </fieldset>
           <fieldset class="report-form__fieldset">
             <legend class="report-form__legend gg-h3">Фотографии</legend>
-            <DragDrop class="report-form__images"></DragDrop>
+            <DragDrop @add="uploadFiles" class="report-form__images"></DragDrop>
+            <section  v-if="attachedFiles.length > 0" class="report-form__added-images">
+                <p class="report-form__block-caption gg-cap">Загруженные изображения</p>
+                <FileContainers :fileUrls="attachedFiles"></FileContainers>
+            </section>
           </fieldset>
            <GGButton class="report-form__submit-button" label="Отправить"></GGButton>
         </q-form>
@@ -58,9 +62,6 @@
   </template>
   
   <script setup lang="ts">
-import { ref } from "vue";
-//   import MapComponent from '@/components/MapComponent.vue';
-
 const types = [
   { value: "hogweed", label: "Борщевик" },
   { value: "fire", label: "Пожар" },
@@ -68,33 +69,35 @@ const types = [
 ];
 const selectedType = ref<string | null>(null);
 const comment = ref<string>("");
-const files = ref<File[]>([]);
+const attachedFiles = ref<string[]>([]);
 
-const onFilesUpload = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files) {
-    files.value = Array.from(input.files);
-  }
-};
-
-const triggerFileInput = () => {
-  const input = document.getElementById("file-upload") as HTMLInputElement;
-  input.click();
-};
+async function uploadFiles(files: File[]) {
+  //api uploading
+  files.forEach((file) => attachedFiles.value.push(URL.createObjectURL(file)));
+  console.log(attachedFiles.value);
+}
 
 const onSubmit = () => {
   console.log("Submitted:", {
     type: selectedType.value,
     comment: comment.value,
-    files: files.value,
+    files: attachedFiles.value,
   });
 };
 </script>
 <style scoped lang="scss">
 .report-form {
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
+
   max-width: 75vw;
   margin: 0 auto;
   padding-bottom: 24px;
+  @media screen and (max-width: $app-mobile) {
+    max-width: 100%;
+  }
   &__header {
     display: flex;
     flex-direction: column;
@@ -102,6 +105,8 @@ const onSubmit = () => {
     gap: 12px;
     justify-content: center;
     align-items: center;
+    padding: 0px 16px;
+    text-align: center;
   }
   &__sub-info {
     font-size: 14px;
@@ -126,6 +131,7 @@ const onSubmit = () => {
 
   &__types {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     margin-top: 12px;
     .report-form__type-button {
@@ -154,6 +160,7 @@ const onSubmit = () => {
   &__comment {
     margin-top: 12px;
     width: 560px;
+    max-width: 100%;
   }
   &__images {
     width: 100%;
@@ -165,6 +172,21 @@ const onSubmit = () => {
     width: 364px;
     margin: 0 auto;
     margin-top: 32px;
+    max-width: 100%;
+  }
+  &__added-images {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+    padding: 0px 8px;
+  }
+  &__block-caption {
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--app-grey-050);
+    width: 100%;
   }
 }
 </style>

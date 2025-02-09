@@ -178,6 +178,7 @@ gap: 48px;
         width: 90vw;
         border-left: 1px solid var(--app-grey-300);
         box-shadow: -2px 2px 2px rgba(0,0,0, 0.25);
+        background-color: var(--app-white);
         .menu-top {
             display: flex;
             justify-content: space-evenly;

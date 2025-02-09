@@ -10,10 +10,12 @@
     @drop.prevent="handleDrop"
   >
     <div class="drag-drop-container__content">
-      <p class="drag-drop-container__main-text gg-t-big">
+      <div>
+        <p class="drag-drop-container__main-text gg-t-big">
         Перетащите сюда ваши файлы
+        </p>
         <p class="drag-drop-container__sub-text q-mt-sm gg-cap">JPG, PNG, Max 20MB</p>
-      </p>
+      </div>
       <p class="drag-drop-container__main-text gg-t-big">или</p>
       <GGButton 
         label="Выберите файл" 
@@ -50,6 +52,10 @@ defineProps({
   },
 });
 
+const emits = defineEmits<{
+  add: [File[]];
+}>();
+
 const isDragOver = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 
@@ -82,8 +88,7 @@ const triggerFileInput = () => {
 };
 
 const emitFiles = (files: File[]) => {
-  console.log("Files selected:", files);
-  // You can replace this with an actual emit or logic
+  emits("add", files);
 };
 </script>
 
