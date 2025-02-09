@@ -68,7 +68,7 @@ const props = withDefaults(defineProps<Props>(), {
     (val) => (val && val.length > 0) || "Поле не может быть пустым",
   ],
   type: "text",
-  label: "Метка",
+  label: undefined,
   placeholder: "Введите текст",
   hideErrorIcon: true,
   hideBottomSpace: true,
@@ -164,6 +164,9 @@ function togglePassword() {
   }
   input {
     font-size: 16px;
+  }
+  &:not(:has(.q-field--labeled)) .q-textarea .q-field__native {
+    padding: 12px 0px;
   }
   input:-webkit-autofill,
   input:-webkit-autofill:hover,

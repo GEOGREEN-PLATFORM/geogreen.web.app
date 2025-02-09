@@ -26,6 +26,7 @@
   $app-narrow-mobile: 364px;
     .header-container {
         padding: 0px 28px;
+        background-color: var(--app-white);
     }
     .toolbar-container {
         display: flex;

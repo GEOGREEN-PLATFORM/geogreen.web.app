@@ -32,8 +32,8 @@
         <div class="menu-bottom">
           <CTabs v-model="currentPageKey" :tabs="pages" shrink vertical></CTabs>
           <div class="login-buttons">
-            <GGButton label="Войти" strech="hug" size="small"></GGButton>
-            <GGButton label="Регистрация" strech="hug" design-type="secondary" size="small"></GGButton>
+            <GGButton label="Войти" strech="fill" size="medium"></GGButton>
+            <GGButton label="Регистрация" strech="fill" design-type="secondary" size="medium"></GGButton>
           </div>
         </div>
       </div>
@@ -77,7 +77,7 @@ function toggleMenu() {
 .c-menu-container {
 $app-desktop: 1294px;
 $app-laptop: 960px;
-$app-mobile: 364px;
+$app-mobile: 440px;
 $app-narrow-mobile: 364px;
 
 
@@ -209,6 +209,18 @@ gap: 48px;
                 .q-tab {
                     width: 100%;
                 }
+            }
+            .login-buttons {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              width: 100%;
+              gap: 24px;
+              padding: 0px 20vw;
+              margin-top: 24px;
+              @media screen and (max-width: $app-mobile) {
+                padding: 0px 24px;
+              }
             }
         }
       }

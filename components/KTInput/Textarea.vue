@@ -29,7 +29,7 @@ interface Props {
   modelValue: string;
   rounded?: boolean;
   outlined?: boolean;
-  label: string;
+  label?: string;
   required?: boolean;
   rules?: ValidationRule[];
   hideBottomSpace?: boolean;
@@ -42,12 +42,10 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
   rounded: true,
   outlined: true,
-  required: true,
-  rules: () => [
-    (val) => (val && val.length > 0) || "Поле не может быть пустым",
-  ],
+  required: false,
+  rules: () => [],
   type: "text",
-  label: "Метка",
+  label: undefined,
   placeholder: "Введите текст",
   hideErrorIcon: true,
   hideBottomSpace: true,

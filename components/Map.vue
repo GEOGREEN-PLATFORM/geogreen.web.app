@@ -651,6 +651,7 @@ function configureMap() {
   const controlElement = controlBarRef.value.control.element;
   controlElement.classList.add("g-green-control-bar");
   const burgerButton = document.createElement("button");
+  burgerButton.setAttribute("type", "button");
   burgerButton.classList.add("burger-button");
   for (let i = 0; i < 3; i++) {
     const line = document.createElement("div");

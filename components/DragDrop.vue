@@ -10,19 +10,18 @@
     @drop.prevent="handleDrop"
   >
     <div class="drag-drop-container__content">
-      <p class="drag-drop-container__main-text">
+      <p class="drag-drop-container__main-text gg-t-big">
         Перетащите сюда ваши файлы
-        <p class="drag-drop-container__sub-text q-mt-sm">JPG, PNG, Max 20MB</p>
+        <p class="drag-drop-container__sub-text q-mt-sm gg-cap">JPG, PNG, Max 20MB</p>
       </p>
-      <p class="drag-drop-container__main-text">или</p>
+      <p class="drag-drop-container__main-text gg-t-big">или</p>
       <GGButton 
         label="Выберите файл" 
-        size="small" 
+        size="small"
+        stretch="hug"
         design-type="secondary" 
         @click="triggerFileInput"
-      >
-        Выберите фото
-      </GGButton>
+      ></GGButton>
       <input
         ref="fileInput"
         type="file"
@@ -94,7 +93,7 @@ const emitFiles = (files: File[]) => {
   align-items: center;
   justify-content: center;
   border: 2px dashed #ccc;
-  padding: 20px;
+  padding: 56px 24px;
   border-radius: 8px;
   transition: background-color 0.3s, border-color 0.3s;
   cursor: pointer;
@@ -108,12 +107,10 @@ const emitFiles = (files: File[]) => {
     text-align: center;
     .drag-drop-container__main-text {
         font-weight: bold;
-
     }
-  .drag-drop-container__sub-text {
-    font-size: 13px;
-    font-weight: normal;
-  }
+    .drag-drop-container__sub-text {
+      font-weight: normal;
+    }
   }
 
 }

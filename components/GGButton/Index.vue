@@ -55,6 +55,11 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .kt-button-main {
+  display: flex;
+  width: 100%;
+  &:has(.hug) {
+    width: fit-content;
+  }
   .primary {
     background: var(--app-green-500);
     color: var(--app-white);
