@@ -1,7 +1,7 @@
 <template>
-    <div class="kt-textarea-wrapper">
+    <div class="c-textarea">
       <KTInput
-        ref="gGInput"
+        ref="inputRef"
         v-model="inputValue"
         :rounded="rounded"
         :outlined="outlined"
@@ -45,7 +45,6 @@ const props = withDefaults(defineProps<Props>(), {
   required: false,
   rules: () => [],
   type: "text",
-  label: undefined,
   placeholder: "Введите текст",
   hideErrorIcon: true,
   hideBottomSpace: true,
@@ -58,18 +57,18 @@ const emits = defineEmits<{
 
 const inputValue = ref(props.modelValue);
 const showPassword = ref(false);
-const qInputRef = ref();
+const inputRef = ref();
 
 function updateValue(value: string | number | null) {
   nextTick(() => {
-    qInputRef.value?.validate();
+    inputRef.value?.validate();
     emits("update:modelValue", value);
   });
 }
 </script>
   
   <style lang="scss">
-  .kt-textarea-wrapper {
+  .c-textarea {
     .kt-input-main .q-field__control {
       height: auto;
       min-height: 96px;

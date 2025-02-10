@@ -1,13 +1,15 @@
 <template>
     <section class="file-container">
-      <div class="file-container__list">
-        <File
-          v-for="(file, index) in files"
-          :key="file"
-          :url="file"
-          @remove="removeFile(index)"
-        />
-      </div>
+      <ul class="file-container__list">
+        <li v-for="(file, index) in files">
+          <File
+            :key="file"
+            :url="file"
+            @remove="removeFile(index)"
+          />
+        </li>
+
+      </ul>
     </section>
   </template>
   
@@ -28,7 +30,6 @@ watch(
   () => props.fileUrls,
   (newValue) => {
     files.value = [...newValue];
-    console.log(files.value, "ewe");
   },
   {
     deep: true,

@@ -68,7 +68,6 @@ const props = withDefaults(defineProps<Props>(), {
     (val) => (val && val.length > 0) || "Поле не может быть пустым",
   ],
   type: "text",
-  label: undefined,
   placeholder: "Введите текст",
   hideErrorIcon: true,
   hideBottomSpace: true,

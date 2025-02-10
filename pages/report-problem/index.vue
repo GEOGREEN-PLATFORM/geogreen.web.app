@@ -24,7 +24,7 @@
                   { 'report-form__type-button--active': selectedType === type.value }
                 ]"
                 type="button"
-                @click="() => (selectedType = type.value)"
+                @click="selectProblemType(type.value)"
               >
                 {{ type.label }}
               </button>
@@ -49,7 +49,7 @@
           </fieldset>
           <fieldset class="report-form__fieldset">
             <legend class="report-form__legend gg-h3">Фотографии</legend>
-            <DragDrop @add="uploadFiles" class="report-form__images"></DragDrop>
+            <DragDrop @add="uploadFiles" class="report-form__upload-file-container"></DragDrop>
             <section  v-if="attachedFiles.length > 0" class="report-form__added-images">
                 <p class="report-form__block-caption gg-cap">Загруженные изображения</p>
                 <FileContainers :fileUrls="attachedFiles"></FileContainers>
@@ -76,7 +76,9 @@ async function uploadFiles(files: File[]) {
   files.forEach((file) => attachedFiles.value.push(URL.createObjectURL(file)));
   console.log(attachedFiles.value);
 }
-
+function selectProblemType(type: string) {
+  selectedType.value = type;
+}
 const onSubmit = () => {
   console.log("Submitted:", {
     type: selectedType.value,
@@ -162,7 +164,7 @@ $app-narrow-mobile: 364px;
     width: 560px;
     max-width: 100%;
   }
-  &__images {
+  &__upload-file-container {
     width: 100%;
     max-width: 928px;
     margin: 0 auto;

@@ -136,7 +136,6 @@ const toggleTheme = () => {
     width: 100%;
     position: relative;
     z-index: 1;
-    color: #333;
     .icon-wrapper {
         display: flex;
         align-items: center;

@@ -34,7 +34,6 @@ interface Props {
   iconColor?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
-  label: "Метка",
   rounded: true,
   designType: "primary",
   stretch: "fill",

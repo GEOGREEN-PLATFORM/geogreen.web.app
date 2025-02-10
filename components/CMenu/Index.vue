@@ -6,9 +6,7 @@
         <div class="burger" @click="toggleMenu" :class="{
             active: isMobileMenuOpened,
         }">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
+            <div class="bar" v-for="_ in 3"></div>
         </div>
     </div>
     <div class="toolbar-right">
@@ -45,29 +43,13 @@
 
 <script setup lang="ts">
 import { mdiAccountOutline, mdiCog } from "@quasar/extras/mdi-v6";
+interface Props {
+  pages: Tab[];
+}
+
+const props = defineProps<Props>();
 const currentPageKey = shallowRef("main");
 const isMobileMenuOpened = shallowRef(false);
-const pages: Tab[] = [
-  {
-    key: "main",
-    name: "Главная",
-    disabled: true,
-  },
-  {
-    key: "hotbeds",
-    name: "Очаги",
-    disabled: true,
-  },
-  {
-    key: "report",
-    name: "Сообщить",
-  },
-  {
-    key: "for-employee",
-    name: "Сотруднику",
-    disabled: true,
-  },
-];
 function toggleMenu() {
   isMobileMenuOpened.value = !isMobileMenuOpened.value;
 }
@@ -77,7 +59,7 @@ function toggleMenu() {
 .c-menu-container {
 $app-desktop: 1294px;
 $app-laptop: 960px;
-$app-mobile: 440px;
+$app-mobile: 600px;
 $app-narrow-mobile: 364px;
 
 
@@ -112,33 +94,18 @@ gap: 48px;
 
         }
         &__text {
-            font-family: Montserrat;
             font-size: 32px;
             background: linear-gradient(270deg, #006D07 0%, #04700B 52%, #000000 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
     }
-    // --- *start* 
-    // comment: 08.02.2025 - подумать над перемещением в качестве props для CTabs
-    :deep(.c-tabs-container .q-tabs .q-tabs__content) {
-        height: 64px;
-    }
-    // --- *end*
     .toolbar-right {
         display: flex;
         align-items: center;
         gap: 32px;
         height: 64px;
         @media screen and (max-width: $app-laptop) {
-          display: none;
-        }
-    }
-    .login-buttons {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        @media screen and (max-width: $app-desktop) {
           display: none;
         }
     }
@@ -156,8 +123,8 @@ gap: 48px;
         .bar {
         width: 100%;
         height: 4px;
-        background-color: black;
-        transition: 0.3s;
+        background-color: var(--app-grey-500);
+        transition: transform 0.3s ease, opacity 0.3s ease;
         border-radius: 5px;
         }
     }
@@ -193,36 +160,24 @@ gap: 48px;
             flex-direction: column;
             align-items: flex-end;
             width: 100%;
-            :deep(.c-tabs-container) {
-                width: 100%;
-            }
-            :deep(.c-tabs-container .q-tabs) {
-                width: 100%;
-            }
-            :deep(.tabs__item) {
-                justify-content: flex-end;
-            }
-            :deep(.c-tabs-container .q-tabs .q-tabs__content) {
-                height: unset;  
-                .tabs__content {
-                    height: 64px;
-                }
-                .q-tab {
-                    width: 100%;
-                }
-            }
-            .login-buttons {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              width: 100%;
-              gap: 24px;
-              padding: 0px 20vw;
-              margin-top: 24px;
-              @media screen and (max-width: $app-mobile) {
-                padding: 0px 24px;
-              }
-            }
+        }
+      }
+      .login-buttons {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        @media screen and (max-width: $app-desktop) and (min-width: $app-laptop) {
+          display: none;
+        }
+        @media screen and (max-width: $app-laptop) {
+          flex-direction: column;
+          width: 100%;
+          gap: 24px;
+          padding: 0px 20vw;
+          margin-top: 24px;
+        }
+        @media screen and (max-width: $app-mobile) {
+          padding: 0px 24px;
         }
       }
 }

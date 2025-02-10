@@ -14,7 +14,7 @@
         <p class="drag-drop-container__main-text gg-t-big">
         Перетащите сюда ваши файлы
         </p>
-        <p class="drag-drop-container__sub-text q-mt-sm gg-cap">JPG, PNG, Max 20MB</p>
+        <p class="drag-drop-container__sub-text gg-cap">JPG, PNG, Max 20MB</p>
       </div>
       <p class="drag-drop-container__main-text gg-t-big">или</p>
       <GGButton 
@@ -37,19 +37,14 @@
 </template>
 
 <script lang="ts" setup>
-defineProps({
-  multiple: {
-    type: Boolean,
-    default: false,
-  },
-  accept: {
-    type: String,
-    default: "image/jpeg, image/png",
-  },
-  background: {
-    type: String,
-    default: "",
-  },
+interface Props {
+  multiple?: boolean;
+  accept?: string;
+  background?: string;
+}
+const props = withDefaults(defineProps<Props>(), {
+  accept: "image/jpeg, image/png",
+  multiple: false,
 });
 
 const emits = defineEmits<{
@@ -97,7 +92,7 @@ const emitFiles = (files: File[]) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed #ccc;
+  border: 2px dashed var(--app-grey-100);
   padding: 56px 24px;
   border-radius: 8px;
   transition: background-color 0.3s, border-color 0.3s;
@@ -114,6 +109,7 @@ const emitFiles = (files: File[]) => {
         font-weight: bold;
     }
     .drag-drop-container__sub-text {
+      margin-top: 8px;
       font-weight: normal;
     }
   }
