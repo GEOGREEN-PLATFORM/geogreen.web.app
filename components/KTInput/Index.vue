@@ -14,6 +14,7 @@
       :placeholder="placeholder"
       :name="name"
       @update:model-value="updateValue"
+      :autogrow="autogrow"
     >
       <template #append>
         <q-icon
@@ -40,10 +41,10 @@ interface Props {
     | "number"
     | "password"
     | "search"
-    | "textarea"
     | "time"
     | "text"
     | "email"
+    | "textarea"
     | "tel"
     | "file"
     | "url"
@@ -56,6 +57,7 @@ interface Props {
   hideErrorIcon?: boolean;
   placeholder?: string;
   name?: string;
+  autogrow?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -66,10 +68,10 @@ const props = withDefaults(defineProps<Props>(), {
     (val) => (val && val.length > 0) || "Поле не может быть пустым",
   ],
   type: "text",
-  label: "Метка",
   placeholder: "Введите текст",
   hideErrorIcon: true,
   hideBottomSpace: true,
+  autogrow: false,
 });
 
 const emits = defineEmits<{
@@ -99,56 +101,60 @@ function togglePassword() {
     border-radius: 16px;
   }
   .q-field--outlined .q-field__control:before {
-    border: 1px solid var(--app-black-6);
+    border: 1px solid var(--app-grey-300);
   }
   .q-field--outlined .q-field__control:after {
     border: 1px solid transparent;
   }
+  .q-field--outlined .q-field__control:hover:after {
+    border-color: var(--app-green-300);
+    border-width: 1px;
+  }
   .q-field--outlined.q-field--highlighted .q-field__control:after {
-    border-color: var(--app-blue-9);
+    border-color: var(--app-green-500);
     border-width: 1px;
   }
   .q-field--outlined.q-field--highlighted.q-field--error
     .q-field__control:after {
-    border-color: var(--app-red-10);
+    border-color: var(--app-red-500);
   }
   .q-field--outlined.q-field--highlighted.q-field--error {
     .q-field__label {
       color: var(--input-label);
     }
   }
-  .q-field--outlined.q-field--highlighted.q-field--error.q-field--focused {
+  .q-field--outlined.q-field--highlighted.q-field--focused {
     .q-field__label {
-      color: var(--app-blue-9);
+      color: var(--app-green-500);
     }
   }
   .q-field__label {
-    transform: skewX(-10deg);
-    top: 22px;
+    top: 18px;
     color: var(--input-label);
   }
   .q-field--highlighted .q-field__label {
     color: currentColor;
   }
   .q-field--float .q-field__label {
-    transform: translateY(-48%) scale(0.85) skewX(0deg);
+    transform: translateY(-48%) scale(0.85);
   }
   .q-field__native:-webkit-autofill + .q-field__label,
   .q-field__input:-webkit-autofill + .q-field__label {
-    transform: translateY(-48%) scale(0.85) skewX(0deg);
+    transform: translateY(-48%) scale(0.85);
   }
   .q-field__native,
   .q-field__input {
-    color: var(--app-black-10);
+    color: var(--app-grey-500);
+    caret-color: var(--app-green-500);
   }
   .q-field--labeled .q-field__native {
     line-height: 20px;
   }
   .q-field__control {
-    height: 64px;
+    height: 56px;
   }
   .q-field__marginal {
-    height: 64px;
+    height: 56px;
   }
   input[type="password"]:not(:placeholder-shown) {
     font-family: Verdana;
@@ -158,12 +164,15 @@ function togglePassword() {
   input {
     font-size: 16px;
   }
+  &:not(:has(.q-field--labeled)) .q-textarea .q-field__native {
+    padding: 12px 0px;
+  }
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
     background-clip: text !important;
-    -webkit-text-fill-color: var(--app-black-10);
+    -webkit-text-fill-color: var(--app-grey-500);
     box-shadow: inset 0 0 20px 20px transparent;
   }
 }
