@@ -93,7 +93,7 @@ $app-desktop: 1294px;
 $app-laptop: 960px;
 $app-mobile: 600px;
 $app-narrow-mobile: 364px;
-
+  background-color: var(--app-white);
   max-width: 75vw;
   margin: 0 auto;
   padding-bottom: 24px;

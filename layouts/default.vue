@@ -44,6 +44,7 @@ const pages: Tab[] = [
   $app-laptop: 960px;
   $app-mobile: 600px;
   $app-narrow-mobile: 364px;
+  background-color: var(--app-white);
     .header-container {
         padding: 0px 28px;
         background-color: var(--app-white);
