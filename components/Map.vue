@@ -11,8 +11,8 @@
     >
       <ol-view
         :center="gGreenOlMap.center"
-        :rotation="gGreenOlMap.rotation.value"
-        :resolution="gGreenOlMap.resolution.value"
+        :rotation="gGreenOlMap.rotation"
+        :resolution="gGreenOlMap.resolution"
         :projection="gGreenOlMap.projection"
       />
       <ol-tile-layer>
@@ -31,30 +31,20 @@
         />
         <ol-toggle-control
           :key="isAllZonesVisible"
-          :html="`${isAllZonesVisible ? 'Скрыть' : 'Показать'} все зоны`"
-          :class-name="`g-green-control-bar__item g-green-control-bar__zones-visible
-          ${isAllZonesVisible ? 'g-green-control-bar__zones-visible--off' : ''}`"
+          :html="isAllZonesVisible ? 'Скрыть все зоны' : 'Показать все зоны'"
+          :class-name="`g-green-control-bar__item g-green-control-bar__zones-visible ${isAllZonesVisible ? 'g-green-control-bar__zones-visible--off' : ''}`"
           :on-toggle="toggleAllZonesVisibility"
         />
       </ol-control-bar>
       <ol-interaction-clusterselect
-        v-if="gGreenOlMap.interactionType.value !== 'zone_add'"
+        v-if="gGreenOlMap.interactionType !== 'zone_add'"
         ref="featureSelect"
         :point-radius="64"
-        @select="
-          (event: SelectEvent) =>
-            gGreenCluster.selectMarker.call(gGreenCluster, event)
-        "
+        @select="selectMarker"
       >
         <ol-style
-          :override-style-function="
-            (feature: FeatureLike, style: Style) =>
-              gGreenCluster.overrideMarkerStyleFunction.call(
-                gGreenCluster,
-                feature,
-                style,
-              )
-          "
+          :override-style-function="(feature: FeatureLike, style: Style) =>
+            overrideMarkerStyleFunction(feature, style)"
         >
           <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
           <ol-style-circle :radius="48">
@@ -69,56 +59,40 @@
 
       <ol-vector-layer>
         <ol-source-vector
-          :features="gGreenCluster.zonesFeatures.value"
+          :features="gGreenCluster.zonesFeatures"
           :format="gGreenCluster.geoJSON"
         />
         <ol-style
-          :override-style-function="
-            (feature: FeatureLike, style: Style) =>
-              gGreenCluster.overrideZoneStyleFunction.call(
-                gGreenCluster,
-                feature,
-                style,
-              )
-          "
+          :override-style-function="(feature: FeatureLike, style: Style) =>
+            overrideZoneStyleFunction(feature, style)"
         />
       </ol-vector-layer>
       <ol-vector-layer>
         <ol-source-vector :key="upKey">
           <ol-interaction-draw
-            v-if="gGreenOlMap.interactionType.value === 'zone_add'"
+            v-if="gGreenOlMap.interactionType === 'zone_add'"
             type="Polygon"
-            @drawend="
-              (event: DrawEvent) => gGreenZone.create.call(gGreenZone, event)
-            "
+            @drawend="createZone"
           >
             <ol-style
-              :override-style-function="
-                () => getPolygonStyleByDensity(gGreenZone.density.value)
-              "
+              :override-style-function="() =>
+                getPolygonStyleByDensity(gGreenZone.density)"
             />
           </ol-interaction-draw>
           <ol-style
-            :override-style-function="
-              () => getPolygonStyleByDensity(gGreenZone.density.value)
-            "
+            :override-style-function="() =>
+              getPolygonStyleByDensity(gGreenZone.density)"
           />
         </ol-source-vector>
       </ol-vector-layer>
       <ol-animated-clusterlayer :animation-duration="500" :distance="40">
         <ol-source-vector
-          :features="gGreenCluster.markerFeatures.value"
+          :features="gGreenCluster.markerFeatures"
           :format="gGreenCluster.geoJSON"
         />
         <ol-style
-          :override-style-function="
-            (feature: FeatureLike, style: Style) =>
-              gGreenCluster.overrideMarkerStyleFunction.call(
-                gGreenCluster,
-                feature,
-                style,
-              )
-          "
+          :override-style-function="(feature: FeatureLike, style: Style) =>
+            overrideMarkerStyleFunction(feature, style)"
         >
           <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
           <ol-style-circle :radius="48">
@@ -131,9 +105,9 @@
         </ol-style>
       </ol-animated-clusterlayer>
       <ol-overlay
-        v-for="[id, marker] in gGreenCluster.markersPopupOpened.value"
+        v-for="[id, marker] in Array.from(gGreenCluster.markersPopupOpened.entries())"
         :key="id"
-        :position="marker.coordinates"
+        :position="marker.coordinate"
         :auto-pan="true"
         class-name="g-green-marker-popup-container"
         positioning="bottom-center"
@@ -174,17 +148,15 @@
                   добавленной зоны
                 </GGHint>
               </q-icon>
-              <span
-                class="actions-label__text"
-                @click="gGreenCluster.addZone(id)"
+              <span class="actions-label__text" @click="addZone(id)"
                 >Добавить зону</span
               >
               <q-icon class="actions-label__icon" :name="mdiPlus" />
             </li>
-            <li v-if="marker.relatedZone" class="actions-label__action">
+            <li v-if="marker.coordinates" class="actions-label__action">
               <span class="actions-label__text">Плотность:</span>
               <GGOptions
-                v-model="marker.relatedZone.density"
+                v-model="marker.details.density"
                 inline
                 :options="densityOptions"
                 @update:model-value="updateFeatures"
@@ -202,10 +174,10 @@
       </ol-overlay>
     </ol-map>
     <GGDialogConfirm
-      v-model="confirmationDialog.isOpened.value"
-      :action-main-text="confirmationDialog.mainText.value"
-      :action-button-confirm-text="confirmationDialog.buttonText.value"
-      @confirm="gGreenCluster.deleteMarker.call(gGreenCluster)"
+      v-model="confirmationDialog.isOpened"
+      :action-main-text="confirmationDialog.mainText"
+      :action-button-confirm-text="confirmationDialog.buttonText"
+      @confirm="deleteMarker"
     />
   </ClientOnly>
 </template>
@@ -229,7 +201,7 @@ import type { DrawEvent } from "ol/interaction/Draw";
 import type { SelectEvent } from "ol/interaction/Select";
 import { Circle, Fill, Icon, Stroke, Style } from "ol/style.js";
 import type CircleStyle from "ol/style/Circle";
-import type { ShallowRef } from "vue";
+import { reactive, ref, shallowRef, watch } from "vue";
 import markerIconDefaultSrc from "/icons/map_marker_default.png";
 import markerIconGreenSrc from "/icons/map_marker_green.png";
 import markerIconOrangeSrc from "/icons/map_marker_orange.png";
@@ -238,17 +210,189 @@ import markerIconRedSrc from "/icons/map_marker_red.png";
 interface Props {
   markers: Marker[];
 }
-// Баг с исчезновением полигона при нажатии на него
-// Баг с неправильной цветокодировкой полигонов при нажатии показать скрыть все
+
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
 });
 const emit = defineEmits<{
-  addMarker: [coordinate: Coordinate, relatedZone?: Zone];
+  addMarker: [coordinate: Coordinate, zone?: unknown];
   deleteMarker: [id: string];
   editMarker: [id: string, marker: Marker];
 }>();
 
+const confirmationDialog = reactive({
+  isOpened: false,
+  mainText: "",
+  buttonText: "",
+});
+
+function openConfirmationDialog(mainText: string, buttonText: string) {
+  confirmationDialog.mainText = mainText;
+  confirmationDialog.buttonText = buttonText;
+  confirmationDialog.isOpened = true;
+}
+
+const gGreenOlMap = reactive({
+  center: [4890670.38077, 7615726.876165] as Coordinate,
+  resolution: 36,
+  rotation: 0,
+  interactionType: "none",
+  projection: "EPSG:3857",
+  url: "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}@2x.png",
+});
+
+const gGreenZone = reactive({
+  density: "default" as "default" | "low" | "medium" | "high",
+});
+
+const gGreenCluster = reactive({
+  markersPopupOpened: new Map<string, Marker>(),
+  markerFeatures: [] as Feature<Geometry>[],
+  zonesFeatures: [] as Feature<Geometry>[],
+  markersDict: new Map<string, Marker>(),
+  currentSelectedMarkerId: "",
+  geoJSON: new GeoJSON(),
+});
+
+function convertMarkersToFeatures(markers: Marker[]) {
+  const features = markers
+    .filter((marker) => marker.coordinate)
+    .map((marker) => ({
+      type: "Feature",
+      properties: {},
+      geometry: { type: "Point", coordinates: marker.coordinate! },
+      id: marker.id,
+    }));
+  const providerFeatureCollection = {
+    type: "FeatureCollection",
+    features,
+  };
+  return gGreenCluster.geoJSON.readFeatures(providerFeatureCollection);
+}
+
+function convertZonesToFeatures(markers: Marker[]) {
+  const features = markers
+    .filter((marker) => marker.coordinates)
+    .map((marker) => ({
+      type: "Feature",
+      properties: { density: marker.details?.density || "default" },
+      geometry: { type: "Polygon", coordinates: marker.coordinates },
+      id: marker.id,
+    }));
+  const providerFeatureCollection = {
+    type: "FeatureCollection",
+    features,
+  };
+  return gGreenCluster.geoJSON.readFeatures(providerFeatureCollection);
+}
+
+function convertMarkersToDictionary(markers: Marker[]) {
+  return new Map(markers.map((marker) => [marker.id, marker]));
+}
+
+function getMemberStyle(clusterMember: FeatureLike) {
+  const features = clusterMember.get("features");
+  if (!features || !features.length) return null;
+  const markerId = features[0].getId();
+  const marker = gGreenCluster.markersDict.get(markerId);
+  return new Style({
+    geometry: clusterMember.getGeometry() as Geometry,
+    image: getMarkerIconByDensity(marker?.details?.density || "default"),
+  });
+}
+
+function selectMarker(event: SelectEvent) {
+  const selected = event.selected[0];
+  if (selected && selected.get("features")?.length === 1) {
+    const markerId = selected.get("features")[0].getId();
+    gGreenCluster.currentSelectedMarkerId = markerId;
+    const marker = gGreenCluster.markersDict.get(markerId);
+    if (marker) {
+      gGreenCluster.zonesFeatures = convertZonesToFeatures(
+        Array.from(gGreenCluster.markersDict.values()),
+      );
+      openMarkerPopup(markerId);
+    }
+  } else {
+    gGreenCluster.currentSelectedMarkerId = "";
+  }
+}
+
+function deleteMarker() {
+  emit("deleteMarker", gGreenCluster.currentSelectedMarkerId);
+  closeMarkerPopup(gGreenCluster.currentSelectedMarkerId);
+}
+
+function addMakrer(coordinate: Coordinate, zone?: unknown) {
+  emit("addMarker", coordinate, zone);
+}
+
+function openMarkerPopup(markerId: string) {
+  const marker = gGreenCluster.markersDict.get(markerId);
+  if (marker) {
+    gGreenCluster.markersPopupOpened.set(markerId, marker);
+  }
+}
+
+function closeMarkerPopup(markerId: string) {
+  gGreenCluster.markersPopupOpened.delete(markerId);
+}
+
+function addZone(markerId: string) {
+  gGreenOlMap.interactionType = "zone_add";
+  closeMarkerPopup(markerId);
+  gGreenCluster.currentSelectedMarkerId = markerId;
+  const marker = gGreenCluster.markersDict.get(markerId);
+  gGreenZone.density = marker?.details?.density || "default";
+}
+
+function overrideZoneStyleFunction(feature: FeatureLike, _: Style) {
+  return getPolygonStyleByDensity(feature.getProperties().density);
+}
+
+function overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
+  const clusteredFeatures = feature.get("features");
+  if (!clusteredFeatures) return;
+  const size = clusteredFeatures.length;
+  const colorFill = size >= 15 ? "#FF0022" : size > 5 ? "#FF8200" : "#55A231";
+  const colorStroke = size >= 15 ? "#55A231" : "#FF0022";
+  const radius = 16;
+  if (size === 1) {
+    style.getText()?.setText("");
+    const styleCopyForSingleMember = style.clone();
+    const newImage = getMemberStyle(feature)?.getImage();
+    if (newImage) {
+      styleCopyForSingleMember.setImage(newImage);
+    }
+    return styleCopyForSingleMember;
+  }
+  (style.getImage() as CircleStyle)?.getStroke()?.setColor(colorStroke);
+  (style.getImage() as CircleStyle)?.getFill()?.setColor(colorFill);
+  (style.getImage() as CircleStyle)?.setRadius(radius);
+  style.getText()?.setText(size.toString());
+  return style;
+}
+
+function getMarkerIconByDensity(
+  density?: "default" | "low" | "medium" | "high",
+) {
+  return new Icon({
+    src: markersSrcByDensity.value[density || "default"],
+  });
+}
+
+function updateFeatures() {
+  gGreenCluster.zonesFeatures = convertZonesToFeatures(
+    Array.from(gGreenCluster.markersDict.values()),
+  );
+  gGreenCluster.markerFeatures = convertMarkersToFeatures(
+    Array.from(gGreenCluster.markersDict.values()),
+  );
+}
+
+//
+// Дополнительные данные и ссылки
+//
 const markersSrcByDensity = ref({
   default: markerIconDefaultSrc,
   low: markerIconGreenSrc,
@@ -273,345 +417,68 @@ const densityOptions = [
     keepColor: true,
   },
 ];
+
 const isAllZonesVisible = ref(false);
 const upKey = ref(0);
 const controlBarRef = useTemplateRef<MapControls>("controlBar");
 const featureSelectRef = useTemplateRef<SelectCluster>("featureSelect");
 
-class ConfirmationDialog {
-  public mainText: ShallowRef<string>;
-  public buttonText: ShallowRef<string>;
-  public isOpened: ShallowRef<boolean>;
-
-  constructor() {
-    this.isOpened = shallowRef(false);
-    this.mainText = shallowRef("");
-    this.buttonText = shallowRef("");
-  }
-
-  open(mainText: string, buttonText: string) {
-    this.mainText.value = mainText;
-    this.buttonText.value = buttonText;
-    this.isOpened.value = true;
-  }
-}
-const confirmationDialog = shallowRef(new ConfirmationDialog());
-
-class GGreenOlMap {
-  public resolution: ShallowRef<number>;
-  public rotation: ShallowRef<number>;
-  public center: Coordinate;
-  public interactionType: ShallowRef<string>;
-  public readonly projection = "EPSG:3857";
-  public readonly url =
-    "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}@2x.png";
-
-  constructor() {
-    this.center = reactive([4890670.38077, 7615726.876165]);
-    this.resolution = shallowRef(36);
-    this.rotation = shallowRef(0);
-    this.interactionType = shallowRef("none");
-  }
-}
-const gGreenOlMap = shallowRef(new GGreenOlMap());
-
-class GGreenCluster {
-  public markersPopupOpened: Ref<Map<string, Marker>>;
-  public markerFeatures: Ref<Feature<Geometry>[]>;
-  public zonesFeatures: Ref<Feature<Geometry>[]>;
-  public markersDict: Map<string, Marker>;
-  public geoJSON = new GeoJSON();
-  public currentSelectedMarkerId: ShallowRef<string>;
-
-  constructor(markers: Marker[]) {
-    this.markersPopupOpened = ref(new Map());
-    this.currentSelectedMarkerId = shallowRef("");
-    this.markersDict = this.convertMarkersToDictionary(markers);
-    this.markerFeatures = ref(this.convertMarkersToFeatures(markers)) as Ref<
-      Feature<Geometry>[]
-    >;
-    this.zonesFeatures = ref(this.convertZonesToFeatures(markers)) as Ref<
-      Feature<Geometry>[]
-    >;
-  }
-
-  convertZonesToFeatures(markers: Marker[]) {
-    const features = markers
-      .filter((marker) => marker.relatedZone?.visible)
-      .map(({ id, relatedZone }) => ({
-        type: "Feature",
-        properties: {
-          density: relatedZone!.density,
-        },
-        geometry: {
-          type: "Polygon",
-          coordinates: relatedZone!.coordinates,
-        },
-        id,
-      }));
-    const providerFeatureCollection = {
-      type: "FeatureCollection",
-      features,
-    };
-    return this.geoJSON.readFeatures(providerFeatureCollection);
-  }
-
-  convertMarkersToFeatures(markers: Marker[]) {
-    const features = markers.map(({ id, coordinates }) => ({
-      type: "Feature",
-      properties: {},
-      geometry: {
-        type: "Point",
-        coordinates,
-      },
-      id,
-    }));
-    const providerFeatureCollection = {
-      type: "FeatureCollection",
-      features,
-    };
-    return this.geoJSON.readFeatures(providerFeatureCollection);
-  }
-
-  convertMarkersToDictionary(markers: Marker[]) {
-    return new Map(
-      markers.map((marker) => [
-        marker.id,
-        {
-          ...marker,
-          relatedZone: marker.relatedZone
-            ? {
-                ...marker.relatedZone,
-                visible:
-                  typeof this.markersDict?.get(marker.id)?.relatedZone!
-                    .visible === "boolean"
-                    ? this.markersDict?.get(marker.id)?.relatedZone!.visible
-                    : this.markersDict?.size !== 0,
-              }
-            : null,
-        },
-      ]),
-    );
-  }
-
-  getMemberStyle(clusterMember: FeatureLike) {
-    return new Style({
-      geometry: clusterMember.getGeometry() as Geometry,
-      image: getMarkerIconByDensity(
-        this.markersDict.get(clusterMember.get("features")[0].getId())
-          ?.relatedZone?.density,
-      ),
-    });
-  }
-
-  selectMarker(event: SelectEvent) {
-    if (event.selected[0] && event.selected[0].get("features")?.length === 1) {
-      const markerId = event.selected[0].get("features")[0].getId();
-      this.currentSelectedMarkerId.value = markerId;
-      if (markerId && this.markersDict.get(markerId)) {
-        if (this.markersDict.get(markerId)!.relatedZone) {
-          this.markersDict.set(markerId, {
-            ...this.markersDict.get(markerId)!,
-            relatedZone: {
-              ...this.markersDict.get(markerId)!.relatedZone!,
-              visible: true,
-            },
-          });
-        }
-        this.zonesFeatures.value = this.convertZonesToFeatures([
-          ...this.markersDict.values(),
-        ]);
-        this.openMarkerPopup(markerId);
-      }
-    } else {
-      this.currentSelectedMarkerId.value = "";
-    }
-  }
-
-  deleteMarker() {
-    emit("deleteMarker", this.currentSelectedMarkerId.value);
-    this.closeMarkerPopup(this.currentSelectedMarkerId.value);
-  }
-
-  addMakrer(coordinate: Coordinate, zoneCoordinates?: Coordinate[]) {
-    emit("addMarker", coordinate, zoneCoordinates);
-  }
-
-  openMarkerPopup(markerId: string) {
-    this.markersPopupOpened.value.set(
-      markerId,
-      this.markersDict.get(markerId)!,
-    );
-  }
-
-  closeMarkerPopup(markerId: string) {
-    this.markersPopupOpened.value.delete(markerId);
-  }
-
-  addZone(markerId: string) {
-    gGreenOlMap.value.interactionType.value = "zone_add";
-    this.closeMarkerPopup(markerId);
-    this.currentSelectedMarkerId.value = markerId;
-    // eslint-disable-next-line ts/no-use-before-define
-    gGreenZone.value.density.value =
-      this.markersDict.get(markerId)?.relatedZone?.density;
-  }
-
-  overrideZoneStyleFunction(feature: FeatureLike, _: Style) {
-    return getPolygonStyleByDensity(feature.getProperties().density);
-  }
-
-  overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
-    const clusteredFeatures = feature.get("features");
-    if (!clusteredFeatures) return;
-    const size = clusteredFeatures.length;
-    const colorFill = size >= 15 ? "#FF0022" : size > 5 ? "#FF8200" : "#55A231";
-    const colorStroke = size >= 15 ? "#55A231" : "#FF0022";
-    const radius = 16;
-    if (size === 1) {
-      style.getText()?.setText("");
-      const styleCopyForSingleMember = style.clone();
-      const newImage = this.getMemberStyle(feature).getImage();
-      if (newImage) {
-        styleCopyForSingleMember.setImage(newImage);
-      }
-      return styleCopyForSingleMember;
-    }
-    (style.getImage() as CircleStyle)?.getStroke()?.setColor(colorStroke);
-    (style.getImage() as CircleStyle)?.getFill()?.setColor(colorFill);
-    (style.getImage() as CircleStyle)?.setRadius(radius);
-    style.getText()?.setText(size.toString());
-    return style;
-  }
-}
-const gGreenCluster = shallowRef(new GGreenCluster(props.markers));
-
-function getMarkerIconByDensity(density?: "low" | "medium" | "high") {
-  return new Icon({
-    src: markersSrcByDensity.value[density || "default"],
-  });
-}
-
-function updateFeatures() {
-  gGreenCluster.value.zonesFeatures.value =
-    gGreenCluster.value.convertZonesToFeatures([
-      ...gGreenCluster.value.markersDict.values(),
-    ]);
-  gGreenCluster.value.markerFeatures.value =
-    gGreenCluster.value.convertMarkersToFeatures([
-      ...gGreenCluster.value.markersDict.values(),
-    ]);
-}
-
-class GGreenZone {
-  public density: ShallowRef<"low" | "medium" | "high" | undefined>;
-
-  constructor() {
-    this.density = shallowRef();
-  }
-
-  create(event: DrawEvent) {
-    if (gGreenCluster.value.currentSelectedMarkerId.value && event.feature) {
-      gGreenCluster.value.markersDict.set(
-        gGreenCluster.value.currentSelectedMarkerId.value,
-        {
-          ...gGreenCluster.value.markersDict.get(
-            gGreenCluster.value.currentSelectedMarkerId.value,
-          )!,
-          coordinates: getCenter(event.feature.getGeometry().getExtent()),
-          relatedZone: {
-            coordinates: event.feature.getGeometry().getCoordinates(),
-            density: this.density.value,
-            visible: true,
-          },
-        },
-      );
-      toggleZoneAdd();
-
-      emit(
-        "editMarker",
-        gGreenCluster.value.currentSelectedMarkerId.value,
-        gGreenCluster.value.markersDict.get(
-          gGreenCluster.value.currentSelectedMarkerId.value,
-        ),
-      );
-      gGreenCluster.value.currentSelectedMarkerId.value = "";
-    } else {
-      gGreenCluster.value.addMakrer(
-        getCenter(event.feature.getGeometry().getExtent()),
-        {
-          coordinates: event.feature.getGeometry().getCoordinates(),
-          density: this.density.value,
-        },
-      );
-    }
-    upKey.value++;
-  }
-}
-
-const gGreenZone = shallowRef(new GGreenZone());
-
+//
+// Функции управления состоянием и событиями карты
+//
 function toggleAllZonesVisibility() {
   isAllZonesVisible.value = !isAllZonesVisible.value;
-  gGreenOlMap.value.interactionType.value = "none";
-  gGreenCluster.value.zonesFeatures.value =
-    gGreenCluster.value.convertZonesToFeatures(
-      props.markers.map((marker) => {
-        if (marker.relatedZone) {
-          return {
-            ...marker,
-            relatedZone: {
-              ...marker.relatedZone,
-              visible: isAllZonesVisible.value,
-            },
-          };
-        }
-        return marker;
-      }),
-    );
+  gGreenOlMap.interactionType = "none";
+  if (isAllZonesVisible.value) {
+    gGreenCluster.zonesFeatures = convertZonesToFeatures(props.markers);
+  } else {
+    gGreenCluster.zonesFeatures = [];
+  }
 }
 
 function handleCloseMarkerPopup(markerId: string) {
-  gGreenCluster.value.closeMarkerPopup(markerId);
+  closeMarkerPopup(markerId);
   deselectFeatures();
 }
+
 function handleMapPointerMove(event: MapBrowserEvent<UIEvent>) {
   const hit = event.target.hasFeatureAtPixel(event.pixel);
   event.target.getTargetElement().style.cursor = hit ? "pointer" : "";
 }
+
 function deselectFeatures() {
   featureSelectRef.value.select.getFeatures().clear();
 }
 
 function toggleMarkerAdd() {
-  if (gGreenOlMap.value.interactionType.value !== "marker_add") {
-    gGreenOlMap.value.interactionType.value = "marker_add";
-  } else {
-    gGreenOlMap.value.interactionType.value = "none";
-  }
+  gGreenOlMap.interactionType =
+    gGreenOlMap.interactionType !== "marker_add" ? "marker_add" : "none";
 }
 
 function toggleZoneAdd() {
-  if (gGreenOlMap.value.interactionType.value !== "zone_add") {
-    gGreenCluster.value.currentSelectedMarkerId.value = "";
-    gGreenZone.value.density.value = "default";
-    gGreenOlMap.value.interactionType.value = "zone_add";
+  if (gGreenOlMap.interactionType !== "zone_add") {
+    gGreenCluster.currentSelectedMarkerId = "";
+    gGreenZone.density = "default";
+    gGreenOlMap.interactionType = "zone_add";
   } else {
-    gGreenOlMap.value.interactionType.value = "none";
+    gGreenOlMap.interactionType = "none";
   }
 }
 
 function suggestDeleteMarker(id: string) {
-  confirmationDialog.value.open("удалить метку", "Удалить");
-  gGreenCluster.value.currentSelectedMarkerId.value = id;
+  openConfirmationDialog("удалить метку", "Удалить");
+  gGreenCluster.currentSelectedMarkerId = id;
 }
 
 function handleMapClick(event: MapBrowserEvent<UIEvent>) {
-  if (gGreenOlMap.value.interactionType.value === "marker_add") {
-    gGreenCluster.value.addMakrer(event.coordinate);
+  if (gGreenOlMap.interactionType === "marker_add") {
+    addMakrer(event.coordinate);
   }
 }
-function getPolygonStyleByDensity(density: "low" | "medium" | "high") {
+
+function getPolygonStyleByDensity(
+  density: "default" | "low" | "medium" | "high",
+) {
   let fillColor = "";
   switch (density) {
     case "low":
@@ -647,6 +514,7 @@ function getPolygonStyleByDensity(density: "low" | "medium" | "high") {
     }),
   });
 }
+
 function configureMap() {
   const controlElement = controlBarRef.value.control.element;
   controlElement.classList.add("g-green-control-bar");
@@ -667,23 +535,56 @@ function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle("is-active");
 }
 
+// Функция создания зоны (вызывается при завершении рисования)
+function createZone(event: DrawEvent) {
+  if (gGreenCluster.currentSelectedMarkerId && event.feature) {
+    const marker = gGreenCluster.markersDict.get(
+      gGreenCluster.currentSelectedMarkerId,
+    );
+    if (marker) {
+      // Обновляем координату маркера и записываем координаты зоны
+      marker.coordinate = getCenter(event.feature.getGeometry().getExtent());
+      marker.coordinates = event.feature.getGeometry().getCoordinates();
+      if (marker.details) {
+        marker.details.density = gGreenZone.density;
+      }
+      toggleZoneAdd();
+      emit("editMarker", gGreenCluster.currentSelectedMarkerId, marker);
+    }
+    gGreenCluster.currentSelectedMarkerId = "";
+  } else if (event.feature) {
+    const coordinate = getCenter(event.feature.getGeometry().getExtent());
+    const zoneCoordinates = event.feature.getGeometry().getCoordinates();
+    const newMarker: Marker = {
+      coordinate,
+      coordinates: zoneCoordinates,
+      details: { square: 0, density: gGreenZone.density },
+    };
+    addMakrer(newMarker.coordinate, {
+      coordinates: newMarker.coordinates,
+      density: gGreenZone.density,
+    });
+  }
+  upKey.value++;
+}
+
+//
+// Следим за изменением входящего списка маркеров
+//
 watch(
   () => props.markers,
   (newMarkers) => {
-    gGreenCluster.value.markersDict =
-      gGreenCluster.value.convertMarkersToDictionary(newMarkers);
-    gGreenCluster.value.markerFeatures.value =
-      gGreenCluster.value.convertMarkersToFeatures(newMarkers);
-    gGreenCluster.value.zonesFeatures.value =
-      gGreenCluster.value.convertZonesToFeatures([
-        ...gGreenCluster.value.markersDict.values(),
-      ]);
+    gGreenCluster.markersDict = convertMarkersToDictionary(newMarkers);
+    gGreenCluster.markerFeatures = convertMarkersToFeatures(newMarkers);
+    gGreenCluster.zonesFeatures = convertZonesToFeatures(
+      Array.from(gGreenCluster.markersDict.values()),
+    );
   },
-  {
-    deep: true,
-  },
+  { deep: true },
 );
 </script>
+
+
 
 <style scoped lang="scss">
 .g-green-map {
