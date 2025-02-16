@@ -140,6 +140,7 @@ $app-narrow-mobile: 364px;
       padding: 8px 16px;
       background: var(--app-green-050);
       border-radius: 12px;
+      color: var(--app-grey-500);
       cursor: pointer;
     }
     .report-form__type-button--active {
