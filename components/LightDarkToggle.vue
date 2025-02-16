@@ -1,7 +1,7 @@
 <template>
     <div
       class="theme-toggle"
-      :class="{ 'theme-toggle--dark': isDark }"
+      :class="{ 'theme-toggle--dark': colorMode?.value === 'dark' }"
       @click="toggleTheme"
     >
     <div
@@ -50,11 +50,18 @@
   </template>
   
   <script lang="ts" setup>
-const isDark = ref(false);
-
+const colorMode = ref(null);
 const toggleTheme = () => {
-  isDark.value = !isDark.value;
+  if (!colorMode.value) return;
+  if (colorMode.value.value === "dark") {
+    colorMode.value.preference = "light";
+  } else {
+    colorMode.value.preference = "dark";
+  }
 };
+onMounted(() => {
+  colorMode.value = useColorMode();
+});
 </script>
   
   <style scoped lang="scss">

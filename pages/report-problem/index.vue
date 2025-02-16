@@ -93,7 +93,7 @@ $app-desktop: 1294px;
 $app-laptop: 960px;
 $app-mobile: 600px;
 $app-narrow-mobile: 364px;
-
+  background-color: var(--app-white);
   max-width: 75vw;
   margin: 0 auto;
   padding-bottom: 24px;
@@ -140,6 +140,7 @@ $app-narrow-mobile: 364px;
       padding: 8px 16px;
       background: var(--app-green-050);
       border-radius: 12px;
+      color: var(--app-grey-500);
       cursor: pointer;
     }
     .report-form__type-button--active {
