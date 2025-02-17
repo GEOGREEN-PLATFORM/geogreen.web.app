@@ -121,22 +121,20 @@
           />
           <ul v-if="marker.details" class="data-list">
             <li
-              v-for="[name, value] in Object.entries(marker.details || {})"
+              v-for="[name, value] in Object.entries(marker.details || {}).filter(([name, value]) => shortInfoKeys[name])"
               :key="name"
+              class="data-list__item"
             >
-              <div class="data-list__name">{{ name }}</div>
+              <div class="data-list__name">{{ shortInfoKeys[name].name }}</div>
               <div class="data-list__value">
-                {{ Array.isArray(value) ? value.join(", ") : value }}
+                <div v-if="shortInfoKeys[name].type === 'text'">{{ value || "Нет данных" }}</div>
+                <div v-else-if="shortInfoKeys[name].type === 'status'" :style="getStatusStyles(value)" class="data-list__status-block">{{ value || "Нет данных" }}</div>
               </div>
             </li>
           </ul>
           <div v-else class="popup-marker__no-data">Данные не найдены</div>
           <div class="popup-marker__divider" />
           <ul class="actions-label">
-            <li class="actions-label__action" @click="suggestDeleteMarker(id)">
-              <span class="actions-label__text">Удалить метку</span>
-              <q-icon class="actions-label__icon" :name="mdiDeleteOutline" />
-            </li>
             <li class="actions-label__action">
               <q-icon
                 class="actions-label__icon actions-label__icon--blue"
@@ -145,29 +143,25 @@
               >
                 <GGHint>
                   Выбранный маркер будет автоматически перемещён внутрь
-                  добавленной зоны
+                  {{ marker.coordinates.length > 0 ? 'измененной' : 'добавленной' }} зоны
                 </GGHint>
               </q-icon>
               <span class="actions-label__text" @click="addZone(id)"
-                >Добавить зону</span
+                >{{ marker.coordinates.length > 0 ? 'Изменить' : 'Добавить' }} зону</span
               >
-              <q-icon class="actions-label__icon" :name="mdiPlus" />
+              <q-icon class="actions-label__icon" :name="marker.coordinates.length > 0 ? mdiPencil : mdiPlus" />
             </li>
-            <li v-if="marker.coordinates" class="actions-label__action">
+            <li class="actions-label__action">
               <span class="actions-label__text">Плотность:</span>
               <GGOptions
                 v-model="marker.details.density"
                 inline
                 :options="densityOptions"
-                @update:model-value="updateFeatures"
+                @update:model-value="updateFeatures(id, marker)"
               />
             </li>
             <li class="actions-label__action">
-              <span class="actions-label__text">Подробнее</span>
-              <q-icon
-                class="actions-label__icon"
-                :name="mdiArrowTopRightThinCircleOutline"
-              />
+              <GGButton label="Подробнее" size="small" stretch="fill" design-type="secondary"></GGButton>
             </li>
           </ul>
         </div>
@@ -188,6 +182,7 @@ import {
   mdiClose,
   mdiDeleteOutline,
   mdiInformation,
+  mdiPencil,
   mdiPlus,
 } from "@quasar/extras/mdi-v6";
 import type { Feature, MapBrowserEvent } from "ol";
@@ -209,6 +204,15 @@ import markerIconRedSrc from "/icons/map_marker_red.png";
 
 interface Props {
   markers: Marker[];
+  shortInfoKeys: {
+    [key: string]: {
+      name: string;
+      type: "images" | "text" | "status";
+    };
+  };
+  dataStatusStyles: {
+    [key: string]: string;
+  };
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -276,7 +280,7 @@ function convertZonesToFeatures(markers: Marker[]) {
     .map((marker) => ({
       type: "Feature",
       properties: { density: marker.details?.density || "default" },
-      geometry: { type: "Polygon", coordinates: marker.coordinates },
+      geometry: { type: "Polygon", coordinates: [marker.coordinates] },
       id: marker.id,
     }));
   const providerFeatureCollection = {
@@ -380,14 +384,17 @@ function getMarkerIconByDensity(
     src: markersSrcByDensity.value[density || "default"],
   });
 }
-
-function updateFeatures() {
+function getStatusStyles(status: string) {
+  return props.dataStatusStyles[status];
+}
+function updateFeatures(id: string, marker: Marker) {
   gGreenCluster.zonesFeatures = convertZonesToFeatures(
     Array.from(gGreenCluster.markersDict.values()),
   );
   gGreenCluster.markerFeatures = convertMarkersToFeatures(
     Array.from(gGreenCluster.markersDict.values()),
   );
+  emit("editMarker", id, marker);
 }
 
 //
@@ -568,9 +575,6 @@ function createZone(event: DrawEvent) {
   upKey.value++;
 }
 
-//
-// Следим за изменением входящего списка маркеров
-//
 watch(
   () => props.markers,
   (newMarkers) => {
@@ -619,19 +623,45 @@ watch(
   }
   .data-list {
     margin: 0;
-    &__name {
-      width: 80px;
-      padding: 12px 0px;
-      float: left;
-      clear: both;
+    display: flex;
+    flex-direction: column;
+    &__item {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      cursor: default;
+      user-select: auto;
+      .data-list__name {
+      font-size: 13px;
+      min-width: 120px;
+      max-width: 120px;
+      padding: 8px 0px;
+      color: var(--app-grey-400);
       &::after {
         content: ":";
       }
     }
-    &__value {
-      margin: 0 0 0 80px;
-      padding: 12px 0px;
+    .data-list__value {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 8px 0px;
+      overflow-wrap: anywhere;
+      .data-list__status-block {
+        font-size: 13px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4px 8px;
+        color: var(--app-white);
+        border-radius: 12px;
+        height: 24px;
+      }
     }
+    }
+
   }
   .actions-label {
     list-style: none;
