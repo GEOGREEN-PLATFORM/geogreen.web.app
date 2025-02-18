@@ -358,9 +358,12 @@ function overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
   const clusteredFeatures = feature.get("features");
   if (!clusteredFeatures) return;
   const size = clusteredFeatures.length;
-  const colorFill = size >= 15 ? "#FF0022" : size > 5 ? "#FF8200" : "#55A231";
-  const colorStroke = size >= 15 ? "#55A231" : "#FF0022";
+  const colorFill = size >= 15 ? "#ff546b" : size > 5 ? "#ffab54" : "#8dc175";
+  const colorStroke = "#1E1E1E";
   const radius = 16;
+  style.getText()?.setFont("13px Montserrat");
+  style.getText()?.setJustify("center");
+  style.getText()?.getFill()?.setColor(colorStroke);
   if (size === 1) {
     style.getText()?.setText("");
     const styleCopyForSingleMember = style.clone();
@@ -489,16 +492,16 @@ function getPolygonStyleByDensity(
   let fillColor = "";
   switch (density) {
     case "low":
-      fillColor = "rgba(85, 162, 49, 0.5)";
+      fillColor = "rgba(177, 212, 160, 0.8)";
       break;
     case "medium":
-      fillColor = "rgba(255, 130, 0, 0.5)";
+      fillColor = "rgba(255, 198, 138, 0.8)";
       break;
     case "high":
-      fillColor = "rgba(255, 0, 34, 0.5)";
+      fillColor = "rgba(255, 138, 153, 0.8)";
       break;
     default:
-      fillColor = "rgba(104, 104, 104, 0.5)";
+      fillColor = "rgba(152, 152, 152, 0.8)";
       break;
   }
   return new Style({
@@ -528,11 +531,11 @@ function configureMap() {
   const burgerButton = document.createElement("button");
   burgerButton.setAttribute("type", "button");
   burgerButton.classList.add("burger-button");
-  for (let i = 0; i < 3; i++) {
-    const line = document.createElement("div");
-    burgerButton.appendChild(line);
-  }
-  burgerButton.addEventListener("click", () => {
+  const toggleIcon = document.createElement("img");
+  toggleIcon.classList.add("bar-toggle-icon");
+  toggleIcon.setAttribute("src", "/icons/chevrons_left.svg");
+  burgerButton.appendChild(toggleIcon);
+  toggleIcon.addEventListener("click", () => {
     toggleControlBar(burgerButton);
   });
   controlElement.appendChild(burgerButton);
@@ -698,40 +701,52 @@ watch(
   .ol-control.ol-bar.g-green-control-bar {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    background:  var(--app-white);
     position: absolute;
-    left: -180px;
+    left: 0;
     top: calc(50% - 250px / 2);
-    width: 220px;
-    height: 250px;
+    width: 44px;
+    height: fit-content;
     transform: none;
-    padding: 48px 16px;
-    transition: transform 0.3s ease;
-    border-radius: 0px 4px 4px 0px;
+    padding: 48px 0px 8px 0px;
+    transition: width 0.3s ease;
+    border-radius: 0px 16px 16px 0px;
+    overflow: hidden;
+    z-index: 1;
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(233, 233, 233, 0.3);
+      z-index: -1;
+    }
     .ol-button.g-green-control-bar__item {
       width: 100%;
       left: 0;
-      opacity: 0;
       transition: opacity 0.3s ease;
       button {
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 8px;
+        justify-content: flex-start;
+        min-width: max-content;
         width: inherit;
-        padding: 4px 8px;
+        padding: 12px 8px;
+        border-radius: 0 !important;
         height: auto;
         line-height: normal;
         font-size: 14px;
         font-weight: 500;
         border-radius: 8px;
-        font-family: Montserrat;
-        color: var(--app-black);
+        gap: 16px;
+        color: var(--app-grey-300);
         appearance: none;
         cursor: pointer;
-        background-color: var(--app-green-050);
-        transition: background-color 0.2s ease;
-        &::after {
+        background-color: transparent;
+        transition: background-color 0.3s ease;
+        &::before {
           background-size: 24px 24px;
           display: inline-block;
           width: 24px;
@@ -739,83 +754,81 @@ watch(
           content: "";
         }
         &:hover {
-          background-color: var(--app-green-100);
-        }
-        &:active {
-          background-color: var(--app-green-500);
+          background-color: var(--app-grey-050);
         }
       }
       &.ol-active {
         button {
-          color: var(--app-black);
-          background-color: var(--app-green-500);
+          background-color: var(--app-grey-050);
         }
       }
     }
     .ol-button.g-green-control-bar__marker {
-      button::after {
-        background-image: url("/icons/map_marker_default.png");
+      button::before {
+        background-image: url("/icons/bar_marker.svg");
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center center;
+        filter: var(--app-filter-red-300);
+        width: 24px;
+        height: 24px;
       }
     }
     .ol-button.g-green-control-bar__zone {
-      button::after {
-        content: url("/icons/polygon.svg");
+      button::before {
+        background-image: url("/icons/bar_zone.svg");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center center;
+        filter: var(--app-filter-orange-300);
+        width: 24px;
+        height: 24px;
       }
     }
     .ol-button.g-green-control-bar__zones-visible {
-      button::after {
+      button::before {
         content: url("/icons/eye_off_outline.svg");
         filter: var(--app-filter-grey-300);
+        width: 24px;
+        height: 24px;
       }
     }
     .ol-button.g-green-control-bar__zones-visible--off {
-      button::after {
+      button::before {
         content: url("/icons/eye_outline.svg");
         filter: var(--app-filter-grey-300);
+        width: 24px;
+        height: 24px;
       }
     }
     &:has(.burger-button.is-active) {
-      transform: translateX(180px);
-      .g-green-control-bar__item {
-        opacity: 1;
+      width: 195px;
+      .burger-button img {
+        transform: rotate(180deg);
       }
     }
     .burger-button {
-      width: 24px;
-      height: 18px;
+      width: 100%;
+      height: 48px;
       display: flex;
-      flex-direction: column;
       gap: 4px;
-      justify-content: space-between;
+      padding-left: 6px;
+      justify-content: flex-start;
       align-items: center;
-      cursor: pointer;
+      cursor: default;
       position: absolute;
-      right: 8px;
-      top: 8px;
+      top: 0;
       appearance: none;
-      background: transparent;
+      background: var(--app-white);
       outline: none;
-      div {
-        width: 24px;
-        height: 2px;
-        background-color: var(--app-white);
-        transition:
-          transform 0.3s ease,
-          opacity 0.3s ease;
-      }
-      &.is-active {
-        div:nth-child(1) {
-          transform: translateY(8px) rotate(45deg);
-        }
-        div:nth-child(2) {
-          opacity: 0;
-        }
-        div:nth-child(3) {
-          transform: translateY(-8px) rotate(-45deg);
-        }
+      margin-bottom: 8px;
+      img {
+        cursor: pointer;
+        transition: transform 0.3s ease;
+        transform: rotate(0deg);
+        width: 32px;
+        height: 32px;
+        filter: var(--app-filter-grey-300);
       }
     }
   }
