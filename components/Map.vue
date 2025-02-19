@@ -166,6 +166,8 @@
           </ul>
         </div>
       </ol-overlay>
+      <ol-fullscreen-control/>
+      <ol-zoom-control :zoomInLabel="plusElem" :zoomOutLabel="minusElem" />
     </ol-map>
     <GGDialogConfirm
       v-model="confirmationDialog.isOpened"
@@ -173,6 +175,10 @@
       :action-button-confirm-text="confirmationDialog.buttonText"
       @confirm="deleteMarker"
     />
+    <div v-show="false" class="html-control-elements">
+      <img src="/icons/plus.svg" ref="plusElem">
+      <img src="/icons/minus.svg" ref="minusElem">
+    </div>
   </ClientOnly>
 </template>
 
@@ -214,7 +220,8 @@ interface Props {
     [key: string]: string;
   };
 }
-
+const plusElem = ref<HTMLElement>();
+const minusElem = ref<HTMLElement>();
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
 });
@@ -834,6 +841,57 @@ watch(
   }
   .g-green-marker-popup-container {
     top: -22px;
+  }
+  .ol-full-screen.ol-control {
+    button {
+      background-color: var(--app-white);
+      color: var(--app-white);
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      &::after {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        content: "";
+        background-size: 24px 24px;
+        display: inline-block;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center center;
+        width: 24px;
+        height: 24px;
+      }
+      &.ol-full-screen-false::after {
+        background-image: url("/icons/fullscreen.svg");
+      }
+      &.ol-full-screen-true::after {
+        background-image: url("/icons/fullscreen_exit.svg");
+      }
+    }
+  }
+  .ol-zoom.ol-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background-color: transparent;
+    right: 8px;
+    left: unset;
+    top: 50%;
+    transform: translateY(-50%);
+    button {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      box-shadow: 2px 2px 2px rgba(0,0,0, 0.25);
+      border-radius: 2px;
+      img {
+        width: 24px;
+        height: 24px;
+      }
+    }
   }
 }
 </style>
