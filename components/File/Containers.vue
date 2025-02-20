@@ -8,7 +8,6 @@
             @remove="removeFile(index)"
           />
         </li>
-
       </ul>
     </section>
   </template>

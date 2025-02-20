@@ -362,8 +362,13 @@ function overrideZoneStyleFunction(feature: FeatureLike, _: Style) {
 }
 
 function overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
-  const clusteredFeatures = feature.get("features");
+  const clusteredFeatures = feature.get("features") || [feature];
   if (!clusteredFeatures) return;
+  const innerFeature = clusteredFeatures[0];
+  const geomType = innerFeature.getGeometry().getType();
+  if (geomType !== "Point") {
+    return overrideZoneStyleFunction(feature, style);
+  }
   const size = clusteredFeatures.length;
   const colorFill = size >= 15 ? "#ff546b" : size > 5 ? "#ffab54" : "#8dc175";
   const colorStroke = "#1E1E1E";
@@ -735,12 +740,13 @@ watch(
       left: 0;
       transition: opacity 0.3s ease;
       button {
+        margin: 0;
         display: flex;
         align-items: center;
         justify-content: flex-start;
         min-width: max-content;
         width: inherit;
-        padding: 12px 8px;
+        padding: 12px 10px;
         border-radius: 0 !important;
         height: auto;
         line-height: normal;
@@ -819,9 +825,10 @@ watch(
       height: 48px;
       display: flex;
       gap: 4px;
-      padding-left: 6px;
+      padding-left: 10px;
       justify-content: flex-start;
       align-items: center;
+      margin: 0;
       cursor: default;
       position: absolute;
       top: 0;
@@ -833,8 +840,8 @@ watch(
         cursor: pointer;
         transition: transform 0.3s ease;
         transform: rotate(0deg);
-        width: 32px;
-        height: 32px;
+        width: 24px;
+        height: 24px;
         filter: var(--app-filter-grey-300);
       }
     }
