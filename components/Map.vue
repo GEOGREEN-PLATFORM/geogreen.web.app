@@ -128,7 +128,7 @@
               <div class="data-list__name">{{ shortInfoKeys[name].name }}</div>
               <div class="data-list__value">
                 <div v-if="shortInfoKeys[name].type === 'text'">{{ value || "Нет данных" }}</div>
-                <div v-else-if="shortInfoKeys[name].type === 'status'" :style="getStatusStyles(value)" class="data-list__status-block">{{ value || "Нет данных" }}</div>
+                <div v-else-if="shortInfoKeys[name].type === 'status' && typeof value === 'string'" :style="getStatusStyles(value)" class="data-list__status-block">{{ value || "Нет данных" }}</div>
               </div>
             </li>
           </ul>
@@ -184,9 +184,7 @@
 
 <script setup lang="ts">
 import {
-  mdiArrowTopRightThinCircleOutline,
   mdiClose,
-  mdiDeleteOutline,
   mdiInformation,
   mdiPencil,
   mdiPlus,
@@ -253,7 +251,7 @@ const gGreenOlMap = reactive({
 });
 
 const gGreenZone = reactive({
-  density: "default" as "default" | "low" | "medium" | "high",
+  density: "default" as Density,
 });
 
 const gGreenCluster = reactive({
@@ -298,7 +296,7 @@ function convertZonesToFeatures(markers: Marker[]) {
 }
 
 function convertMarkersToDictionary(markers: Marker[]) {
-  return new Map(markers.map((marker) => [marker.id, marker]));
+  return new Map(markers.map((marker) => [marker.id as string, marker]));
 }
 
 function getMemberStyle(clusterMember: FeatureLike) {
@@ -412,9 +410,6 @@ function updateFeatures(id: string, marker: Marker) {
   emit("editMarker", id, marker);
 }
 
-//
-// Дополнительные данные и ссылки
-//
 const markersSrcByDensity = ref({
   default: markerIconDefaultSrc,
   low: markerIconGreenSrc,
@@ -445,9 +440,6 @@ const upKey = ref(0);
 const controlBarRef = useTemplateRef<MapControls>("controlBar");
 const featureSelectRef = useTemplateRef<SelectCluster>("featureSelect");
 
-//
-// Функции управления состоянием и событиями карты
-//
 function toggleAllZonesVisibility() {
   isAllZonesVisible.value = !isAllZonesVisible.value;
   gGreenOlMap.interactionType = "none";
@@ -557,16 +549,14 @@ function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle("is-active");
 }
 
-// Функция создания зоны (вызывается при завершении рисования)
 function createZone(event: DrawEvent) {
   if (gGreenCluster.currentSelectedMarkerId && event.feature) {
     const marker = gGreenCluster.markersDict.get(
       gGreenCluster.currentSelectedMarkerId,
     );
     if (marker) {
-      // Обновляем координату маркера и записываем координаты зоны
-      marker.coordinate = getCenter(event.feature.getGeometry().getExtent());
-      marker.coordinates = event.feature.getGeometry().getCoordinates();
+      marker.coordinate = getCenter(event.feature.getGeometry()!.getExtent());
+      marker.coordinates = event.feature.getGeometry()!.getCoordinates();
       if (marker.details) {
         marker.details.density = gGreenZone.density;
       }
@@ -575,8 +565,8 @@ function createZone(event: DrawEvent) {
     }
     gGreenCluster.currentSelectedMarkerId = "";
   } else if (event.feature) {
-    const coordinate = getCenter(event.feature.getGeometry().getExtent());
-    const zoneCoordinates = event.feature.getGeometry().getCoordinates();
+    const coordinate = getCenter(event.feature.getGeometry()!.getExtent());
+    const zoneCoordinates = event.feature.getGeometry()!.getCoordinates();
     const newMarker: Marker = {
       coordinate,
       coordinates: zoneCoordinates,

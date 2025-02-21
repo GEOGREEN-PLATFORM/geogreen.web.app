@@ -21,11 +21,12 @@ declare global {
       workStatus?: string;
       eliminationMethod?: string;
       photos?: string[];
-      density?: "default" | "low" | "medium" | "high";
+      density?: Density;
     };
     relatedTaskId?: string | null;
     coordinates?: Coordinate[];
   }
+  type Density = "default" | "low" | "medium" | "high";
   interface Tab {
     key: string;
     name: string;
