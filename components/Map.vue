@@ -43,8 +43,7 @@
         @select="selectMarker"
       >
         <ol-style
-          :override-style-function="(feature: FeatureLike, style: Style) =>
-            overrideMarkerStyleFunction(feature, style)"
+          :override-style-function="overrideMarkerStyleFunction"
         >
           <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
           <ol-style-circle :radius="48">
@@ -63,8 +62,7 @@
           :format="gGreenCluster.geoJSON"
         />
         <ol-style
-          :override-style-function="(feature: FeatureLike, style: Style) =>
-            overrideZoneStyleFunction(feature, style)"
+          :override-style-function="overrideZoneStyleFunction"
         />
       </ol-vector-layer>
       <ol-vector-layer>
@@ -91,8 +89,7 @@
           :format="gGreenCluster.geoJSON"
         />
         <ol-style
-          :override-style-function="(feature: FeatureLike, style: Style) =>
-            overrideMarkerStyleFunction(feature, style)"
+          :override-style-function="overrideMarkerStyleFunction"
         >
           <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
           <ol-style-circle :radius="48">
@@ -200,7 +197,6 @@ import type { DrawEvent } from "ol/interaction/Draw";
 import type { SelectEvent } from "ol/interaction/Select";
 import { Circle, Fill, Icon, Stroke, Style } from "ol/style.js";
 import type CircleStyle from "ol/style/Circle";
-import { reactive, ref, shallowRef, watch } from "vue";
 import markerIconDefaultSrc from "/icons/map_marker_default.png";
 import markerIconGreenSrc from "/icons/map_marker_green.png";
 import markerIconOrangeSrc from "/icons/map_marker_orange.png";
@@ -218,8 +214,6 @@ interface Props {
     [key: string]: string;
   };
 }
-const plusElem = ref<HTMLElement>();
-const minusElem = ref<HTMLElement>();
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
 });
@@ -234,12 +228,38 @@ const confirmationDialog = reactive({
   mainText: "",
   buttonText: "",
 });
+const plusElem = ref<HTMLElement>();
+const minusElem = ref<HTMLElement>();
 
-function openConfirmationDialog(mainText: string, buttonText: string) {
-  confirmationDialog.mainText = mainText;
-  confirmationDialog.buttonText = buttonText;
-  confirmationDialog.isOpened = true;
-}
+const markersSrcByDensity = ref({
+  default: markerIconDefaultSrc,
+  low: markerIconGreenSrc,
+  medium: markerIconOrangeSrc,
+  high: markerIconRedSrc,
+});
+
+const densityOptions = [
+  {
+    value: "low",
+    color: "green-500",
+    keepColor: true,
+  },
+  {
+    value: "medium",
+    color: "orange-500",
+    keepColor: true,
+  },
+  {
+    value: "high",
+    color: "red-500",
+    keepColor: true,
+  },
+];
+
+const isAllZonesVisible = ref(false);
+const upKey = ref(0);
+const controlBarRef = useTemplateRef<MapControls>("controlBar");
+const featureSelectRef = useTemplateRef<SelectCluster>("featureSelect");
 
 const gGreenOlMap = reactive({
   center: [4890670.38077, 7615726.876165] as Coordinate,
@@ -262,6 +282,12 @@ const gGreenCluster = reactive({
   currentSelectedMarkerId: "",
   geoJSON: new GeoJSON(),
 });
+
+function openConfirmationDialog(mainText: string, buttonText: string) {
+  confirmationDialog.mainText = mainText;
+  confirmationDialog.buttonText = buttonText;
+  confirmationDialog.isOpened = true;
+}
 
 function convertMarkersToFeatures(markers: Marker[]) {
   const features = markers
@@ -409,36 +435,6 @@ function updateFeatures(id: string, marker: Marker) {
   );
   emit("editMarker", id, marker);
 }
-
-const markersSrcByDensity = ref({
-  default: markerIconDefaultSrc,
-  low: markerIconGreenSrc,
-  medium: markerIconOrangeSrc,
-  high: markerIconRedSrc,
-});
-
-const densityOptions = [
-  {
-    value: "low",
-    color: "green-500",
-    keepColor: true,
-  },
-  {
-    value: "medium",
-    color: "orange-500",
-    keepColor: true,
-  },
-  {
-    value: "high",
-    color: "red-500",
-    keepColor: true,
-  },
-];
-
-const isAllZonesVisible = ref(false);
-const upKey = ref(0);
-const controlBarRef = useTemplateRef<MapControls>("controlBar");
-const featureSelectRef = useTemplateRef<SelectCluster>("featureSelect");
 
 function toggleAllZonesVisibility() {
   isAllZonesVisible.value = !isAllZonesVisible.value;
