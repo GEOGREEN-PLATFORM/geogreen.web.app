@@ -14,6 +14,8 @@
         @add-marker="addMarker"
         @delete-marker="deleteMarker"
         @edit-marker="editMarker"
+        :shortInfoKeys="shortMarkerInfoNameKeys"
+        :dataStatusStyles="workStageStyles"
       />
       <div class="text-center" @click="navigateTo('/auth/register')">
         В регистрацию
@@ -26,44 +28,87 @@
 
 <script setup lang="ts">
 import type { Coordinate } from "ol/coordinate";
-
+import { useMainStore } from "~/store/main";
+const shortMarkerInfoNameKeys = ref({
+  owner: {
+    name: "Владелец",
+    type: "text",
+  },
+  landType: {
+    name: "Тип земель",
+    type: "text",
+  },
+  workStage: {
+    name: "Статус работы",
+    type: "status",
+  },
+  problemAreaType: {
+    name: "Тип проблемы",
+    type: "text",
+  },
+  eliminationMethod: {
+    name: "Метод по устранению",
+    type: "text",
+  },
+  contractingOrganisation: {
+    name: "Подрядная организация",
+    type: "text",
+  },
+});
+const workStageStyles = {
+  Создано: "background-color: var(--app-blue-400)",
+  "В работе": "background-color: var(--app-green-400)",
+  Завершено: "background-color: var(--app-grey-400)",
+};
+const store = useMainStore();
 const markers = ref<Marker[]>([]);
-function getMarkers() {
-  markers.value = [
-    {
-      id: "gfaefasfefdsf23424",
-      coordinates: [4890670.38077, 7615726.876165 + 5000],
-      details: null,
-      relatedTaskId: null,
-      relatedZone: {
-        coordinates: [
-          [
-            [4885375.1307334015, 7618459.590018971],
-            [4883818.244237658, 7615742.875328411],
-            [4887245.484308826, 7615492.101664667],
-            [4885375.1307334015, 7618459.590018971],
-          ],
-        ],
-        density: "high",
+async function getMarkers() {
+  const data = await $fetch<Marker[]>(`${store.api}/geo/info/getAll`);
+  console.log(data);
+  if (data) {
+    markers.value = data;
+    console.log(markers.value);
+  } else {
+    markers.value = [];
+  }
+}
+async function addMarker(coordinate: Coordinate, relatedZone?: Zone) {
+  const data = await $fetch(`${store.api}/geo/info`, {
+    method: "POST",
+    body: {
+      coordinate: coordinate,
+      details: {
+        square: 0,
+        owner: "",
+        landType: "Сельскохозяйственный",
+        contractingOrganization: "",
+        workStage: "Создано",
+        eliminationMethod: "Механический",
+        images: [],
+        problemAreaType: "Борщевик",
+        comment: "",
+        density: relatedZone?.density,
       },
+      relatedTaskId: null,
+      coordinates: relatedZone?.coordinates[0] || [],
     },
-  ];
-}
-function addMarker(coordinate: Coordinate, relatedZone?: Zone) {
-  // mock api req
-  markers.value.push({
-    id: Math.random().toString(),
-    coordinates: coordinate,
-    details: null,
-    relatedTaskId: null,
-    relatedZone: relatedZone || null,
   });
+  getMarkers();
 }
-function deleteMarker(id: string) {
-  markers.value = markers.value.filter((marker) => marker.id !== id);
+async function deleteMarker(id: string) {
+  const data = await $fetch(`${store.api}/geo/info/${id}`, {
+    method: "DELETE",
+  });
+  getMarkers();
 }
-function editMarker(id: string, marker: Marker) {
-  markers.value[markers.value.findIndex((marker) => marker.id === id)] = marker;
+async function editMarker(id: string, marker: Marker) {
+  marker.id = undefined;
+  marker.relatedTaskId = undefined;
+  const data = await $fetch(`${store.api}/geo/info/${id}`, {
+    method: "PATCH",
+    body: marker,
+  });
+  getMarkers();
 }
 onMounted(() => {
   getMarkers();

@@ -18,7 +18,7 @@ interface Props {
   inline?: boolean;
 }
 interface Option {
-  label: string;
+  label?: string;
   value: T;
 }
 type Group = T | T[];

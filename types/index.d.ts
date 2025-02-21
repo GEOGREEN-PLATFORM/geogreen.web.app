@@ -11,9 +11,9 @@ declare global {
     email?: string;
   }
   interface Marker {
-    id: string;
-    coordinates: Coordinate;
-    details?: {
+    id?: string;
+    coordinate?: Coordinate;
+    details: {
       square: number;
       owner?: string;
       landType?: string;
@@ -21,15 +21,12 @@ declare global {
       workStatus?: string;
       eliminationMethod?: string;
       photos?: string[];
-    } | null;
+      density?: Density;
+    };
     relatedTaskId?: string | null;
-    relatedZone?: Zone | null;
+    coordinates?: Coordinate[];
   }
-  interface Zone {
-    coordinates: Coordinate[];
-    density: "low" | "medium" | "high";
-    visible?: boolean;
-  }
+  type Density = "default" | "low" | "medium" | "high";
   interface Tab {
     key: string;
     name: string;
