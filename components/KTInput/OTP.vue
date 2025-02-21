@@ -1,5 +1,5 @@
 <template>
-  <div ref="otpCont" class="otp-container">
+  <div ref="otpCont" class="otp-container" @click="handleContainerClick">
     <input
       v-for="(el, ind) in digits"
       :key="ind"
@@ -7,7 +7,7 @@
       inputmode="numeric"
       pattern="[0-9]*"
       type="text"
-      class="otp-box"
+      class="otp-box gg-h1"
       :class="{ error: isError }"
       autocomplete="one-time-code"
       @focus="focusInput"
@@ -183,7 +183,7 @@ watch(
     width: 100%;
     text-align: center;
     transform: translate(-50%, 0);
-    color: var(--app-red-10);
+    color: var(--app-red-500);
     font-size: 16px;
     font-weight: 500;
   }
@@ -191,22 +191,23 @@ watch(
 .otp-box {
   outline: none;
   appearance: none;
-  border: 1px solid var(--app-black-8);
+  border: 1px solid var(--app-grey-300);
   background-color: transparent;
-  width: 54px;
-  height: 54px;
-  color: var(--app-black);
+  width: 64px;
+  height: 64px;
+  color: var(--app-grey-500);
   text-align: center;
   padding: 9px 12px;
-  border-radius: 8px;
+  border-radius: 16px;
   font-size: 20px;
 }
 .error {
-  border: 1px solid var(--app-red-10);
+  border: 1px solid var(--app-red-500);
+  background-color: var(--app-red-050);
 }
 
 .otp-box:focus {
-  border: 1px solid var(--app-blue-9);
+  border: 1px solid var(--app-green-500);
 }
 
 .bounce {

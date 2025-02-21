@@ -15,6 +15,7 @@
       :name="name"
       @update:model-value="updateValue"
       :autogrow="autogrow"
+      :autocomplete="autocomplete"
     >
       <template #append>
         <q-icon
@@ -58,6 +59,7 @@ interface Props {
   placeholder?: string;
   name?: string;
   autogrow?: boolean;
+  autocomplete?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -97,6 +99,7 @@ function togglePassword() {
 
 <style lang="scss">
 .kt-input-main {
+  width: 100%;
   .q-field--outlined.q-field--rounded .q-field__control {
     border-radius: 16px;
   }

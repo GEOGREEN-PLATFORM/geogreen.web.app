@@ -2,10 +2,15 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  margin-bottom: 32px;
+  &__head {
+    text-align: center;
+    margin-bottom: 48px;
+  }
   &__input-fields {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px;
   }
   &__info-text {
     font-weight: 400;
@@ -21,4 +26,19 @@
       font-weight: 500;
     }
   }
+}
+.form-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin: 32px 32px 0px 32px;
+}
+.action-label {
+  color: var(--app-green-500);
+  cursor: pointer;
+}
+.link-label {
+  color: var(--app-blue-500);
+  cursor: pointer;
 }

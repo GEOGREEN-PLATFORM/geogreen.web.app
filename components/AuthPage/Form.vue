@@ -23,6 +23,7 @@
         @click="sendActionEvent('sub')"
       />
     </div>
+    <slot name="form-footer"></slot>
   </q-form>
 </template>
 
@@ -81,7 +82,6 @@ onMounted(() => {
     flex-direction: column;
     width: 100%;
     gap: 16px;
-    padding: 0px 16px;
   }
 }
 </style>

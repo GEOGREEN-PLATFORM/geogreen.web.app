@@ -2,22 +2,28 @@
   <AuthPageForm
     :button-options="buttonOptions"
     @main-button-click="sendRegister"
-    @sub-button-click="goToLogin"
   >
     <template #form-content>
       <div class="form-content">
+        <h1 class="form-content__head gg-h1">Создать аккаунт</h1>
         <div class="form-content__input-fields">
-          <KTInput v-model="userData.email!" label="Почта" type="email" />
-          <KTInput v-model="userData.login" label="Логин" />
-          <KTInput v-model="userData.password" label="Пароль" type="password" />
+          <div class="form-content__inline-block">
+            <KTInput v-model="userData.firstName" label="Имя" />
+            <KTInput v-model="userData.lastName" label="Фамилия" />
+          </div>
+          <KTInput v-model="userData.email" label="Почта" type="email" autocomplete="new-email"/>
+          <KTInput v-model="userData.password" label="Пароль" type="password" autocomplete="new-password"/>
+          <KTInput v-model="userData.repeatedPassword" label="Подтвердите пароль" autocomplete="new-password" type="password"/>
         </div>
-        <div class="form-content__accept-rules-block text-center">
-          <span class="form-content__info-text form-content__info-text--small">
-            Регистрируясь, вы соглашаетесь<br />с&nbsp;<span
-              style="text-decoration: underline"
-              >правилами платформы</span
-            >
-          </span>
+      </div>
+    </template>
+    <template #form-footer>
+      <div class="form-footer">
+        <div class="form-footer__have-account">Уже есть аккаунт? <NuxtLink to="/auth/login" class="action-label">Войти</NuxtLink></div>
+        <div class="form-footer__accept-rules-block gg-cap">
+          Продолжая, вы соглашаетесь 
+          с <span class="link-label">условиями использования</span> 
+          и&nbsp;<span class="link-label">политикой конфидецинальности</span>
         </div>
       </div>
     </template>
@@ -29,9 +35,11 @@ definePageMeta({
   layout: "auth",
 });
 
-const userData = ref<UserAuthData>({
-  login: "",
+const userData = ref<UserRegisterData>({
   password: "",
+  repeatedPassword: "",
+  firstName: "",
+  lastName: "",
   email: "",
 });
 
@@ -42,8 +50,7 @@ const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
     loading: false,
   },
   sub: {
-    designType: "secondary",
-    label: "У меня есть аккаунт",
+    show: false,
   },
 });
 
@@ -57,18 +64,20 @@ function goToMainPage() {
   buttonOptions.value.main.loading = false;
   navigateTo({ path: "/" });
 }
-
-function goToLogin() {
-  navigateTo({ path: "/auth/login" });
-}
 </script>
 
 <style lang="scss" scoped>
 @use "@/assets/styles/pages/auth.scss";
 .form-content {
-  gap: 24px;
-  margin-top: 84px;
-  margin-bottom: 24px;
-  padding: 0px 16px;
+  &__inline-block {
+    display: flex;
+    min-width: 100%;
+    gap: 24px;
+  }
+}
+.form-footer {
+  &__accept-rules-block {
+    text-align: center;
+  }
 }
 </style>

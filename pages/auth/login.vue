@@ -2,20 +2,12 @@
   <AuthPageForm
     :button-options="buttonOptions"
     @main-button-click="sendLogin"
-    @sub-button-click="goToRegister"
   >
     <template #form-content>
+      <h1 class="form-content__head gg-h1">Войти в аккаунт</h1>
       <div class="form-content">
-        <div
-          v-show="showAuthError"
-          class="form-content__auth-error-block text-center"
-        >
-          <span class="form-content__info-text form-content__info-text--error">
-            Логин или пароль введены неверно
-          </span>
-        </div>
         <div class="form-content__input-fields">
-          <KTInput v-model="userData.login" label="Логин" name="login" />
+          <KTInput v-model="userData.email" label="Почта" name="email" type="email"/>
           <KTInput
             v-model="userData.password"
             label="Пароль"
@@ -24,10 +16,15 @@
           />
         </div>
         <div class="form-content__forgot-password-block text-right">
-          <span class="form-content__info-text">
+          <span class="action-label">
             <NuxtLink to="/auth/change-password">Забыли пароль?</NuxtLink>
           </span>
         </div>
+      </div>
+    </template>
+      <template #form-footer>
+      <div class="form-footer">
+        <div class="form-footer__no-account">Еще нет аккаунта? <NuxtLink to="/auth/register" class="action-label">Зарегистрироваться </NuxtLink></div>
       </div>
     </template>
   </AuthPageForm>
@@ -39,7 +36,7 @@ definePageMeta({
 });
 
 const userData = ref<UserAuthData>({
-  login: "",
+  email: "",
   password: "",
 });
 const showAuthError = ref(false);
@@ -50,8 +47,7 @@ const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
     loading: false,
   },
   sub: {
-    designType: "secondary",
-    label: "У меня нет аккаунта",
+    show: false,
   },
 });
 
@@ -66,18 +62,8 @@ function goToMainPage() {
   showAuthError.value = true;
   // navigateTo({ path: '/' });
 }
-
-function goToRegister() {
-  navigateTo({ path: "/auth/register" });
-}
 </script>
 
 <style lang="scss" scoped>
 @use "@/assets/styles/pages/auth.scss";
-.form-content {
-  margin-top: 84px;
-  margin-bottom: 56px;
-  padding: 0px 16px;
-  gap: 8px;
-}
 </style>
