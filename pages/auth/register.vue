@@ -67,15 +67,27 @@ function goToMainPage() {
 </script>
 
 <style lang="scss" scoped>
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
+
 @use "@/assets/styles/pages/auth.scss";
 .form-content {
   &__inline-block {
     display: flex;
     min-width: 100%;
     gap: 24px;
+    @media screen and (max-width: $app-mobile) {
+      flex-direction: column;
+      gap: 8px;
+    }
   }
 }
 .form-footer {
+  &__have-account {
+    text-align: center;
+  }
   &__accept-rules-block {
     text-align: center;
   }

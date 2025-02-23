@@ -27,15 +27,26 @@
             v-model="userData.password"
             type="password"
             label="Новый пароль"
+            autocomplete="new-password"
           />
           <KTInput
             v-if="pageState.step === 2"
             v-model="userData.repeatedPassword"
             type="password"
             label="Повторите пароль"
+            autocomplete="new-password"
           />
         </div>
       </div>
+    </template>
+    <template v-if="pageState.step === 1 && (isWrongCode || userData.confirmationCode.length < 4)" #main-button>
+      <GGButton design-type="secondary" :disabled="sendCodeTimer !== 0"><div class="button-timer-slot">
+        {{ `Отправить код ${sendCodeTimer !== 0 ? 'через' : ''}` }}
+          <span v-show="sendCodeTimer !== 0" class="button-timer-slot__time">
+            {{ formattedSendTimer }}
+          </span>
+        </div>
+      </GGButton>
     </template>
   </AuthPageForm>
 </template>
@@ -46,13 +57,27 @@ definePageMeta({
 });
 
 const INITIAL_STEP = 0;
+const CODE_SENDING_TIMEOUT = 59;
+
 const defaultSubButton: ButtonOptions = {
   designType: "tertiary",
   label: "Назад",
   show: true,
 };
+const userData = ref({
+  email: "",
+  password: "",
+  repeatedPassword: "",
+  confirmationCode: "",
+});
+const codeSendingInterval = ref<NodeJS.Timeout>();
+const sendCodeTimer = ref(CODE_SENDING_TIMEOUT);
+const formattedSendTimer = computed(() => {
+  return `00:${sendCodeTimer.value.toString().padStart(2, "0")}`;
+});
+const router = useRouter();
 const isWrongCode = ref(false);
-const stepConfig = [
+const stepConfig = reactive([
   {
     mainButton: { label: "Далее", show: true },
     hintText: "Введите почту, указанную в аккаунте",
@@ -65,7 +90,7 @@ const stepConfig = [
     mainButton: { label: "Сменить пароль", show: true },
     hintText: "Придумайте новый пароль",
   },
-];
+]);
 const pageState = reactive({
   step: INITIAL_STEP,
   hintText: stepConfig[INITIAL_STEP].hintText,
@@ -77,6 +102,17 @@ const pageState = reactive({
 
 function updatePageState(newStep: number) {
   pageState.step = newStep;
+  if (newStep === 1) {
+    codeSendingInterval.value = setInterval(() => {
+      sendCodeTimer.value -= 1;
+      if (sendCodeTimer.value === 0) {
+        clearInterval(codeSendingInterval.value);
+      }
+    }, 1000);
+  } else {
+    sendCodeTimer.value = CODE_SENDING_TIMEOUT;
+    clearInterval(codeSendingInterval.value);
+  }
   const config = stepConfig[newStep] || stepConfig[INITIAL_STEP];
   pageState.buttonOpts = {
     main: { designType: "primary", ...config.mainButton },
@@ -84,14 +120,6 @@ function updatePageState(newStep: number) {
   };
   pageState.hintText = config.hintText;
 }
-
-const userData = ref({
-  email: "",
-  password: "",
-  repeatedPassword: "",
-  confirmationCode: "",
-});
-const router = useRouter();
 
 function handleMainAction(pageStep: number) {
   if (pageStep <= 2) {
@@ -124,6 +152,17 @@ function goBack() {
   &__page-step-hint {
     text-align: center;
     margin-bottom: 16px;
+  }
+}
+.button-timer-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  &__time {
+    text-align: left;
+    width: 4.2ch;
+    color: var(--app-blue-600);
   }
 }
 </style>

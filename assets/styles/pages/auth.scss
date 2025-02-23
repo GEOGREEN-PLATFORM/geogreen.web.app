@@ -1,3 +1,8 @@
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
+
 .form-content {
   display: flex;
   flex-direction: column;
@@ -10,7 +15,7 @@
   &__input-fields {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
   }
   &__info-text {
     font-weight: 400;
@@ -33,6 +38,9 @@
   align-items: center;
   gap: 16px;
   margin: 32px 32px 0px 32px;
+  @media screen and (max-width: $app-mobile) {
+    margin: 32px 0px 0px 0px;
+  }
 }
 .action-label {
   color: var(--app-green-500);

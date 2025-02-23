@@ -1,5 +1,5 @@
 <template>
-  <div ref="otpCont" class="otp-container" @click="handleContainerClick">
+  <div ref="otpCont" class="otp-container">
     <input
       v-for="(el, ind) in digits"
       :key="ind"
@@ -11,7 +11,6 @@
       :class="{ error: isError }"
       autocomplete="one-time-code"
       @focus="focusInput"
-      @blur="isDigitsFull()"
       @input="handleInput($event, ind)"
       @paste.prevent="handlePaste($event, ind)"
       @keydown="handleKey($event, ind)"
@@ -54,7 +53,6 @@ function setValue() {
     }
   }
 }
-setValue();
 
 function isDigitsFull() {
   for (const elem of digits) {
@@ -88,6 +86,7 @@ function handleInput(event: Event, index: number) {
       } else {
         digits[index] = "";
       }
+      isDigitsFull();
     }
   });
 }
@@ -116,6 +115,7 @@ function handlePaste(event: ClipboardEvent, index: number) {
     } else {
       (otpCont.value?.children[index] as HTMLInputElement).blur();
     }
+    isDigitsFull();
   });
 }
 
@@ -155,6 +155,7 @@ function isPressedDeletingKey() {
 }
 
 onMounted(() => {
+  setValue();
   if (!checkIphone() && otpCont.value && otpCont.value.children.length > 0) {
     (otpCont.value.children[0] as HTMLInputElement).focus();
   }

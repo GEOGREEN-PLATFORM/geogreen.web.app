@@ -66,4 +66,18 @@ function goToMainPage() {
 
 <style lang="scss" scoped>
 @use "@/assets/styles/pages/auth.scss";
+.form-content {
+  position: relative;
+  margin-bottom: 40px;
+  &__forgot-password-block {
+    position: absolute;
+    bottom: -12px;
+    right: 0;
+  }
+}
+.form-footer {
+  &__no-account {
+    text-align: center;
+  }
+}
 </style>

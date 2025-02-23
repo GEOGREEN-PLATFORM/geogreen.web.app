@@ -72,7 +72,7 @@ const props = withDefaults(defineProps<Props>(), {
   type: "text",
   placeholder: "Введите текст",
   hideErrorIcon: true,
-  hideBottomSpace: true,
+  hideBottomSpace: false,
   autogrow: false,
 });
 

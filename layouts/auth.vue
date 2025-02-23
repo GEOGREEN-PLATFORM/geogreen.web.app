@@ -12,6 +12,11 @@
 </template>
 
 <style scoped lang="scss">
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
+
 .page-container {
   min-height: 100vh;
   width: 100vw;
@@ -51,6 +56,9 @@
     transition: opacity 0.5s linear;
     opacity: 0;
   }
+  @media screen and (max-width: $app-narrow-mobile){
+    padding: 0;
+  }
   .page-content {
     display: flex;
     justify-content: center;
@@ -61,6 +69,13 @@
     background-color: var(--app-white);
     padding: 36px 24px;
     border-radius: 32px;
+    @media screen and (max-width: $app-narrow-mobile){
+      border-radius: 0;
+      width: 100vw;
+      height: 100vh;
+      min-height: max-content;
+      padding: 24px 16px;
+    }
     &__logo {
       background-image: linear-gradient(
       to left, #006D07 0%, #04700B 52%, #000000 100%);
