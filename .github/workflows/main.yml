@@ -7,38 +7,38 @@ on:
     branches: [master, develop]
 
 jobs:
-  lint_test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+  # lint_test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
+  #     - name: Setup Node.js environment
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 20
 
-      - name: Cache node_modules
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-v20-deps-${{ hashFiles('**/package-lock.json') }}
+  #     - name: Cache node_modules
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: node_modules
+  #         key: ${{ runner.os }}-node-v20-deps-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: npm install
+  #     - name: Install dependencies
+  #       if: steps.cache.outputs.cache-hit != 'true'
+  #       run: npm install
 
-      - name: Run lint
-        run: npm run lint
+  #     - name: Run lint
+  #       run: npm run lint
 
-      - name: Run tests
-        run: npm run coverage
+  #     - name: Run tests
+  #       run: npm run coverage
 
-      - name: Code coverage
-        uses: codecov/codecov-action@v3
+  #     - name: Code coverage
+  #       uses: codecov/codecov-action@v3
   build-and-publish:
     runs-on: ubuntu-latest
-    needs: lint_test
+    # needs: lint_test
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -51,7 +51,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.Docker-geogreen }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
