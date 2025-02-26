@@ -57,14 +57,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create .env file
+        run: |
+          echo "PORTAL_HTTP_PROTOCOL=${{ secrets.PORTAL_HTTP_PROTOCOL }}" >> .env
+          echo "PORTAL_API_HOST=${{ secrets.PORTAL_API_HOST }}" >> .env
+          echo "PORTAL_PORT=${{ secrets.PORTAL_PORT }}" >> .env
+          
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: ghcr.io/geogreen-platform/web-app:latest,ghcr.io/geogreen-platform/web-app:${{ github.sha }}
-      - name: Create .env file
-        run: |
-          echo "PORTAL_HTTP_PROTOCOL=${{ secrets.PORTAL_HTTP_PROTOCOL }}" >> .env
-          echo "PORTAL_API_HOST=${{ secrets.PORTAL_API_HOST }}" >> .env
-          echo "PORTAL_PORT=${{ secrets.PORTAL_PORT }}" >> .env
