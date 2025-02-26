@@ -2,6 +2,13 @@
 export default defineNuxtConfig({
   compatibilityDate: "2024-04-03",
   devtools: { enabled: true },
+  runtimeConfig: {
+    public: {
+      PORTAL_HTTP_PROTOCOL: "",
+      PORTAL_API_HOST: "",
+      PORTAL_PORT: "",
+    },
+  },
   modules: [
     "@pinia/nuxt",
     "nuxt-quasar-ui",
