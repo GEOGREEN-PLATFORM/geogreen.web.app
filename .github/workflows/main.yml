@@ -72,7 +72,3 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/geogreen-platform/web-app:latest,ghcr.io/geogreen-platform/web-app:${{ github.sha }}
-          build-args: |
-            PORTAL_HTTP_PROTOCOL=${{ secrets.PORTAL_HTTP_PROTOCOL }}
-            PORTAL_API_HOST=${{ secrets.PORTAL_API_HOST }}
-            PORTAL_PORT=${{ secrets.PORTAL_PORT }}
