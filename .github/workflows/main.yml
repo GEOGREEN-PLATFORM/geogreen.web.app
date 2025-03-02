@@ -72,12 +72,7 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/geogreen-platform/web-app:latest,ghcr.io/geogreen-platform/web-app:${{ github.sha }}
-
-      - name: Create .env file
-        run: |
-          echo "PORTAL_HTTP_PROTOCOL=${{ secrets.PORTAL_HTTP_PROTOCOL }}" >> .env
-          echo "PORTAL_API_HOST=${{ secrets.PORTAL_API_HOST }}" >> .env
-          echo "PORTAL_PORT=${{ secrets.PORTAL_PORT }}" >> .env
-          
-      - name: Run Docker Compose
-        run: docker-compose --env-file .env up -d
+          build-args: |
+            PORTAL_HTTP_PROTOCOL=${{ secrets.PORTAL_HTTP_PROTOCOL }}
+            PORTAL_API_HOST=${{ secrets.PORTAL_API_HOST }}
+            PORTAL_PORT=${{ secrets.PORTAL_PORT }}
