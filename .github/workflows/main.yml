@@ -58,7 +58,12 @@ jobs:
             9dba4e83-f761-4554-820c-b294012a9ce4 > PORTAL_API_HOST
             f3909625-9963-454e-8eb2-b294012a899e > PORTAL_HTTP_PROTOCOL
             ce9c2bad-7f20-4c32-99af-b294012aa9e4 > PORTAL_PORT
-            
+      - name: Create .env file
+        run: |
+          echo "PORTAL_HTTP_PROTOCOL=${{ secrets.PORTAL_HTTP_PROTOCOL }}" >> .env
+          echo "PORTAL_API_HOST=${{ secrets.PORTAL_API_HOST }}" >> .env
+          echo "PORTAL_PORT=${{ secrets.PORTAL_PORT }}" >> .env
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
