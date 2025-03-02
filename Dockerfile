@@ -1,35 +1,23 @@
-# ARG NODE_VERSION=20.18.0
+# Используем официальный Node.js образ (LTS версия)
+FROM node:18-alpine
 
-# FROM node:${NODE_VERSION}-slim as base
+# Задаём рабочую директорию внутри контейнера
+WORKDIR /app
 
-# ARG PORT=3000
+# Копируем файлы зависимостей
+COPY package*.json ./
 
-# # Устанавливаем рабочую директорию как текущую директорию
-# WORKDIR /src
+# Устанавливаем зависимости
+RUN npm install
 
-# # Build stage
-# FROM base as build
+# Копируем весь код приложения
+COPY . .
 
-# # Копируем package.json и package-lock.json для установки зависимостей
-# COPY package.json package-lock.json ./
-# RUN npm install
+# Собираем приложение для production
+RUN npm run build
 
-# # Копируем весь проект в контейнер
-# COPY . ./
+# Открываем порт, на котором работает Nuxt (обычно 3000)
+EXPOSE 3000
 
-# # Строим проект
-# RUN npm run build
-
-# # Final stage (production)
-# FROM base
-
-# ENV PORT=$PORT
-# ENV NODE_ENV=production
-
-# # Копируем из стадии сборки
-# COPY --from=build /src/.output /src/.output
-
-# # Optional, if you need unbundled dependencies
-# # COPY --from=build /src/node_modules /src/node_modules
-
-# CMD [ "node", ".output/server/index.mjs" ]
+# Запускаем приложение в production-режиме
+CMD ["npm", "run", "start"]
