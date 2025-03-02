@@ -43,6 +43,10 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     needs: lint_test
+    env:
+      NUXT_PORTAL_HTTP_PROTOCOL: $${{ secrets.PORTAL_HTTP_PROTOCOL }}
+      NUXT_PORTAL_API_HOST: $${{ secrets.PORTAL_API_HOST }}
+      NUXT_PORTAL_PORT: $${{ secrets.PORTAL_PORT }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -63,7 +67,3 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/geogreen-platform/web-app:latest,ghcr.io/geogreen-platform/web-app:${{ github.sha }}
-          secrets: |
-            "NUXT_PORTAL_HTTP_PROTOCOL: ${{ secrets.PORTAL_HTTP_PROTOCOL }}"
-            "NUXT_PORTAL_API_HOST: ${{ secrets.PORTAL_API_HOST }}"
-            "NUXT_PORTAL_PORT: ${{ secrets.PORTAL_PORT }}"
