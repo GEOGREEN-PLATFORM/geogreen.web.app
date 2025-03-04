@@ -37,7 +37,17 @@ const pages: Pages[] = [
   {
     key: "for-employee",
     name: "Сотруднику",
-    disabled: true,
+    hasNested: true,
+    nested: [
+      {
+        key: "employees",
+        name: "Сотрудники",
+      },
+      {
+        key: "tasks",
+        name: "Задачи",
+      },
+    ],
   },
 ];
 </script>
