@@ -11,12 +11,12 @@
     </div>
     <div class="toolbar-right">
         <LightDarkToggle></LightDarkToggle>
-        <CTabs v-model="currentPageKey" :tabs="pages" shrink></CTabs>
+        <CTabs v-model="currentPageKey" @update:model-value="goToPage" :tabs="pages" shrink></CTabs>
         <div class="login-buttons">
-        <GGButton label="Войти" strech="hug" size="small"></GGButton>
-        <GGButton label="Регистрация" strech="hug" design-type="secondary" size="small"></GGButton>
+        <GGButton label="Войти" strech="hug" size="small" @click="navigateTo('/auth/login')"></GGButton>
+        <GGButton label="Регистрация" strech="hug" design-type="secondary" size="small" @click="navigateTo('/auth/register')"></GGButton>
         </div>
-        <div class="user">
+        <div class="user" @click="handleAccountClick">
         <GGButton :icon="mdiAccountOutline" strech="hug" design-type="secondary" size="small" iconColor="var(--app-grey-400)"></GGButton>
         </div>
     </div>
@@ -24,14 +24,14 @@
           <div v-show="isMobileMenuOpened" class="c-menu-container__mobile">
         <div class="menu-top">
             <LightDarkToggle></LightDarkToggle>
-          <div class="user">
+          <div class="user" @click="handleAccountClick">
                 <GGButton :icon="mdiAccountOutline" strech="hug" design-type="secondary" size="small" iconColor="var(--app-grey-400)"></GGButton>
               </div><q-icon :name="mdiCog" color="grey-500" size="32px"></q-icon></div>
         <div class="menu-bottom">
-          <CTabs v-model="currentPageKey" :tabs="pages" shrink vertical></CTabs>
+          <CTabs v-model="currentPageKey" @update:model-value="goToPage" :tabs="pages" shrink vertical></CTabs>
           <div class="login-buttons">
-            <GGButton label="Войти" strech="fill" size="medium"></GGButton>
-            <GGButton label="Регистрация" strech="fill" design-type="secondary" size="medium"></GGButton>
+            <GGButton label="Войти" strech="fill" size="medium" @click="navigateTo('/auth/login')"></GGButton>
+            <GGButton label="Регистрация" strech="fill" design-type="secondary" size="medium" @click="navigateTo('/auth/register')"></GGButton>
           </div>
         </div>
       </div>
@@ -43,16 +43,31 @@
 
 <script setup lang="ts">
 import { mdiAccountOutline, mdiCog } from "@quasar/extras/mdi-v6";
-interface Props {
-  pages: Tab[];
+interface Pages extends Tab {
+  path: string;
 }
-
+interface Props {
+  pages: Pages[];
+}
+const route = useRoute();
 const props = defineProps<Props>();
-const currentPageKey = shallowRef("main");
+const currentPageKey = shallowRef("");
 const isMobileMenuOpened = shallowRef(false);
 function toggleMenu() {
   isMobileMenuOpened.value = !isMobileMenuOpened.value;
 }
+function goToPage(pageKey: string) {
+  navigateTo(props.pages.find((page) => page.key === pageKey)!.path);
+}
+function handleAccountClick() {
+  navigateTo("/auth/register");
+}
+onMounted(() => {
+  const pageKey = props.pages.find((page) => page.path === route.path)?.key;
+  if (pageKey) {
+    currentPageKey.value = pageKey;
+  }
+});
 </script>
 
 <style scoped lang="scss">

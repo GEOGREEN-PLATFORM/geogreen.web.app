@@ -2,6 +2,7 @@
   <div class="page-container">
     <div class="page-content">
       <header class="page-content__head">
+        <NuxtImg class="page-content__back-button" @click="goBack" src="/icons/home.svg" width="36px" height="36px"/>
         <div class="page-content__logo">
           GeoGreen
         </div>
@@ -10,7 +11,12 @@
     </div>
   </div>
 </template>
-
+<script setup lang="ts">
+const router = useRouter();
+function goBack() {
+  navigateTo("/");
+}
+</script>
 <style scoped lang="scss">
 $app-desktop: 1294px;
 $app-laptop: 960px;
@@ -69,6 +75,19 @@ $app-narrow-mobile: 364px;
     background-color: var(--app-white);
     padding: 36px 24px;
     border-radius: 32px;
+    &__head {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      justify-content: center;
+      position: relative;
+      .page-content__back-button {
+        cursor: pointer;
+        position: absolute;
+        left: 0;
+        filter: var(--app-filter-grey-500);
+      }
+    }
     @media screen and (max-width: $app-narrow-mobile){
       border-radius: 0;
       width: 100vw;

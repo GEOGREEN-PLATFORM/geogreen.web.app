@@ -15,7 +15,10 @@
   </template>
 
 <script setup lang="ts">
-const pages: Tab[] = [
+interface Pages extends Tab {
+  path: string;
+}
+const pages: Pages[] = [
   {
     key: "main",
     name: "Главная",
@@ -29,6 +32,7 @@ const pages: Tab[] = [
   {
     key: "report",
     name: "Сообщить",
+    path: "/report-problem",
   },
   {
     key: "for-employee",
