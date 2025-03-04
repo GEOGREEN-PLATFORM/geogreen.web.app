@@ -17,7 +17,7 @@
       :type="type"
       :loading="loading"
       :icon="icon"
-    />
+    ><slot></slot></q-btn>
   </div>
 </template>
 
@@ -74,10 +74,10 @@ onMounted(() => {
     background: var(--app-grey-050);
   }
   .secondary.disabled {
-    color: var(--app-black-6);
+    color: var(--app-grey-100);
   }
   .tertiary.disabled {
-    color: var(--app-black-6);
+    color: var(--app-grey-100);
   }
   .large {
     height: 56px;

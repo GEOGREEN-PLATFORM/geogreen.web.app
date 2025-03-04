@@ -1,39 +1,52 @@
 <template>
   <AuthPageForm
-    :button-options="pageState.buttonOptions"
+    :button-options="pageState.buttonOpts"
     @main-button-click="handleMainAction(pageState.step + 1)"
     @sub-button-click="handleSubAction(pageState.step - 1)"
   >
     <template #form-content>
       <div class="form-content">
-        <div class="form-content__page-step-hint text-center">
-          <span>{{ pageState.hint }}</span>
+        <h1 class="form-content__head gg-h1">Сменить пароль</h1>
+        <div class="form-content__page-step-hint gg-t-base">
+          <span>{{ pageState.hintText }}</span>
         </div>
         <div class="form-content__input-fields">
           <KTInput
-            v-if="pageState.step === 1"
+            v-if="pageState.step === 0"
             v-model="userData.email"
             label="Почта"
           />
           <KTInputOTP
-            v-if="pageState.step === 2"
+            v-if="pageState.step === 1"
+            v-model:is-error="isWrongCode"
             v-model="userData.confirmationCode"
             @is-full="handleMainAction(pageState.step + 1)"
           />
           <KTInput
-            v-if="pageState.step === 3"
+            v-if="pageState.step === 2"
             v-model="userData.password"
             type="password"
             label="Новый пароль"
+            autocomplete="new-password"
           />
           <KTInput
-            v-if="pageState.step === 3"
+            v-if="pageState.step === 2"
             v-model="userData.repeatedPassword"
             type="password"
             label="Повторите пароль"
+            autocomplete="new-password"
           />
         </div>
       </div>
+    </template>
+    <template v-if="pageState.step === 1 && (isWrongCode || userData.confirmationCode.length < 4)" #main-button>
+      <GGButton design-type="secondary" :disabled="sendCodeTimer !== 0"><div class="button-timer-slot">
+        {{ `Отправить код ${sendCodeTimer !== 0 ? 'через' : ''}` }}
+          <span v-show="sendCodeTimer !== 0" class="button-timer-slot__time">
+            {{ formattedSendTimer }}
+          </span>
+        </div>
+      </GGButton>
     </template>
   </AuthPageForm>
 </template>
@@ -43,98 +56,90 @@ definePageMeta({
   layout: "auth",
 });
 
-const INITIAL_STEP = 1;
+const INITIAL_STEP = 0;
+const CODE_SENDING_TIMEOUT = 59;
 
-class PageState {
-  private currentStep: number;
-  private hintText: string;
-  private currentButtonOpts: { main: ButtonOptions; sub: ButtonOptions };
-
-  private readonly defaultSubButton: ButtonOptions = {
-    designType: "tertiary",
-    label: "Назад",
-    show: true,
-  };
-
-  private readonly stepConfig = {
-    1: {
-      mainButton: { label: "Далее", show: true },
-      hintText: "Введите почту, указанную в аккаунте",
-    },
-    2: {
-      mainButton: { label: "Далее", show: false },
-      hintText: "Введите код, отправленный на вашу почту",
-    },
-    3: {
-      mainButton: { label: "Сменить пароль", show: true },
-      hintText: "Придумайте новый пароль",
-    },
-  };
-
-  constructor() {
-    this.currentStep = INITIAL_STEP;
-    this.hintText = this.stepConfig[INITIAL_STEP].hintText;
-    this.currentButtonOpts = {
-      main: {
-        designType: "primary",
-        ...this.stepConfig[INITIAL_STEP].mainButton,
-      },
-      sub: this.defaultSubButton,
-    };
-  }
-
-  get step() {
-    return this.currentStep;
-  }
-
-  get hint() {
-    return this.hintText;
-  }
-
-  get buttonOptions() {
-    return this.currentButtonOpts;
-  }
-
-  update(newStep: number) {
-    this.currentStep = newStep;
-    if (Object.hasOwn(this.stepConfig, newStep)) {
-      const config =
-        this.stepConfig[newStep as 1 | 2 | 3] || this.stepConfig[INITIAL_STEP];
-      this.currentButtonOpts = {
-        main: { designType: "primary", ...config.mainButton },
-        sub: this.defaultSubButton,
-      };
-      this.hintText = config.hintText;
-    }
-  }
-}
-
-const pageState = ref(new PageState());
+const defaultSubButton: ButtonOptions = {
+  designType: "tertiary",
+  label: "Назад",
+  show: true,
+};
 const userData = ref({
   email: "",
   password: "",
   repeatedPassword: "",
   confirmationCode: "",
 });
+const codeSendingInterval = ref<NodeJS.Timeout>();
+const sendCodeTimer = ref(CODE_SENDING_TIMEOUT);
+const formattedSendTimer = computed(() => {
+  return `00:${sendCodeTimer.value.toString().padStart(2, "0")}`;
+});
 const router = useRouter();
+const isWrongCode = ref(false);
+const stepConfig = reactive([
+  {
+    mainButton: { label: "Далее", show: true },
+    hintText: "Введите почту, указанную в аккаунте",
+  },
+  {
+    mainButton: { label: "Далее", show: true },
+    hintText: "Введите код, отправленный на вашу почту",
+  },
+  {
+    mainButton: { label: "Сменить пароль", show: true },
+    hintText: "Придумайте новый пароль",
+  },
+]);
+const pageState = reactive({
+  step: INITIAL_STEP,
+  hintText: stepConfig[INITIAL_STEP].hintText,
+  buttonOpts: {
+    main: { designType: "primary", ...stepConfig[INITIAL_STEP].mainButton },
+    sub: defaultSubButton,
+  } as { main: ButtonOptions; sub: ButtonOptions },
+});
+
+function updatePageState(newStep: number) {
+  pageState.step = newStep;
+  if (newStep === 1) {
+    codeSendingInterval.value = setInterval(() => {
+      sendCodeTimer.value -= 1;
+      if (sendCodeTimer.value === 0) {
+        clearInterval(codeSendingInterval.value);
+      }
+    }, 1000);
+  } else {
+    sendCodeTimer.value = CODE_SENDING_TIMEOUT;
+    clearInterval(codeSendingInterval.value);
+  }
+  const config = stepConfig[newStep] || stepConfig[INITIAL_STEP];
+  pageState.buttonOpts = {
+    main: { designType: "primary", ...config.mainButton },
+    sub: defaultSubButton,
+  };
+  pageState.hintText = config.hintText;
+}
 
 function handleMainAction(pageStep: number) {
-  if (pageStep <= 3) {
-    pageState.value.update(pageStep);
+  if (pageStep <= 2) {
+    updatePageState(pageStep);
   } else {
     sendChangePassword();
   }
 }
 
 function handleSubAction(pageStep: number) {
-  if (pageStep >= 1) {
-    pageState.value.update(pageStep);
+  if (pageStep >= 0) {
+    updatePageState(pageStep);
   } else {
     goBack();
   }
 }
 
-function sendChangePassword() {}
+function sendChangePassword() {
+  // Логика отправки запроса на смену пароля
+}
 
 function goBack() {
   router.back();
@@ -144,14 +149,20 @@ function goBack() {
 <style lang="scss" scoped>
 @use "@/assets/styles/pages/auth.scss";
 .form-content {
-  margin-top: 84px;
-  margin-bottom: 56px;
-  padding: 0px 16px;
-  gap: 8px;
   &__page-step-hint {
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 17.07px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+}
+.button-timer-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  &__time {
+    text-align: left;
+    width: 4.2ch;
+    color: var(--app-blue-600);
   }
 }
 </style>

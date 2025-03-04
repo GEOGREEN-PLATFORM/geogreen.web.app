@@ -8,14 +8,16 @@
   >
     <slot name="form-content" />
     <div class="auth-form__action-buttons">
-      <GGButton
-        v-if="buttonOptions.main.show !== false"
-        :disabled="formHasError"
-        :label="buttonOptions.main.label"
-        :design-type="buttonOptions.main.designType"
-        :loading="buttonOptions.main.loading"
-        type="submit"
-      />
+      <slot name="main-button">
+        <GGButton
+          v-if="buttonOptions.main.show !== false"
+          :disabled="formHasError"
+          :label="buttonOptions.main.label"
+          :design-type="buttonOptions.main.designType"
+          :loading="buttonOptions.main.loading"
+          type="submit"
+        />
+      </slot>
       <GGButton
         v-if="buttonOptions.sub.show !== false"
         :label="buttonOptions.sub.label"
@@ -23,6 +25,7 @@
         @click="sendActionEvent('sub')"
       />
     </div>
+    <slot name="form-footer"></slot>
   </q-form>
 </template>
 
@@ -81,7 +84,6 @@ onMounted(() => {
     flex-direction: column;
     width: 100%;
     gap: 16px;
-    padding: 0px 16px;
   }
 }
 </style>

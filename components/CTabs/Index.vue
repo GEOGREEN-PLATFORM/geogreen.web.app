@@ -1,6 +1,9 @@
 <template>
     <div class="c-tabs-container">
-        <q-tabs :vertical="vertical" stretch active-bg-color="green-050" v-model="currentTab" @update:model-value="updateTab" indicator-color="green-500" class="c-tabs">
+        <q-tabs 
+          :vertical="vertical" stretch active-bg-color="green-050" v-model="currentTab" @update:model-value="updateTab" 
+          indicator-color="green-500" class="c-tabs"
+        >
             <q-tab  
             content-class="c-tabs__content" :ripple="{ color: 'green-200'}" class="c-tabs__item text-grey-500" no-caps v-for="tab in props.tabs" 
             :name="tab.key" :key="tab.key" :label="tab.name" :disable="tab.disabled">
@@ -34,6 +37,12 @@ function updateTab(newTab: string) {
 onMounted(() => {
   currentTab.value = props.modelValue;
 });
+watch(
+  () => props.modelValue,
+  () => {
+    currentTab.value = props.modelValue;
+  },
+);
 </script>
 
 <style scoped lang="scss">

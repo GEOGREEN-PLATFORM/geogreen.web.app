@@ -1,16 +1,28 @@
 <template>
   <div class="page-container">
     <div class="page-content">
-      <div class="logo">
-        <div class="logo__main">TONIGHT</div>
-        <div class="logo__slogan">watch. meet. enjoy</div>
-      </div>
+      <header class="page-content__head">
+        <NuxtImg class="page-content__back-button" @click="goBack" src="/icons/home.svg" width="36px" height="36px"/>
+        <div class="page-content__logo">
+          GeoGreen
+        </div>
+      </header>
       <slot />
     </div>
   </div>
 </template>
-
+<script setup lang="ts">
+const router = useRouter();
+function goBack() {
+  navigateTo("/");
+}
+</script>
 <style scoped lang="scss">
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
+
 .page-container {
   min-height: 100vh;
   width: 100vw;
@@ -18,15 +30,16 @@
   padding: 16px;
   display: flex;
   align-items: center;
+  justify-content: center;
   background:
-    linear-gradient(0deg, rgba(249, 249, 241, 0.6), rgba(249, 249, 241, 0.6)),
+    linear-gradient(0deg, rgba(249, 249, 241, 0.1), rgba(249, 249, 241, 0.1)),
     linear-gradient(
       180deg,
       rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.48) 24.38%,
-      rgba(255, 255, 255, 0.8) 79.95%
+      rgba(255, 255, 255, 0.2) 24.38%,
+      rgba(255, 255, 255, 0.4) 79.95%
     ),
-    url("/images/login_bg.png") center / cover no-repeat;
+    url("/images/login_bg.jpg") center / cover no-repeat;
   z-index: 1;
   box-shadow: 0px 0px 30px 0px #ffffff08;
   &::before {
@@ -37,49 +50,57 @@
     bottom: 0;
     left: 0;
     background:
-      linear-gradient(0deg, rgba(8, 8, 8, 0.8), rgba(18, 18, 18, 0.8)),
+      linear-gradient(0deg, rgba(8, 8, 8, 0.4), rgba(18, 18, 18, 0.4)),
       linear-gradient(
         180deg,
-        rgba(8, 8, 8, 0.24) 0%,
-        rgba(8, 8, 8, 0.48) 44.64%,
-        rgba(8, 8, 8, 0.7) 74.65%
+        rgba(8, 8, 8, 0.1) 0%,
+        rgba(8, 8, 8, 0.2) 44.64%,
+        rgba(8, 8, 8, 0.4) 74.65%
       ),
-      url("/images/login_bg.png") center / cover no-repeat;
+      url("/images/login_bg.jpg") center / cover no-repeat;
     z-index: -1;
     transition: opacity 0.5s linear;
     opacity: 0;
+  }
+  @media screen and (max-width: $app-narrow-mobile){
+    padding: 0;
   }
   .page-content {
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    width: 100%;
-    min-height: 100%;
-    .logo {
+    width: 580px;
+    min-height: auto;
+    background-color: var(--app-white);
+    padding: 36px 24px;
+    border-radius: 32px;
+    &__head {
       display: flex;
       align-items: center;
+      width: 100%;
       justify-content: center;
-      flex-direction: column;
-      &__main {
-        font-size: 40px;
-        font-weight: 900;
-        line-height: 48.76px;
-        background: rgb(249, 87, 57);
-        background: linear-gradient(
-          90deg,
-          rgba(249, 87, 57, 1) 0%,
-          rgba(99, 105, 209, 1) 100%
-        );
-        -webkit-background-clip: text;
-        color: transparent;
+      position: relative;
+      .page-content__back-button {
+        cursor: pointer;
+        position: absolute;
+        left: 0;
+        filter: var(--app-filter-grey-500);
       }
-      &__slogan {
-        font-size: 24px;
-        font-weight: 500;
-        line-height: 29.26px;
-        color: var(--app-black-10);
-      }
+    }
+    @media screen and (max-width: $app-narrow-mobile){
+      border-radius: 0;
+      width: 100vw;
+      height: 100vh;
+      min-height: max-content;
+      padding: 24px 16px;
+    }
+    &__logo {
+      background-image: linear-gradient(
+      to left, #006D07 0%, #04700B 52%, #000000 100%);
+      background-clip: text;
+      color: transparent;
+      font-size: 32px;
     }
   }
 }
