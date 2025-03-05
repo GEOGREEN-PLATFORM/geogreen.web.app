@@ -12,9 +12,15 @@
              no-caps v-for="tab in props.tabs" 
             :name="tab.key" :key="tab.key" :label="tab.hasNested ? '' : tab.name" :disable="tab.disabled">
             <slot :name="tab.key">
-              <q-btn-dropdown v-if="tab.hasNested" class="c-tabs__item-dropdown" auto-close flat stretch  :label="tab.name" :ripple="false" no-caps>
+              <q-btn-dropdown v-if="tab.hasNested" class="c-tabs__item-dropdown" content-class="c-tabs__dropdown-content" auto-close flat stretch  :label="tab.name" :ripple="false" no-caps>
               <q-list class="c-tabs__dropdown-list">
-                <q-item v-for="item in tab.nested" :key="item.key" clickable>
+                <q-item v-for="item in tab.nested" :key="item.key" 
+                @click="() => handleNestedTabClick(item)" 
+                clickable 
+                :class="{
+                  active: item.selected
+                }"
+                >
                   <q-item-section>{{ item.name }}</q-item-section>
                 </q-item>
               </q-list>
@@ -49,6 +55,7 @@ function updateTab(newTab: string) {
     emits("update:modelValue", newTab);
   }
 }
+function handleNestedTabClick(tab: Tab) {}
 onMounted(() => {
   currentTab.value = props.modelValue;
 });
@@ -68,6 +75,12 @@ $app-mobile: 600px;
 $app-narrow-mobile: 364px;
   display: flex;
   height: v-bind(height);
+  :global(.c-tabs__dropdown-content) {
+    box-shadow: none;
+    background-color: var(--app-green-050);
+    margin-top: 4px !important;
+    border-radius: 0px 0px 8px 8px;
+  }
   :deep(.c-tabs) {
     .c-tabs__item {
       &.has-nested {
@@ -78,7 +91,6 @@ $app-narrow-mobile: 364px;
       height: 100%;
     }
     .c-tabs__dropdown-list {
-      
     }
     .c-tabs__content {
       .q-tab__label {
