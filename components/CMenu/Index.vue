@@ -11,7 +11,7 @@
     </div>
     <div class="toolbar-right">
         <LightDarkToggle></LightDarkToggle>
-        <CTabs v-model="currentPageKey" @update:model-value="goToPage" :tabs="pages" shrink></CTabs>
+        <CTabs v-model="currentPage" returnObj @update:model-value="goToPage" @select-nested="selectNestedPage" :tabs="pages" shrink></CTabs>
         <div class="login-buttons">
         <GGButton label="Войти" strech="hug" size="small" @click="navigateTo('/auth/login')"></GGButton>
         <GGButton label="Регистрация" strech="hug" design-type="secondary" size="small" @click="navigateTo('/auth/register')"></GGButton>
@@ -28,7 +28,7 @@
                 <GGButton :icon="mdiAccountOutline" strech="hug" design-type="secondary" size="small" iconColor="var(--app-grey-400)"></GGButton>
               </div><q-icon :name="mdiCog" color="grey-500" size="32px"></q-icon></div>
         <div class="menu-bottom">
-          <CTabs v-model="currentPageKey" @update:model-value="goToPage" :tabs="pages" shrink vertical></CTabs>
+          <CTabs v-model="currentPage" returnObj @update:model-value="goToPage" @select-nested="selectNestedPage" :tabs="pages" shrink vertical></CTabs>
           <div class="login-buttons">
             <GGButton label="Войти" strech="fill" size="medium" @click="navigateTo('/auth/login')"></GGButton>
             <GGButton label="Регистрация" strech="fill" design-type="secondary" size="medium" @click="navigateTo('/auth/register')"></GGButton>
@@ -43,30 +43,63 @@
 
 <script setup lang="ts">
 import { mdiAccountOutline, mdiCog } from "@quasar/extras/mdi-v6";
-interface Pages extends Tab {
-  path: string;
+interface Page extends Tab {
+  path?: string;
+  nestedItems?: {
+    path?: string;
+    name: string;
+    key: string;
+    selected: boolean;
+  }[];
 }
 interface Props {
-  pages: Pages[];
+  pages: Page[];
 }
 const route = useRoute();
 const props = defineProps<Props>();
-const currentPageKey = shallowRef("");
+const currentPage = shallowRef<Page>();
 const isMobileMenuOpened = shallowRef(false);
 function toggleMenu() {
   isMobileMenuOpened.value = !isMobileMenuOpened.value;
 }
-function goToPage(pageKey: string) {
-  navigateTo(props.pages.find((page) => page.key === pageKey)!.path);
+function goToPage(page: Page) {
+  if (!page.hasNested) {
+    props.pages.forEach((page) => {
+      if (page.hasNested) {
+        page.nestedItems?.forEach((nested) => {
+          nested.selected = false;
+        });
+      }
+    });
+    navigateTo(page.path);
+  }
+}
+function selectNestedPage(page: Page, nestedKey: string) {
+  const nestedPage = page.nestedItems?.find((item) => item.key === nestedKey);
+  console.log(page.nestedItems, nestedKey);
+  if (nestedPage) {
+    nestedPage.selected = true;
+    navigateTo(`${page.path}${nestedPage.path}`);
+  }
 }
 function handleAccountClick() {
   navigateTo("/auth/register");
 }
 onMounted(() => {
-  const pageKey = props.pages.find((page) => page.path === route.path)?.key;
-  if (pageKey) {
-    currentPageKey.value = pageKey;
-  }
+  props.pages.forEach((page) => {
+    if (page.hasNested) {
+      page.nestedItems?.forEach((nested) => {
+        if (`${page.path}${nested.path}` === route.path) {
+          currentPage.value = page;
+          nested.selected = true;
+        }
+      });
+    } else {
+      if (page.path === route.path) {
+        currentPage.value = page;
+      }
+    }
+  });
 });
 </script>
 

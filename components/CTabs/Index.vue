@@ -1,7 +1,7 @@
 <template>
     <div class="c-tabs-container">
         <q-tabs 
-          :vertical="vertical" stretch active-bg-color="green-050" :model-value="currentTab" @update:model-value="updateTab" 
+          :vertical="vertical" stretch active-bg-color="green-050" :model-value="currentTabKey" @update:model-value="updateTab" 
           indicator-color="green-500" class="c-tabs"
         >
             <q-tab  
@@ -14,12 +14,12 @@
             <slot :name="tab.key">
               <q-btn-dropdown v-if="tab.hasNested" class="c-tabs__item-dropdown" content-class="c-tabs__dropdown-content" auto-close flat stretch  :label="tab.name" :ripple="false" no-caps>
               <q-list class="c-tabs__dropdown-list">
-                <q-item v-for="item in tab.nested" :key="item.key" 
-                @click="() => handleNestedTabClick(item)" 
-                clickable 
+                <q-item v-for="item in tab.nestedItems" :key="item.key"
                 :class="{
                   active: item.selected
                 }"
+                @click="handleNestedTabClick(tab, item.key)" 
+                clickable 
                 >
                   <q-item-section>{{ item.name }}</q-item-section>
                 </q-item>
@@ -33,13 +33,14 @@
 
 <script setup lang="ts">
 interface Props {
-  modelValue: string;
+  modelValue: string | Tab;
   tabs: Tab[];
   shrink?: boolean;
   vertical?: boolean;
   height?: string;
+  returnObj?: boolean;
 }
-const currentTab = shallowRef("");
+const currentTabKey = shallowRef("");
 
 const props = withDefaults(defineProps<Props>(), {
   shrink: false,
@@ -47,22 +48,39 @@ const props = withDefaults(defineProps<Props>(), {
   height: "64px",
 });
 const emits = defineEmits<{
-  "update:modelValue": [string];
+  "update:modelValue": [string | Tab];
+  selectNested: [Tab, string];
 }>();
-function updateTab(newTab: string) {
-  if (!props.tabs.find((tab) => tab.key === newTab).hasNested) {
-    currentTab.value = newTab;
-    emits("update:modelValue", newTab);
+
+function getTabByKey(key: string) {
+  return props.tabs.find((tab) => tab.key === key);
+}
+function updateTab(newTabKey: string) {
+  if (!getTabByKey(newTabKey)?.hasNested) {
+    currentTabKey.value = newTabKey;
+    if (props.returnObj) {
+      emits("update:modelValue", getTabByKey(newTabKey) as Tab);
+    } else {
+      emits("update:modelValue", newTabKey);
+    }
   }
 }
-function handleNestedTabClick(tab: Tab) {}
+function handleNestedTabClick(tab: Tab, nestedKey: string) {
+  currentTabKey.value = tab.key;
+  emits("update:modelValue", tab);
+  emits("selectNested", tab, nestedKey);
+}
 onMounted(() => {
-  currentTab.value = props.modelValue;
+  currentTabKey.value = props.returnObj
+    ? (props.modelValue as Tab)?.key
+    : (props.modelValue as string);
 });
 watch(
   () => props.modelValue,
   () => {
-    currentTab.value = props.modelValue;
+    currentTabKey.value = props.returnObj
+      ? (props.modelValue as Tab)?.key
+      : (props.modelValue as string);
   },
 );
 </script>
@@ -81,6 +99,9 @@ $app-narrow-mobile: 364px;
     margin-top: 4px !important;
     border-radius: 0px 0px 8px 8px;
   }
+  :global(.c-tabs__dropdown-content .c-tabs__dropdown-list .active) {
+    background-color: var(--app-green-200);
+  }
   :deep(.c-tabs) {
     .c-tabs__item {
       &.has-nested {
@@ -89,8 +110,7 @@ $app-narrow-mobile: 364px;
     }
     .c-tabs__item-dropdown {
       height: 100%;
-    }
-    .c-tabs__dropdown-list {
+      font-size: 16px;
     }
     .c-tabs__content {
       .q-tab__label {

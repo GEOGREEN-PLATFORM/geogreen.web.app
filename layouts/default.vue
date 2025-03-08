@@ -15,10 +15,16 @@
   </template>
 
 <script setup lang="ts">
-interface Pages extends Tab {
-  path: string;
+interface Page extends Tab {
+  path?: string;
+  nestedItems?: {
+    path?: string;
+    name: string;
+    key: string;
+    selected: boolean;
+  }[];
 }
-const pages: Pages[] = [
+const pages: Page[] = [
   {
     key: "main",
     name: "Главная",
@@ -37,15 +43,20 @@ const pages: Pages[] = [
   {
     key: "for-employee",
     name: "Сотруднику",
+    path: "/for-employee",
     hasNested: true,
-    nested: [
+    nestedItems: [
       {
         key: "employees",
         name: "Сотрудники",
+        selected: false,
+        path: "/employees",
       },
       {
         key: "tasks",
         name: "Задачи",
+        selected: false,
+        path: "/tasks",
       },
     ],
   },

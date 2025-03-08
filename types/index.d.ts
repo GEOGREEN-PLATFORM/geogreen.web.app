@@ -35,6 +35,12 @@ declare global {
     key: string;
     name: string;
     disabled?: boolean;
+    hasNested?: boolean;
+    nestedItems?: {
+      name: string;
+      key: string;
+      selected: boolean;
+    }[];
   }
 }
 
