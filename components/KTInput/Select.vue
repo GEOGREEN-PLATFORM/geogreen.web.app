@@ -1,38 +1,25 @@
 <template>
-  <div class="kt-input-main">
-    <q-input
-      ref="qInputRef"
-      v-model="inputValue"
-      :rounded="rounded"
-      :outlined="outlined"
-      :label="label"
-      :type="currentType"
-      :rules="validationRules"
-      lazy-rules
-      :no-error-icon="hideErrorIcon"
-      :hide-bottom-space="hideBottomSpace"
-      :placeholder="placeholder"
-      :name="name"
-      @update:model-value="updateValue"
-      :autogrow="autogrow"
-      :autocomplete="autocomplete"
-    >
-      <template #append>
-        <slot name="append">
-          <q-icon
-            v-if="type === 'password'"
-            :name="showPassword ? mdiEyeOutline : mdiEyeOffOutline"
-            class="cursor-pointer"
-            @click="togglePassword"
-          />
-        </slot>
-      </template>
-    </q-input>
-  </div>
+    <div class="kt-input-select">
+        <q-select 
+        :model-value="modelValue" 
+        @update:model-value="selectValue"
+        :options="props.options" 
+        :outlined="outlined" 
+        :label="label" 
+        ref="qInputRef"
+        :rounded="rounded"
+        lazy-rules
+        :no-error-icon="hideErrorIcon"
+        :hide-bottom-space="hideBottomSpace"
+        :placeholder="placeholder"
+        :name="name"
+        :option-value="optionValue"
+        :option-label="optionLabel"
+        />
+    </div>
 </template>
 
 <script setup lang="ts">
-import { mdiEyeOffOutline, mdiEyeOutline } from "@quasar/extras/mdi-v6";
 import type { ValidationRule } from "quasar";
 
 interface Props {
@@ -40,29 +27,19 @@ interface Props {
   rounded?: boolean;
   outlined?: boolean;
   label: string;
-  type?:
-    | "number"
-    | "password"
-    | "search"
-    | "time"
-    | "text"
-    | "email"
-    | "textarea"
-    | "tel"
-    | "file"
-    | "url"
-    | "date"
-    | "datetime-local"
-    | undefined;
   required?: boolean;
   rules?: ValidationRule[];
   hideBottomSpace?: boolean;
   hideErrorIcon?: boolean;
   placeholder?: string;
   name?: string;
-  autogrow?: boolean;
-  autocomplete?: string;
+  options: {
+    name: string;
+    value: string;
+  }[];
   height?: string;
+  optionValue?: string;
+  optionLabel?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -70,49 +47,24 @@ const props = withDefaults(defineProps<Props>(), {
   outlined: true,
   required: true,
   rules: () => [],
-  type: "text",
   placeholder: "Введите текст",
   hideErrorIcon: true,
   hideBottomSpace: false,
-  autogrow: false,
   height: "56px",
+  optionValue: "value",
+  optionLabel: "name",
 });
-
 const emits = defineEmits<{
-  "update:modelValue": [string | number | null];
+  "update:modelValue": [string];
 }>();
-
-const inputValue = ref(props.modelValue);
-const showPassword = ref(false);
-const currentType = ref(props.type);
-const qInputRef = ref();
-const validationRules = ref<ValidationRule[]>([]);
-
-function updateValue(value: string | number | null) {
-  nextTick(() => {
-    qInputRef.value?.validate();
-    emits("update:modelValue", value);
-  });
+function selectValue(value: string) {
+  emits("update:modelValue", value);
 }
-function togglePassword() {
-  showPassword.value = !showPassword.value;
-  currentType.value = showPassword.value ? "text" : "password";
-}
-onMounted(() => {
-  if (props.required) {
-    validationRules.value = [
-      (val) => (val && val.length > 0) || "Поле не может быть пустым",
-    ];
-  } else {
-    validationRules.value = props.rules;
-  }
-});
 </script>
 
 <style lang="scss">
-.kt-input-main {
+.kt-input-select {
   width: 100%;
-  height: v-bind(height);
   .q-field--outlined.q-field--rounded .q-field__control {
     border-radius: 16px;
   }

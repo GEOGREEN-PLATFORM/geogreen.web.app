@@ -17,6 +17,7 @@
       :type="type"
       :loading="loading"
       :icon="icon"
+      :style="`background-color: ${bgColor}; color: ${textColor}`"
     ><slot></slot></q-btn>
   </div>
 </template>
@@ -32,6 +33,8 @@ interface Props {
   size?: "large" | "medium" | "small";
   icon?: string;
   iconColor?: string;
+  bgColor?: string;
+  textColor?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
   rounded: true,
@@ -116,9 +119,6 @@ onMounted(() => {
   }
   .q-btn.disabled {
     opacity: 1 !important;
-  }
-  .q-icon {
-    fill: v-bind(iconColor);
   }
 }
 </style>

@@ -29,7 +29,7 @@ interface Props {
   modelValue: string;
   rounded?: boolean;
   outlined?: boolean;
-  label?: string;
+  label: string;
   required?: boolean;
   rules?: ValidationRule[];
   hideBottomSpace?: boolean;

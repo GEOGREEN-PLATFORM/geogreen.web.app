@@ -14,6 +14,16 @@ declare global {
     firstName: string;
     lastName: string;
   }
+  interface FilterItem {
+    type: "select" | "date" | "date-range";
+    key: string;
+    label: string;
+    selected: string;
+    data: {
+      name: string;
+      value: string;
+    }[];
+  }
   interface Marker {
     id?: string;
     coordinate?: Coordinate;

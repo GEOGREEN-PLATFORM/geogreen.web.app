@@ -76,7 +76,6 @@ function goToPage(page: Page) {
 }
 function selectNestedPage(page: Page, nestedKey: string) {
   const nestedPage = page.nestedItems?.find((item) => item.key === nestedKey);
-  console.log(page.nestedItems, nestedKey);
   if (nestedPage) {
     nestedPage.selected = true;
     navigateTo(`${page.path}${nestedPage.path}`);
