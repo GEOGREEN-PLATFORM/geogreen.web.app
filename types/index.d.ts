@@ -18,8 +18,8 @@ declare global {
     type: "select" | "date" | "date-range";
     key: string;
     label: string;
-    selected: string;
-    data: {
+    selected: string | string[];
+    data?: {
       name: string;
       value: string;
     }[];

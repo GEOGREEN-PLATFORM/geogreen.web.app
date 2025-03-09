@@ -15,6 +15,8 @@
         :name="name"
         :option-value="optionValue"
         :option-label="optionLabel"
+        emit-value
+        map-options
         />
     </div>
 </template>

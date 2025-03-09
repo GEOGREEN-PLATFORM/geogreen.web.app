@@ -15,7 +15,7 @@
         </section>
         <section class="employees-page__content">
             <div class="filter-container">
-                <CFilter :items="filters"></CFilter>
+                <CFilter v-model="filters"></CFilter>
             </div>
             <div class="table-container">
               <CTable :columns="tableHeaders" :rows="tableRows" row-key="name"></CTable>
@@ -62,18 +62,8 @@ const filters = reactive<FilterItem[]>([
   {
     type: "date-range",
     key: "status",
-    selected: "",
-    label: "Статус аккаунта",
-    data: [
-      {
-        name: "Активен",
-        value: "active",
-      },
-      {
-        name: "Заблокирован",
-        value: "blocked",
-      },
-    ],
+    selected: ["", ""],
+    label: "Дата создания",
   },
 ]);
 const searchEmployee = ref("");

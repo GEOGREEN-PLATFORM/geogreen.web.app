@@ -1,41 +1,52 @@
 <template>
-    <KTInput
-      type="text"
-      :model-value="props.modelValue"
-      placeholder="01.01.2024"
-      :required="false"
-      :label="label"
-      hide-bottom-space
-    >
-      <template #append>
-        <q-icon
-          :name="mdiCalendarMonthOutline"
-        >
-          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-            <q-date
-              mask="DD.MM.YYYY"
-              :model-value="modelValue"
-              :locale="myLocale"
-              color="green-500"
-              @update:model-value="updateDate"
-            >
-              <div class="row items-center justify-end">
-                <GGButton v-close-popup label="Закрыть" size="small" design-type="tertiary" stretch="hug"></GGButton>
-              </div>
-            </q-date>
-          </q-popup-proxy>
-        </q-icon>
-      </template>
-    </KTInput>
-  </template>
-  
-  <script lang="ts" setup>
+  <KTInput
+    type="text"
+    :model-value="props.modelValue"
+    placeholder="01.01.2024"
+    :required="false"
+    :label="label"
+    hide-bottom-space
+    maska="##.##.####"
+    :rules="dateRules"
+    @update:model-value="updateDate"
+  >
+    <template #append>
+      <q-icon :name="mdiCalendarMonthOutline">
+        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+          <q-date
+            mask="DD.MM.YYYY"
+            :model-value="props.modelValue"
+            :locale="myLocale"
+            color="green-500"
+            @update:model-value="updateDate"
+          >
+            <div class="row items-center justify-end">
+              <GGButton
+                v-close-popup
+                label="Закрыть"
+                size="small"
+                design-type="tertiary"
+                stretch="hug"
+              ></GGButton>
+            </div>
+          </q-date>
+        </q-popup-proxy>
+      </q-icon>
+    </template>
+  </KTInput>
+</template>
+
+<script lang="ts" setup>
 import { mdiCalendarMonthOutline } from "@quasar/extras/mdi-v6";
+
 interface Props {
   modelValue: string;
   label: string;
 }
+
 const props = defineProps<Props>();
+const emit = defineEmits(["update:modelValue"]);
+
 const myLocale: object = {
   days: "Воскресенье_Понедельник_Вторник_Среда_Четверг_Пятница_Суббота".split(
     "_",
@@ -51,11 +62,29 @@ const myLocale: object = {
   pluralDay: "дня",
 };
 
-const emit = defineEmits(["update:modelValue"]);
-function updateDate(val: string) {
-  emit("update:modelValue", val);
+function isValidDate(dateStr: string): boolean {
+  const regex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+  if (!regex.test(dateStr)) return false;
+  const [day, month, year] = dateStr.split(".").map(Number);
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
+
+const dateRules = [
+  (val: string) => {
+    // Если значение не полностью заполнено (не 10 символов), правило не срабатывает
+    if (!val || val.length < 10) return true;
+    return isValidDate(val) || "Неверная дата. Используйте формат ДД.ММ.ГГГГ";
+  },
+];
+
+function updateDate(val: string | number) {
+  emit("update:modelValue", String(val));
 }
 </script>
-  
-  <style></style>
-  
+
+<style></style>

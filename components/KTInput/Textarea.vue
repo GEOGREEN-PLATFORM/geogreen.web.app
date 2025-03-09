@@ -15,6 +15,7 @@
         :placeholder="placeholder"
         :name="name"
         @update:model-value="updateValue"
+        height="96px"
       >
       </KTInput>
     </div>

@@ -16,6 +16,7 @@
       @update:model-value="updateValue"
       :autogrow="autogrow"
       :autocomplete="autocomplete"
+      :mask="maska"
     >
       <template #append>
         <slot name="append">
@@ -62,6 +63,7 @@ interface Props {
   name?: string;
   autogrow?: boolean;
   autocomplete?: string;
+  maska?: string;
   height?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
@@ -79,19 +81,19 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emits = defineEmits<{
-  "update:modelValue": [string | number | null];
+  "update:modelValue": [string | number];
 }>();
 
-const inputValue = ref(props.modelValue);
 const showPassword = ref(false);
 const currentType = ref(props.type);
+const inputValue = ref("");
 const qInputRef = ref();
 const validationRules = ref<ValidationRule[]>([]);
 
 function updateValue(value: string | number | null) {
   nextTick(() => {
     qInputRef.value?.validate();
-    emits("update:modelValue", value);
+    emits("update:modelValue", value || "");
   });
 }
 function togglePassword() {
@@ -99,6 +101,7 @@ function togglePassword() {
   currentType.value = showPassword.value ? "text" : "password";
 }
 onMounted(() => {
+  inputValue.value = props.modelValue;
   if (props.required) {
     validationRules.value = [
       (val) => (val && val.length > 0) || "Поле не может быть пустым",
@@ -107,12 +110,18 @@ onMounted(() => {
     validationRules.value = props.rules;
   }
 });
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    inputValue.value = newVal;
+  },
+);
 </script>
 
 <style lang="scss">
 .kt-input-main {
   width: 100%;
-  height: v-bind(height);
+  min-height: v-bind(height);
   .q-field--outlined.q-field--rounded .q-field__control {
     border-radius: 16px;
   }
