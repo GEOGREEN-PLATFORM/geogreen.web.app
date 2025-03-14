@@ -18,7 +18,16 @@
                 <CFilter v-model="filters"></CFilter>
             </div>
             <div class="table-container">
-              <CTable :columns="tableHeaders" :rows="tableRows" row-key="name"></CTable>
+              <CTable :columns="tableHeaders" :rows="tableRows" row-key="name" :slots="['status']">
+                <template v-slot:body-cell-status="slotProps">
+                  <div class="status-wrapper">
+                  <div class="account-status gg-t-small" :class="{
+                    'account-status--active': slotProps.row.status === 'Активен',
+                    'account-status--blocked': slotProps.row.status === 'Заблокирован',
+                  }">{{slotProps.row.status}}</div>
+                  </div>
+                </template>
+              </CTable>
             </div>
         </section>
     </main>
@@ -133,5 +142,27 @@ $app-narrow-mobile: 364px;
             }
         }
     }
+    .status-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .account-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: max-content;
+    height: 32px;
+    padding: 4px 16px;
+    border-radius: 16px;
+    color: var(--app-white);
+    &--active {
+      background-color: var(--app-green-300);
+    }
+    &--blocked {
+      background-color: var(--app-grey-300);
+    }
+  }
+    }
+
 }
 </style>

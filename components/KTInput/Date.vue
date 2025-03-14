@@ -5,7 +5,6 @@
     placeholder="01.01.2024"
     :required="false"
     :label="label"
-    hide-bottom-space
     maska="##.##.####"
     :rules="dateRules"
     @update:model-value="updateDate"
@@ -78,7 +77,7 @@ const dateRules = [
   (val: string) => {
     // Если значение не полностью заполнено (не 10 символов), правило не срабатывает
     if (!val || val.length < 10) return true;
-    return isValidDate(val) || "Неверная дата. Используйте формат ДД.ММ.ГГГГ";
+    return isValidDate(val) || "Используйте формат ДД.ММ.ГГГГ";
   },
 ];
 

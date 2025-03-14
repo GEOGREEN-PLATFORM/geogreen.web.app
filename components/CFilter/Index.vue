@@ -9,6 +9,7 @@
                 </div>
             </GGButton>
         </div>
+        <Transition name="slide-fade">
         <div v-show="showContent" class="filter-content">
             <div class="filter-items">
                 <div v-for="item in filterItems" class="filter-items__item">
@@ -27,6 +28,7 @@
                 <div @click="resetFilters" class="filter-content__btn filter-content__btn--reset">Сбросить</div>
             </div>
         </div>
+        </Transition>
     </div>
 </template>
 
@@ -93,7 +95,7 @@ onMounted(() => {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 12px;
+            gap: 6px;
             .filter-button__active-count {
                 background-color: var(--app-blue-500);
                 display: flex;
@@ -109,7 +111,6 @@ onMounted(() => {
     .filter-content {
         .filter-items {
             display: flex;
-            align-items: center;
             flex-wrap: wrap;
             gap: 32px;
             &__item {
@@ -124,7 +125,7 @@ onMounted(() => {
                         height: 2px;
                         background-color: var(--app-grey-050);
                         display: inline-block;
-                        margin: auto 12px;
+                        margin: 28px 12px;
                     }
                 }
             }
@@ -132,11 +133,45 @@ onMounted(() => {
         &__footer {
             display: flex;
             gap: 16px;
-            margin-top: 16px;
         .filter-content__btn {
             cursor: pointer;
+            user-select: none;
+            transition: color 0.1s ease;
+            &--apply {
+              color: var(--app-blue-300);
+              &:hover {
+                color: var(--app-blue-400);
+              }
+              &:active {
+                color: var(--app-blue-500);
+              }
+            }
+            &--reset {
+              color: var(--app-grey-300);
+              &:hover {
+                color: var(--app-grey-400);
+              }
+              &:active {
+                color: var(--app-grey-500);
+              }
+            }
         }
+        
         }
     }
+}
+
+.slide-fade-enter-active, .slide-fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.slide-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

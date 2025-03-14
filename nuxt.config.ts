@@ -36,6 +36,7 @@ export default defineNuxtConfig({
     "@/assets/styles/main.scss",
   ],
   quasar: {
+    lang: "ru",
     config: {
       brand: {
         primary: "var(--app-blue-9)",

@@ -5,7 +5,17 @@
             :rows="rows"
             :columns="columns"
             :row-key="rowKey"
-        />
+            flat
+            bordered
+            table-class="c-table-container__table"
+            :rows-per-page-options="[10, 20, 50, 0]"
+        >
+        <template v-for="slot in props.slots" v-slot:[`body-cell-${slot}`]="slotProps">
+        <q-td :props="slotProps">
+          <slot :name="`body-cell-${slot}`" v-bind="slotProps"></slot>
+        </q-td>
+      </template>
+      </q-table>
     </div>
 </template>
 
@@ -24,10 +34,30 @@ interface Props {
   }[];
   title: string;
   rowKey?: string;
+  slots?: string[];
 }
 const props = defineProps<Props>();
 </script>
 
-<style scoped lang="scss">
-
+<style lang="scss">
+.c-table-container {
+  &__table {
+    .q-table tbody td, .q-table thead th {
+      font-size: 14px;
+    }
+    .q-table__sort-icon {
+      width: 0px;
+      margin: 0;
+      &--right {
+        right: 12px;
+      }
+      &--left {
+        left: 12px;
+      }
+      &--center {
+        left: 12px;
+      }
+    }
+  }
+}
 </style>
