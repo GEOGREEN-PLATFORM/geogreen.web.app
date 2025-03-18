@@ -1,6 +1,6 @@
 <template>
   <div class="gg-dialog">
-    <q-dialog :model-value="modelValue" @update:model-value="toggleOpenState">
+    <q-dialog :model-value="modelValue" @update:model-value="toggleOpenState" :auto-close="false">
       <slot />
     </q-dialog>
   </div>

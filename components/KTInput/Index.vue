@@ -1,5 +1,7 @@
 <template>
-  <div class="kt-input-main">
+  <div class="kt-input-main" :class="{
+    required: required
+  }">
     <q-input
       ref="qInputRef"
       v-model="inputValue"
@@ -17,6 +19,7 @@
       :autogrow="autogrow"
       :autocomplete="autocomplete"
       :mask="maska"
+      :hint="hint"
     >
       <template #append>
         <slot name="append">
@@ -65,6 +68,7 @@ interface Props {
   autocomplete?: string;
   maska?: string;
   height?: string;
+  hint?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -200,6 +204,14 @@ watch(
     background-clip: text !important;
     -webkit-text-fill-color: var(--app-grey-500);
     box-shadow: inset 0 0 20px 20px transparent;
+  }
+}
+.kt-input-main.required {
+  .q-field__label {
+    &::after {
+      content: "*";
+      color: var(--app-red-500);
+    }
   }
 }
 </style>

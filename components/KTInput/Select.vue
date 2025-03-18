@@ -1,5 +1,7 @@
 <template>
-    <div class="kt-input-select">
+    <div class="kt-input-select" :class="{
+      required: required
+    }">
         <q-select 
         :model-value="modelValue" 
         @update:model-value="selectValue"
@@ -8,6 +10,7 @@
         :label="label" 
         ref="qInputRef"
         :rounded="rounded"
+        :rules="validationRules"
         lazy-rules
         :no-error-icon="hideErrorIcon"
         :hide-bottom-space="hideBottomSpace"
@@ -59,9 +62,19 @@ const props = withDefaults(defineProps<Props>(), {
 const emits = defineEmits<{
   "update:modelValue": [string];
 }>();
+const validationRules = ref<ValidationRule[]>([]);
 function selectValue(value: string) {
   emits("update:modelValue", value);
 }
+onMounted(() => {
+  if (props.required) {
+    validationRules.value = [
+      (val) => (val && val.length > 0) || "Поле не может быть пустым",
+    ];
+  } else {
+    validationRules.value = props.rules;
+  }
+});
 </script>
 
 <style lang="scss">
@@ -145,6 +158,14 @@ function selectValue(value: string) {
     background-clip: text !important;
     -webkit-text-fill-color: var(--app-grey-500);
     box-shadow: inset 0 0 20px 20px transparent;
+  }
+}
+.kt-input-select.required {
+  .q-field__label {
+    &::after {
+      content: "*";
+      color: var(--app-red-500);
+    }
   }
 }
 </style>
