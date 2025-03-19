@@ -3,7 +3,7 @@
         <section class="employees-page__header">
             <h1 class="employees-page__title gg-h1">Сотрудники</h1>
             <div class="employees-page__actions-wrapper">
-                <GGButton @click="openDialogEmployeeAdd" class="employees-page__add-employee" label="Добавить сотрудника" size="medium"></GGButton>
+                <GGButton @click="openEmployeeDialog" class="employees-page__add-employee" label="Добавить сотрудника" size="medium"></GGButton>
                 <KTInput class="employees-page__search-employee" v-model="searchEmployee" label="Поиск сотрудника" hideBottomSpace height="48px" :required="false">
                     <template #append>
                         <q-icon
@@ -30,86 +30,16 @@
               </CTable>
             </div>
         </section>
-        <GGDialog v-model="dialogEmployeeAdd.isOpened">
-          <div class="dialog-employee-add">
-            <header class="dialog-employee-add__title">
-              <h1 class="gg-h1">Создание сотрудника</h1>
-              <div class="sub-title">{{ dialogEmployeeAdd.currentSubTitle }}</div>
-            </header>
-            <div v-if="dialogEmployeeAdd.currentStep === 1">
-            <section class="block">
-              <h2 class="block__name gg-h3">Личные данные</h2>
-              <div class="block__content">
-                <div class="block__row-fields">
-                  <KTInput v-model="dialogEmployeeAdd.form.personalData.lastName" label="Фамилия" required class="block__field"></KTInput>
-                  <KTInput v-model="dialogEmployeeAdd.form.personalData.firstName" label="Имя" required class="block__field"></KTInput>
-                  <KTInput v-model="dialogEmployeeAdd.form.personalData.secondName" label="Отчество" required class="block__field"></KTInput>
-                </div>
-                  <KTInputDate v-model="dialogEmployeeAdd.form.personalData.dateOfBirth" label="Дата рождения" class="block__field"></KTInputDate>
-              </div>
-            </section>
-            <section class="block">
-              <h2 class="gg-h3 block__name">Контакты</h2>
-                  <KTInput v-model="dialogEmployeeAdd.form.contacts.email" label="Email" class="block__field" hint="Электронная почта сотрудника для входа в систему."></KTInput>
-                  <KTInput v-model="dialogEmployeeAdd.form.contacts.phoneNumber" label="Номер телефона" class="block__field" :required="false"></KTInput>
-            </section>
-            <section class="block">
-              <h2 class="gg-h3 block__name">Авторизация</h2>
-              <KTInputSelect v-model="dialogEmployeeAdd.form.auth.role" label="Роль" :options="roleOptions" class="block__field" required></KTInputSelect>
-            </section>
-          </div>
-          <div v-else-if="dialogEmployeeAdd.currentStep === 2">
-            <section class="block">
-              <h2 class="block__name gg-h3">Личные данные</h2>
-              <div class="block__content">
-                <div>
-                <span>ФИО:</span>
-                <span>{{ `${dialogEmployeeAdd.form.personalData.lastName} ${dialogEmployeeAdd.form.personalData.firstName} ${dialogEmployeeAdd.form.personalData.secondName}` }}</span>
-              </div>
-              <div>
-                <span>Дата рождения:</span>
-                <span>{{ dialogEmployeeAdd.form.personalData.dateOfBirth }}</span>
-              </div>
-              </div>
-            </section>
-            <section class="block">
-              <h2 class="gg-h3 block__name">Контакты</h2>
-              <div>
-                <span>Email:</span>
-                <span>{{ dialogEmployeeAdd.form.contacts.email }}</span>
-              </div>
-              <div>
-                <span>Номер телефона:</span>
-                <span>{{ dialogEmployeeAdd.form.contacts.phoneNumber }}</span>
-              </div>
-            </section>
-            <section class="block">
-              <h2 class="gg-h3 block__name">Авторизация</h2>
-              <div>
-                <span>Роль:</span>
-                <span>{{ dialogEmployeeAdd.form.auth.role }}</span>
-              </div>
-            </section>
-          </div>
-          <div v-else-if="dialogEmployeeAdd.currentStep === 3">
-            <div class="password-container">
-              <div class="gg-h2">Пароль</div>
-              <div class="with-copy">              <div class="password">{{ dialogEmployeeAdd.password }}</div>
-              <q-icon :name="mdiContentCopy" size="32px"></q-icon></div>
-
-            </div>
-            </div>
-            <footer class="dialog-employee-add__footer-buttons">
-              <GGButton @click="stepBackDialogEmployeeAdd" design-type="tertiary" :label="dialogEmployeeAdd.buttons.cancel"></GGButton>
-              <GGButton @click="stepForwardDialogEmployeeAdd"  :label="dialogEmployeeAdd.buttons.apply"></GGButton>
-            </footer>
-          </div>
-        </GGDialog>
+        <EmployeesPageAddDialog 
+        v-model="isEmployeeDialogOpen"
+        @employeeCreated="handleEmployeeCreated"
+        />
     </main>
 </template>
 
 <script setup lang="ts">
 import { mdiContentCopy, mdiMagnify } from "@quasar/extras/mdi-v6";
+
 const statusOptions = [
   {
     name: "Активен",
@@ -130,94 +60,13 @@ const roleOptions = [
     value: "administrator",
   },
 ];
-const dialogEmployeeAdd = reactive({
-  isOpened: false,
-  form: {
-    personalData: {
-      firstName: "",
-      secondName: "",
-      lastName: "",
-      dateOfBirth: "",
-    },
-    contacts: {
-      email: "",
-      phoneNumber: "",
-    },
-    auth: {
-      role: "",
-    },
-  },
-  buttons: {
-    cancel: "Отмена",
-    apply: "Далее",
-  },
-  currentSubTitle: "",
-  password: "",
-  currentStep: 1,
-});
-function stepBackDialogEmployeeAdd() {
-  switch (dialogEmployeeAdd.currentStep) {
-    case 1:
-      dialogEmployeeAdd.isOpened = false;
-      dialogEmployeeAdd.form = {
-        personalData: {
-          firstName: "",
-          secondName: "",
-          lastName: "",
-          dateOfBirth: "",
-        },
-        contacts: {
-          email: "",
-          phoneNumber: "",
-        },
-        auth: {
-          role: "",
-        },
-      };
-      break;
-    case 2:
-      dialogEmployeeAdd.currentStep--;
-      break;
-    case 3:
-      dialogEmployeeAdd.currentStep--;
-      break;
-  }
+const isEmployeeDialogOpen = ref(false);
+function openEmployeeDialog() {
+  isEmployeeDialogOpen.value = true;
 }
-function stepForwardDialogEmployeeAdd() {
-  switch (dialogEmployeeAdd.currentStep) {
-    case 1:
-      dialogEmployeeAdd.currentStep++;
-      dialogEmployeeAdd.currentSubTitle =
-        "Проверьте корректность введённых данных";
-      dialogEmployeeAdd.buttons.cancel = "Назад";
-      break;
-    case 2:
-      dialogEmployeeAdd.currentStep++;
-      dialogEmployeeAdd.currentSubTitle =
-        "Сохраните пароль для сотрудника. Утерянные пароли не восстанавливаются в системе!";
-      dialogEmployeeAdd.buttons.apply = "Создать";
-      dialogEmployeeAdd.password = generatePassword();
-      break;
-    case 3:
-      dialogEmployeeAdd.currentStep--;
-      break;
-  }
+function handleEmployeeCreated(newEmployeeData: unknown) {
+  console.log("Создан сотрудник:", newEmployeeData);
 }
-function generatePassword() {
-  const specialChars = "@#$%&*";
-  const passwordArr = Math.random()
-    .toString(36)
-    .slice(-10)
-    .split("")
-    .map((char) => {
-      return Math.random() > 0.5 ? char.toUpperCase() : char.toLowerCase();
-    });
-  const index = Math.floor(Math.random() * passwordArr.length);
-  passwordArr[index] =
-    specialChars[Math.floor(Math.random() * specialChars.length)];
-  return passwordArr.join("");
-}
-
 const filters = reactive<FilterItem[]>([
   {
     type: "select",
@@ -279,9 +128,6 @@ const tableRows = [
     dateCreated: "23.02.2025",
   },
 ];
-function openDialogEmployeeAdd() {
-  dialogEmployeeAdd.isOpened = true;
-}
 </script>
 
 <style scoped lang="scss">
