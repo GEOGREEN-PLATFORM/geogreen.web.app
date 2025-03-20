@@ -18,7 +18,7 @@
                 <CFilter v-model="filters"></CFilter>
             </div>
             <div class="table-container">
-              <CTable :columns="tableHeaders" :rows="tableRows" row-key="name" :slots="['status']">
+              <CTable :columns="tableHeaders" :rows="tableRows" row-key="name" :slots="['status']" click:row="goToEmployee">
                 <template v-slot:body-cell-status="slotProps">
                   <div class="status-wrapper">
                   <div class="account-status gg-t-small" :class="{
@@ -128,6 +128,11 @@ const tableRows = [
     dateCreated: "23.02.2025",
   },
 ];
+
+// function goToEmployee(_, row) {
+//   console.log(row);
+//   navigateTo(`/for-employee/employees/${id}`)
+// }
 </script>
 
 <style scoped lang="scss">

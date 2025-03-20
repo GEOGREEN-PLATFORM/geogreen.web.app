@@ -2,7 +2,7 @@
     <GGDialog v-model="dialogVisible" class="employee-add-dialog">
       <div class="employee-add-dialog__container">
         <header class="employee-add-dialog__header">
-          <h1 class="employee-add-dialog__title gg-h1">Создание сотрудника</h1>
+          <h1 class="employee-add-dialog__title gg-h1">Создание оператора</h1>
           <p v-if="subTitle" class="employee-add-dialog__subtitle">{{ subTitle }}</p>
         </header>
   
@@ -61,16 +61,6 @@
                 />
               </div>
             </section>
-            <section class="employee-add-dialog__section">
-              <h2 class="employee-add-dialog__section-title gg-h3">Авторизация</h2>
-              <KTInputSelect
-                v-model="form.auth.role"
-                label="Роль"
-                :options="roleOptions"
-                required
-                class="employee-add-dialog__field"
-              />
-            </section>
           </template>
           <template v-else-if="currentStep === 2">
             <section class="employee-add-dialog__section">
@@ -93,13 +83,6 @@
               <div class="employee-add-dialog__info-row gg-t-base">
                 <span class="employee-add-dialog__info-label">Номер телефона:</span>
                 <span class="employee-add-dialog__info-value">{{ form.contacts.phoneNumber }}</span>
-              </div>
-            </section>
-            <section class="employee-add-dialog__section">
-              <h2 class="employee-add-dialog__section-title gg-h3">Авторизация</h2>
-              <div class="employee-add-dialog__info-row gg-t-base">
-                <span class="employee-add-dialog__info-label">Роль:</span>
-                <span class="employee-add-dialog__info-value">{{ form.auth.role }}</span>
               </div>
             </section>
           </template>
@@ -152,11 +135,6 @@ watch(dialogVisible, (newVal) => {
   emit("update:modelValue", newVal);
 });
 
-const roleOptions = [
-  { name: "Оператор", value: "operator" },
-  { name: "Администратор", value: "administrator" },
-];
-
 const form = reactive({
   personalData: {
     firstName: "",
@@ -167,9 +145,6 @@ const form = reactive({
   contacts: {
     email: "",
     phoneNumber: "",
-  },
-  auth: {
-    role: "",
   },
 });
 
@@ -242,7 +217,6 @@ function resetForm() {
   form.personalData.dateOfBirth = "";
   form.contacts.email = "";
   form.contacts.phoneNumber = "";
-  form.auth.role = "";
 }
 
 function generatePassword(): string {
