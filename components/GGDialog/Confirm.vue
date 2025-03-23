@@ -7,12 +7,7 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <GGButton
-          v-close-popup
-          label="Отмена"
-          design-type="tertiary"
-          @click="cancelAction"
-        />
+        <GGButton v-close-popup label="Отмена" design-type="tertiary" @click="cancelAction" />
         <GGButton
           v-close-popup
           :label="actionButtonConfirmText"

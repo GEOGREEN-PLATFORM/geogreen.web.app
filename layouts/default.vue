@@ -1,18 +1,17 @@
 <template>
-    <q-layout view="hHh lpR fFf" class="layout-container">
-      <q-header class="header-container">
-        <q-toolbar class="toolbar-container">
-            <CMenu :pages="pages"></CMenu>
-    </q-toolbar>
-    <div class="hr-line"></div>
-      </q-header>
+  <q-layout view="hHh lpR fFf" class="layout-container">
+    <q-header class="header-container">
+      <q-toolbar class="toolbar-container">
+        <CMenu :pages="pages"></CMenu>
+      </q-toolbar>
+      <div class="hr-line"></div>
+    </q-header>
 
-      <q-page-container>
-        <NuxtPage></NuxtPage>
-      </q-page-container>
-  
-    </q-layout>
-  </template>
+    <q-page-container>
+      <NuxtPage></NuxtPage>
+    </q-page-container>
+  </q-layout>
+</template>
 
 <script setup lang="ts">
 interface Page extends Tab {
@@ -70,22 +69,22 @@ const pages: Page[] = [
   $app-mobile: 600px;
   $app-narrow-mobile: 364px;
   background-color: var(--app-white);
-    .header-container {
-        padding: 0px 28px;
-        background-color: var(--app-white);
-    }
-    .toolbar-container {
-        display: flex;
-        height: 64px;
-    }
-    
-      .hr-line {
-        width: 100vw;
-        position: relative;
-        left: -28px;
-        top: -1px;
-        height: 1px;
-        background-color: var(--app-grey-050);
-      }
+  .header-container {
+    padding: 0px 28px;
+    background-color: var(--app-white);
+  }
+  .toolbar-container {
+    display: flex;
+    height: 64px;
+  }
+
+  .hr-line {
+    width: 100vw;
+    position: relative;
+    left: -28px;
+    top: -1px;
+    height: 1px;
+    background-color: var(--app-grey-050);
+  }
 }
 </style>

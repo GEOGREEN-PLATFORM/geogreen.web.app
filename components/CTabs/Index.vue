@@ -1,34 +1,58 @@
 <template>
-    <div class="c-tabs-container">
-        <q-tabs 
-          :vertical="vertical" stretch active-bg-color="green-050" :model-value="currentTabKey" @update:model-value="updateTab" 
-          indicator-color="green-500" class="c-tabs"
-        >
-            <q-tab  
-            content-class="c-tabs__content" :ripple="{ color: 'green-200'}" class="c-tabs__item text-grey-500"
-            :class="{
-              'has-nested': tab.hasNested
-            }"
-             no-caps v-for="tab in props.tabs" 
-            :name="tab.key" :key="tab.key" :label="tab.hasNested ? '' : tab.name" :disable="tab.disabled">
-            <slot :name="tab.key">
-              <q-btn-dropdown v-if="tab.hasNested" class="c-tabs__item-dropdown" content-class="c-tabs__dropdown-content" auto-close flat stretch  :label="tab.name" :ripple="false" no-caps>
-              <q-list class="c-tabs__dropdown-list">
-                <q-item v-for="item in tab.nestedItems" :key="item.key"
+  <div class="c-tabs-container">
+    <q-tabs
+      :vertical="vertical"
+      stretch
+      active-bg-color="green-050"
+      :model-value="currentTabKey"
+      @update:model-value="updateTab"
+      indicator-color="green-500"
+      class="c-tabs"
+    >
+      <q-tab
+        content-class="c-tabs__content"
+        :ripple="{ color: 'green-200' }"
+        class="c-tabs__item text-grey-500"
+        :class="{
+          'has-nested': tab.hasNested,
+        }"
+        no-caps
+        v-for="tab in props.tabs"
+        :name="tab.key"
+        :key="tab.key"
+        :label="tab.hasNested ? '' : tab.name"
+        :disable="tab.disabled"
+      >
+        <slot :name="tab.key">
+          <q-btn-dropdown
+            v-if="tab.hasNested"
+            class="c-tabs__item-dropdown"
+            content-class="c-tabs__dropdown-content"
+            auto-close
+            flat
+            stretch
+            :label="tab.name"
+            :ripple="false"
+            no-caps
+          >
+            <q-list class="c-tabs__dropdown-list">
+              <q-item
+                v-for="item in tab.nestedItems"
+                :key="item.key"
                 :class="{
-                  active: item.selected
+                  active: item.selected,
                 }"
-                @click="handleNestedTabClick(tab, item.key)" 
-                clickable 
-                >
-                  <q-item-section>{{ item.name }}</q-item-section>
-                </q-item>
-              </q-list>
-            </q-btn-dropdown>
-            </slot>
-        </q-tab>
-        </q-tabs>
-    </div>
+                @click="handleNestedTabClick(tab, item.key)"
+                clickable
+              >
+                <q-item-section>{{ item.name }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+        </slot>
+      </q-tab>
+    </q-tabs>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -87,10 +111,10 @@ watch(
 
 <style scoped lang="scss">
 .c-tabs-container {
-$app-desktop: 1294px;
-$app-laptop: 960px;
-$app-mobile: 600px;
-$app-narrow-mobile: 364px;
+  $app-desktop: 1294px;
+  $app-laptop: 960px;
+  $app-mobile: 600px;
+  $app-narrow-mobile: 364px;
   display: flex;
   height: v-bind(height);
   :global(.c-tabs__dropdown-content) {

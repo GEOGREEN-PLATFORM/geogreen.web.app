@@ -18,7 +18,8 @@
       :loading="loading"
       :icon="icon"
       :style="`background-color: ${bgColor}; color: ${textColor}`"
-    ><slot></slot></q-btn>
+      ><slot></slot
+    ></q-btn>
   </div>
 </template>
 

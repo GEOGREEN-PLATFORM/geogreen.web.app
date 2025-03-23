@@ -1,7 +1,10 @@
 <template>
-  <div class="kt-input-main" :class="{
-    required: required
-  }">
+  <div
+    class="kt-input-main"
+    :class="{
+      required: required,
+    }"
+  >
     <q-input
       ref="qInputRef"
       v-model="inputValue"
@@ -143,8 +146,7 @@ watch(
     border-color: var(--app-green-500);
     border-width: 1px;
   }
-  .q-field--outlined.q-field--highlighted.q-field--error
-    .q-field__control:after {
+  .q-field--outlined.q-field--highlighted.q-field--error .q-field__control:after {
     border-color: var(--app-red-500);
   }
   .q-field--outlined.q-field--highlighted.q-field--error {

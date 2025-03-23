@@ -42,9 +42,7 @@
         :point-radius="64"
         @select="selectMarker"
       >
-        <ol-style
-          :override-style-function="overrideMarkerStyleFunction"
-        >
+        <ol-style :override-style-function="overrideMarkerStyleFunction">
           <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
           <ol-style-circle :radius="48">
             <ol-style-stroke color="black" :width="1" line-cap="round" />
@@ -57,13 +55,8 @@
       </ol-interaction-clusterselect>
 
       <ol-vector-layer>
-        <ol-source-vector
-          :features="gGreenCluster.zonesFeatures"
-          :format="gGreenCluster.geoJSON"
-        />
-        <ol-style
-          :override-style-function="overrideZoneStyleFunction"
-        />
+        <ol-source-vector :features="gGreenCluster.zonesFeatures" :format="gGreenCluster.geoJSON" />
+        <ol-style :override-style-function="overrideZoneStyleFunction" />
       </ol-vector-layer>
       <ol-vector-layer>
         <ol-source-vector :key="upKey">
@@ -73,14 +66,10 @@
             @drawend="createZone"
           >
             <ol-style
-              :override-style-function="() =>
-                getPolygonStyleByDensity(gGreenZone.density)"
+              :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density)"
             />
           </ol-interaction-draw>
-          <ol-style
-            :override-style-function="() =>
-              getPolygonStyleByDensity(gGreenZone.density)"
-          />
+          <ol-style :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density)" />
         </ol-source-vector>
       </ol-vector-layer>
       <ol-animated-clusterlayer :animation-duration="500" :distance="40">
@@ -88,9 +77,7 @@
           :features="gGreenCluster.markerFeatures"
           :format="gGreenCluster.geoJSON"
         />
-        <ol-style
-          :override-style-function="overrideMarkerStyleFunction"
-        >
+        <ol-style :override-style-function="overrideMarkerStyleFunction">
           <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
           <ol-style-circle :radius="48">
             <ol-style-stroke color="black" :width="1" line-cap="round" />
@@ -118,14 +105,22 @@
           />
           <ul v-if="marker.details" class="data-list">
             <li
-              v-for="[name, value] in Object.entries(marker.details || {}).filter(([name, value]) => shortInfoKeys[name])"
+              v-for="[name, value] in Object.entries(marker.details || {}).filter(
+                ([name, value]) => shortInfoKeys[name],
+              )"
               :key="name"
               class="data-list__item"
             >
               <div class="data-list__name">{{ shortInfoKeys[name].name }}</div>
               <div class="data-list__value">
                 <div v-if="shortInfoKeys[name].type === 'text'">{{ value || "Нет данных" }}</div>
-                <div v-else-if="shortInfoKeys[name].type === 'status' && typeof value === 'string'" :style="getStatusStyles(value)" class="data-list__status-block">{{ value || "Нет данных" }}</div>
+                <div
+                  v-else-if="shortInfoKeys[name].type === 'status' && typeof value === 'string'"
+                  :style="getStatusStyles(value)"
+                  class="data-list__status-block"
+                >
+                  {{ value || "Нет данных" }}
+                </div>
               </div>
             </li>
           </ul>
@@ -140,13 +135,16 @@
               >
                 <GGHint>
                   Выбранный маркер будет автоматически перемещён внутрь
-                  {{ marker.coordinates.length > 0 ? 'измененной' : 'добавленной' }} зоны
+                  {{ marker.coordinates.length > 0 ? "измененной" : "добавленной" }} зоны
                 </GGHint>
               </q-icon>
               <span class="actions-label__text" @click="addZone(id)"
-                >{{ marker.coordinates.length > 0 ? 'Изменить' : 'Добавить' }} зону</span
+                >{{ marker.coordinates.length > 0 ? "Изменить" : "Добавить" }} зону</span
               >
-              <q-icon class="actions-label__icon" :name="marker.coordinates.length > 0 ? mdiPencil : mdiPlus" />
+              <q-icon
+                class="actions-label__icon"
+                :name="marker.coordinates.length > 0 ? mdiPencil : mdiPlus"
+              />
             </li>
             <li class="actions-label__action">
               <span class="actions-label__text">Плотность:</span>
@@ -158,12 +156,17 @@
               />
             </li>
             <li class="actions-label__action">
-              <GGButton label="Подробнее" size="small" stretch="fill" design-type="secondary"></GGButton>
+              <GGButton
+                label="Подробнее"
+                size="small"
+                stretch="fill"
+                design-type="secondary"
+              ></GGButton>
             </li>
           </ul>
         </div>
       </ol-overlay>
-      <ol-fullscreen-control/>
+      <ol-fullscreen-control />
       <ol-zoom-control :zoomInLabel="plusElem" :zoomOutLabel="minusElem" />
     </ol-map>
     <GGDialogConfirm
@@ -173,8 +176,8 @@
       @confirm="deleteMarker"
     />
     <div v-show="false" class="html-control-elements">
-      <img src="/icons/plus.svg" ref="plusElem">
-      <img src="/icons/minus.svg" ref="minusElem">
+      <img src="/icons/plus.svg" ref="plusElem" />
+      <img src="/icons/minus.svg" ref="minusElem" />
     </div>
   </ClientOnly>
 </template>
@@ -589,8 +592,6 @@ watch(
 );
 </script>
 
-
-
 <style scoped lang="scss">
 .g-green-map {
   height: 100%;
@@ -633,36 +634,35 @@ watch(
       cursor: default;
       user-select: auto;
       .data-list__name {
-      font-size: 13px;
-      min-width: 120px;
-      max-width: 120px;
-      padding: 8px 0px;
-      color: var(--app-grey-400);
-      &::after {
-        content: ":";
-      }
-    }
-    .data-list__value {
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin: 8px 0px;
-      overflow-wrap: anywhere;
-      .data-list__status-block {
         font-size: 13px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 4px 8px;
-        color: var(--app-white);
-        border-radius: 12px;
-        height: 24px;
+        min-width: 120px;
+        max-width: 120px;
+        padding: 8px 0px;
+        color: var(--app-grey-400);
+        &::after {
+          content: ":";
+        }
+      }
+      .data-list__value {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin: 8px 0px;
+        overflow-wrap: anywhere;
+        .data-list__status-block {
+          font-size: 13px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 4px 8px;
+          color: var(--app-white);
+          border-radius: 12px;
+          height: 24px;
+        }
       }
     }
-    }
-
   }
   .actions-label {
     list-style: none;
@@ -699,7 +699,7 @@ watch(
   .ol-control.ol-bar.g-green-control-bar {
     display: flex;
     flex-direction: column;
-    background:  var(--app-white);
+    background: var(--app-white);
     position: absolute;
     left: 0;
     top: calc(50% - 250px / 2);
@@ -712,7 +712,7 @@ watch(
     overflow: hidden;
     z-index: 1;
     &::before {
-      content: '';
+      content: "";
       position: absolute;
       top: 0;
       left: 0;
@@ -878,7 +878,7 @@ watch(
       width: 32px;
       height: 32px;
       cursor: pointer;
-      box-shadow: 2px 2px 2px rgba(0,0,0, 0.25);
+      box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
       border-radius: 2px;
       img {
         width: 24px;

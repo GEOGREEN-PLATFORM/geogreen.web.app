@@ -15,9 +15,7 @@
       @paste.prevent="handlePaste($event, ind)"
       @keydown="handleKey($event, ind)"
     />
-    <div v-if="isError" class="otp-error-message">
-      Неверный код, попробуйте еще
-    </div>
+    <div v-if="isError" class="otp-error-message">Неверный код, попробуйте еще</div>
   </div>
 </template>
 

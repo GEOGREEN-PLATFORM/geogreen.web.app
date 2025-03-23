@@ -1,26 +1,29 @@
 <template>
-    <div class="kt-input-select" :class="{
-      required: required
-    }">
-        <q-select 
-        :model-value="modelValue" 
-        @update:model-value="selectValue"
-        :options="props.options" 
-        :outlined="outlined" 
-        :label="label" 
-        ref="qInputRef"
-        :rounded="rounded"
-        :rules="validationRules"
-        :no-error-icon="hideErrorIcon"
-        :hide-bottom-space="hideBottomSpace"
-        :placeholder="placeholder"
-        :name="name"
-        :option-value="optionValue"
-        :option-label="optionLabel"
-        emit-value
-        map-options
-        />
-    </div>
+  <div
+    class="kt-input-select"
+    :class="{
+      required: required,
+    }"
+  >
+    <q-select
+      :model-value="modelValue"
+      @update:model-value="selectValue"
+      :options="props.options"
+      :outlined="outlined"
+      :label="label"
+      ref="qInputRef"
+      :rounded="rounded"
+      :rules="validationRules"
+      :no-error-icon="hideErrorIcon"
+      :hide-bottom-space="hideBottomSpace"
+      :placeholder="placeholder"
+      :name="name"
+      :option-value="optionValue"
+      :option-label="optionLabel"
+      emit-value
+      map-options
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -96,8 +99,7 @@ onMounted(() => {
     border-color: var(--app-green-500);
     border-width: 1px;
   }
-  .q-field--outlined.q-field--highlighted.q-field--error
-    .q-field__control:after {
+  .q-field--outlined.q-field--highlighted.q-field--error .q-field__control:after {
     border-color: var(--app-red-500);
   }
   .q-field--outlined.q-field--highlighted.q-field--error {
