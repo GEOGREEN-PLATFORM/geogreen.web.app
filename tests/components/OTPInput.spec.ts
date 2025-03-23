@@ -11,7 +11,7 @@ describe("oTPInput", () => {
 
   it("renders the correct number of input fields based on digitCount", async () => {
     const wrapper = mount(OTPInput, {
-      props: { digitCount: 6, modelValue: "" }
+      props: { digitCount: 6, modelValue: "" },
     });
     await nextTick();
     const inputs = wrapper.findAll("input");
@@ -20,7 +20,7 @@ describe("oTPInput", () => {
 
   it("initializes input fields with the value from modelValue", async () => {
     const wrapper = mount(OTPInput, {
-      props: { modelValue: "1234", digitCount: 4 }
+      props: { modelValue: "1234", digitCount: 4 },
     });
     await nextTick();
     const inputs = wrapper.findAll("input");
@@ -31,7 +31,7 @@ describe("oTPInput", () => {
 
   it("clears input fields when modelValue is empty", async () => {
     const wrapper = mount(OTPInput, {
-      props: { modelValue: "", digitCount: 4 }
+      props: { modelValue: "", digitCount: 4 },
     });
     await nextTick();
     const inputs = wrapper.findAll("input");
@@ -42,13 +42,15 @@ describe("oTPInput", () => {
 
   it("correctly handles paste events at any index", async () => {
     const wrapper = mount(OTPInput, {
-      props: { digitCount: 4, modelValue: "" }
+      props: { digitCount: 4, modelValue: "" },
     });
     await nextTick();
     const pastedData = "7583";
     for (let i = 0; i < 4; i++) {
       const inputs = wrapper.findAll("input");
-      await inputs.at(i)?.trigger("paste", { clipboardData: { getData: () => pastedData } });
+      await inputs
+        .at(i)
+        ?.trigger("paste", { clipboardData: { getData: () => pastedData } });
       await nextTick();
 
       const inputsAfterPaste = wrapper.findAll("input");
@@ -60,7 +62,7 @@ describe("oTPInput", () => {
 
   it("correctly handles input-delete event", async () => {
     const wrapper = mount(OTPInput, {
-      props: { digitCount: 4, modelValue: "7654" }
+      props: { digitCount: 4, modelValue: "7654" },
     });
     await nextTick();
 

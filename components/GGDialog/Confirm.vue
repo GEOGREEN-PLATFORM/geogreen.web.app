@@ -7,7 +7,12 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <GGButton v-close-popup label="Отмена" design-type="tertiary" @click="cancelAction" />
+        <GGButton
+          v-close-popup
+          label="Отмена"
+          design-type="tertiary"
+          @click="cancelAction"
+        />
         <GGButton
           v-close-popup
           :label="actionButtonConfirmText"
@@ -27,7 +32,7 @@ interface Props {
 }
 withDefaults(defineProps<Props>(), {
   actionMainText: "подтвердить действие",
-  actionButtonConfirmText: "Подтвердить"
+  actionButtonConfirmText: "Подтвердить",
 });
 const emit = defineEmits<{
   cancel: [];

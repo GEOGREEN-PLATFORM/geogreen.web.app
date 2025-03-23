@@ -2,20 +2,17 @@
   <div class="page-container">
     <div class="page-content">
       <header class="page-content__head">
-        <NuxtImg
-          class="page-content__back-button"
-          src="/icons/home.svg"
-          width="36px"
-          height="36px"
-          @click="goBack"
-        />
-        <div class="page-content__logo">GeoGreen</div>
+        <NuxtImg class="page-content__back-button" @click="goBack" src="/icons/home.svg" width="36px" height="36px"/>
+        <div class="page-content__logo">
+          GeoGreen
+        </div>
       </header>
       <slot />
     </div>
   </div>
 </template>
 <script setup lang="ts">
+const router = useRouter();
 function goBack() {
   navigateTo("/");
 }
@@ -65,7 +62,7 @@ $app-narrow-mobile: 364px;
     transition: opacity 0.5s linear;
     opacity: 0;
   }
-  @media screen and (max-width: $app-narrow-mobile) {
+  @media screen and (max-width: $app-narrow-mobile){
     padding: 0;
   }
   .page-content {
@@ -91,7 +88,7 @@ $app-narrow-mobile: 364px;
         filter: var(--app-filter-grey-500);
       }
     }
-    @media screen and (max-width: $app-narrow-mobile) {
+    @media screen and (max-width: $app-narrow-mobile){
       border-radius: 0;
       width: 100vw;
       height: 100vh;
@@ -99,7 +96,8 @@ $app-narrow-mobile: 364px;
       padding: 24px 16px;
     }
     &__logo {
-      background-image: linear-gradient(to left, #006d07 0%, #04700b 52%, #000000 100%);
+      background-image: linear-gradient(
+      to left, #006D07 0%, #04700B 52%, #000000 100%);
       background-clip: text;
       color: transparent;
       font-size: 32px;

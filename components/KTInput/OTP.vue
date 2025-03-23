@@ -15,7 +15,9 @@
       @paste.prevent="handlePaste($event, ind)"
       @keydown="handleKey($event, ind)"
     />
-    <div v-if="isError" class="otp-error-message">Неверный код, попробуйте еще</div>
+    <div v-if="isError" class="otp-error-message">
+      Неверный код, попробуйте еще
+    </div>
   </div>
 </template>
 
@@ -28,7 +30,8 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   digitCount: 4,
-  isError: false
+  modelValue: "",
+  isError: false,
 });
 const emits = defineEmits<{
   "update:modelValue": [string];
@@ -89,7 +92,9 @@ function handleInput(event: Event, index: number) {
 }
 
 function handlePaste(event: ClipboardEvent, index: number) {
-  const pastedData = event.clipboardData?.getData("text").slice(0, props.digitCount - index);
+  const pastedData = event.clipboardData
+    ?.getData("text")
+    .slice(0, props.digitCount - index);
   if (!pastedData) return;
   nextTick(() => {
     let pastedCharInd = 0;
@@ -100,8 +105,13 @@ function handlePaste(event: ClipboardEvent, index: number) {
         digits[index + pastedCharInd] = "";
       }
     }
-    if (index + pastedCharInd < props.digitCount && digits[index + pastedCharInd] === "") {
-      (otpCont.value?.children[index + pastedCharInd] as HTMLInputElement).focus();
+    if (
+      index + pastedCharInd < props.digitCount &&
+      digits[index + pastedCharInd] === ""
+    ) {
+      (
+        otpCont.value?.children[index + pastedCharInd] as HTMLInputElement
+      ).focus();
     } else {
       (otpCont.value?.children[index] as HTMLInputElement).blur();
     }
@@ -116,7 +126,10 @@ function handleKey(event: KeyboardEvent, index: number) {
     return;
   }
   if (eventKey === "Backspace" && otpCont.value) {
-    if (!(otpCont.value.children[index] as HTMLInputElement).value && index > 0) {
+    if (
+      !(otpCont.value.children[index] as HTMLInputElement).value &&
+      index > 0
+    ) {
       (otpCont.value.children[index - 1] as HTMLInputElement).focus();
     }
   }
@@ -151,7 +164,7 @@ watch(
   () => props.modelValue,
   () => {
     setValue();
-  }
+  },
 );
 </script>
 

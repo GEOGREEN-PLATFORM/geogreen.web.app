@@ -11,7 +11,11 @@
           <span>{{ pageState.hintText }}</span>
         </div>
         <div class="form-content__input-fields">
-          <KTInput v-if="pageState.step === 0" v-model="userData.email" label="Почта" />
+          <KTInput
+            v-if="pageState.step === 0"
+            v-model="userData.email"
+            label="Почта"
+          />
           <KTInputOTP
             v-if="pageState.step === 1"
             v-model:is-error="isWrongCode"
@@ -35,13 +39,9 @@
         </div>
       </div>
     </template>
-    <template
-      v-if="pageState.step === 1 && (isWrongCode || userData.confirmationCode.length < 4)"
-      #main-button
-    >
-      <GGButton design-type="secondary" :disabled="sendCodeTimer !== 0"
-        ><div class="button-timer-slot">
-          {{ `Отправить код ${sendCodeTimer !== 0 ? "через" : ""}` }}
+    <template v-if="pageState.step === 1 && (isWrongCode || userData.confirmationCode.length < 4)" #main-button>
+      <GGButton design-type="secondary" :disabled="sendCodeTimer !== 0"><div class="button-timer-slot">
+        {{ `Отправить код ${sendCodeTimer !== 0 ? 'через' : ''}` }}
           <span v-show="sendCodeTimer !== 0" class="button-timer-slot__time">
             {{ formattedSendTimer }}
           </span>
@@ -53,7 +53,7 @@
 
 <script setup lang="ts">
 definePageMeta({
-  layout: "auth"
+  layout: "auth",
 });
 
 const INITIAL_STEP = 0;
@@ -62,13 +62,13 @@ const CODE_SENDING_TIMEOUT = 59;
 const defaultSubButton: ButtonOptions = {
   designType: "tertiary",
   label: "Назад",
-  show: true
+  show: true,
 };
 const userData = ref({
   email: "",
   password: "",
   repeatedPassword: "",
-  confirmationCode: ""
+  confirmationCode: "",
 });
 const codeSendingInterval = ref<NodeJS.Timeout>();
 const sendCodeTimer = ref(CODE_SENDING_TIMEOUT);
@@ -80,24 +80,24 @@ const isWrongCode = ref(false);
 const stepConfig = reactive([
   {
     mainButton: { label: "Далее", show: true },
-    hintText: "Введите почту, указанную в аккаунте"
+    hintText: "Введите почту, указанную в аккаунте",
   },
   {
     mainButton: { label: "Далее", show: true },
-    hintText: "Введите код, отправленный на вашу почту"
+    hintText: "Введите код, отправленный на вашу почту",
   },
   {
     mainButton: { label: "Сменить пароль", show: true },
-    hintText: "Придумайте новый пароль"
-  }
+    hintText: "Придумайте новый пароль",
+  },
 ]);
 const pageState = reactive({
   step: INITIAL_STEP,
   hintText: stepConfig[INITIAL_STEP].hintText,
   buttonOpts: {
     main: { designType: "primary", ...stepConfig[INITIAL_STEP].mainButton },
-    sub: defaultSubButton
-  } as { main: ButtonOptions; sub: ButtonOptions }
+    sub: defaultSubButton,
+  } as { main: ButtonOptions; sub: ButtonOptions },
 });
 
 function updatePageState(newStep: number) {
@@ -116,7 +116,7 @@ function updatePageState(newStep: number) {
   const config = stepConfig[newStep] || stepConfig[INITIAL_STEP];
   pageState.buttonOpts = {
     main: { designType: "primary", ...config.mainButton },
-    sub: defaultSubButton
+    sub: defaultSubButton,
   };
   pageState.hintText = config.hintText;
 }

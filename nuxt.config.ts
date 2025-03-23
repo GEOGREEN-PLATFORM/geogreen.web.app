@@ -6,8 +6,8 @@ export default defineNuxtConfig({
     public: {
       PORTAL_HTTP_PROTOCOL: "",
       PORTAL_API_HOST: "",
-      PORTAL_PORT: ""
-    }
+      PORTAL_PORT: "",
+    },
   },
   modules: [
     "@pinia/nuxt",
@@ -15,9 +15,7 @@ export default defineNuxtConfig({
     "@nuxt/image",
     "@nuxtjs/color-mode",
     "@nuxt/test-utils/module",
-    "@nuxt/eslint"
   ],
-  eslint: {},
   colorMode: {
     preference: "dark", // default value of $colorMode.preference
     fallback: "light", // fallback value if not system preference found
@@ -27,7 +25,7 @@ export default defineNuxtConfig({
     classPrefix: "",
     classSuffix: "-mode",
     storage: "localStorage", // or 'sessionStorage' or 'cookie'
-    storageKey: "nuxt-color-mode"
+    storageKey: "nuxt-color-mode",
   },
   css: [
     "normalize.css/normalize.css",
@@ -35,7 +33,7 @@ export default defineNuxtConfig({
     "@/assets/styles/colors.scss",
     "@/assets/styles/typography.scss",
     "@/assets/styles/fonts.scss",
-    "@/assets/styles/main.scss"
+    "@/assets/styles/main.scss",
   ],
   quasar: {
     lang: "ru",
@@ -44,11 +42,11 @@ export default defineNuxtConfig({
         primary: "var(--app-blue-9)",
         dark: "",
         negative: "var(--app-red-500)",
-        positive: "#BC0909"
-      }
-    }
+        positive: "#BC0909",
+      },
+    },
   },
   build: {
-    transpile: process.env.NODE_ENV === "test" ? ["vue3-openlayers", "ol"] : []
-  }
+    transpile: process.env.NODE_ENV === "test" ? ["vue3-openlayers", "ol"] : [],
+  },
 });

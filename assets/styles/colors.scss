@@ -63,81 +63,76 @@
   --map-cluster-medium: #ff8200;
   --map-cluster-high: #ff0022;
 
-  --app-filter-red-300: invert(44%) sepia(49%) saturate(2915%) hue-rotate(324deg) brightness(107%)
-    contrast(101%);
-  --app-filter-orange-300: invert(84%) sepia(22%) saturate(4271%) hue-rotate(322deg)
-    brightness(108%) contrast(101%);
-  --app-filter-red-500: invert(12%) sepia(74%) saturate(6735%) hue-rotate(347deg) brightness(102%)
-    contrast(111%);
-  --app-filter-grey-300: brightness(0) saturate(100%) invert(41%) sepia(0%) saturate(0%)
-    hue-rotate(61deg) brightness(96%) contrast(90%);
-  --app-filter-white: invert(99%) sepia(0%) saturate(0%) hue-rotate(277deg) brightness(109%)
-    contrast(101%);
-  --app-filter-grey-500: invert(0%) sepia(4%) saturate(2757%) hue-rotate(348deg) brightness(90%)
-    contrast(76%);
+  --app-filter-red-300: invert(44%) sepia(49%) saturate(2915%) hue-rotate(324deg) brightness(107%) contrast(101%);
+  --app-filter-orange-300: invert(84%) sepia(22%) saturate(4271%) hue-rotate(322deg) brightness(108%) contrast(101%);
+  --app-filter-red-500: invert(12%) sepia(74%) saturate(6735%)
+    hue-rotate(347deg) brightness(102%) contrast(111%);
+  --app-filter-grey-300: brightness(0) saturate(100%) invert(41%) sepia(0%)
+    saturate(0%) hue-rotate(61deg) brightness(96%) contrast(90%);
+  --app-filter-white: invert(99%) sepia(0%) saturate(0%) hue-rotate(277deg) brightness(109%) contrast(101%);
+  --app-filter-grey-500: invert(0%) sepia(4%) saturate(2757%) hue-rotate(348deg) brightness(90%) contrast(76%);
 }
 .dark-mode {
   --input-label: rgba(255, 255, 255, 0.7);
   --app-orange-050: #191919;
   --app-orange-100: #683400;
-  --app-orange-200: #ffc68a;
-  --app-orange-300: #ffb96e;
-  --app-orange-400: #ffa94d;
-  --app-orange-500: #ff901a;
-  --app-orange-600: #ff8503;
-  --app-orange-700: #cf6700;
-  --app-orange-800: #a65600;
+  --app-orange-200: #FFC68A;
+  --app-orange-300: #FFB96E;
+  --app-orange-400: #FFA94D;
+  --app-orange-500: #FF901A;
+  --app-orange-600: #FF8503;
+  --app-orange-700: #CF6700;
+  --app-orange-800: #A65600;
   --app-orange-900: #844400;
 
-  --app-green-050: #1c1c1c;
+  --app-green-050: #1C1C1C;
   --app-green-100: #335225;
-  --app-green-200: #b1d4a0;
-  --app-green-300: #9cc987;
-  --app-green-400: #85bd6c;
-  --app-green-500: #5fb637;
-  --app-green-600: #58a733;
+  --app-green-200: #B1D4A0;
+  --app-green-300: #9CC987;
+  --app-green-400: #85BD6C;
+  --app-green-500: #5FB637;
+  --app-green-600: #58A733;
   --app-green-700: #478729;
-  --app-green-800: #396d21;
-  --app-green-900: #caeabb;
+  --app-green-800: #396D21;
+  --app-green-900: #CAEABB;
 
-  --app-blue-050: #1b1b1b;
-  --app-blue-100: #0e4d65;
-  --app-blue-200: #8ad2ef;
-  --app-blue-300: #6ac7eb;
-  --app-blue-400: #49bae6;
-  --app-blue-500: #00b0f6;
-  --app-blue-600: #00a2e2;
-  --app-blue-700: #0082b6;
+  --app-blue-050: #1B1B1B;
+  --app-blue-100: #0E4D65;
+  --app-blue-200: #8AD2EF;
+  --app-blue-300: #6AC7EB;
+  --app-blue-400: #49BAE6;
+  --app-blue-500: #00B0F6;
+  --app-blue-600: #00A2E2;
+  --app-blue-700: #0082B6;
   --app-blue-800: #006992;
-  --app-blue-900: #a3e5ff;
+  --app-blue-900: #A3E5FF;
 
   --app-red-050: #191919;
-  --app-red-100: #68000e;
-  --app-red-200: #ff8a9a;
-  --app-red-300: #ff6e81;
-  --app-red-400: #ff4d64;
-  --app-red-500: #ff1a38;
-  --app-red-600: #ff0324;
-  --app-red-700: #cf001c;
-  --app-red-800: #a60016;
+  --app-red-100: #68000E;
+  --app-red-200: #FF8A9A;
+  --app-red-300: #FF6E81;
+  --app-red-400: #FF4D64;
+  --app-red-500: #FF1A38;
+  --app-red-600: #FF0324;
+  --app-red-700: #CF001C;
+  --app-red-800: #A60016;
   --app-red-900: #840012;
 
   --app-grey-050: #232323;
-  --app-grey-100: #b9b9b9;
+  --app-grey-100: #B9B9B9;
   --app-grey-200: #989898;
   --app-grey-300: #686868;
   --app-grey-400: #4b4b4b;
-  --app-grey-500: #e1e1e1;
-  --app-grey-600: #e4e4e4;
-  --app-grey-700: #ffffff;
-  --app-grey-800: #ffffff;
-  --app-grey-900: #ffffff;
+  --app-grey-500: #E1E1E1;
+  --app-grey-600: #E4E4E4;
+  --app-grey-700: #FFFFFF;
+  --app-grey-800: #FFFFFF;
+  --app-grey-900: #FFFFFF;
 
   --app-black: #ffffff;
-  --app-white: #0d0d0d;
+  --app-white: #0D0D0D;
 
-  --app-filter-grey-500: invert(99%) sepia(0%) saturate(0%) hue-rotate(277deg) brightness(109%)
-    contrast(101%);
+  --app-filter-grey-500: invert(99%) sepia(0%) saturate(0%) hue-rotate(277deg) brightness(109%) contrast(101%);
 }
 .text-orange-050 {
   color: var(--app-orange-050);
@@ -462,3 +457,4 @@
 .bg-white {
   background-color: var(--app-white);
 }
+

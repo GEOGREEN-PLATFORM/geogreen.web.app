@@ -1,11 +1,19 @@
 <template>
-  <AuthPageForm :button-options="buttonOptions" @main-button-click="sendLogin">
+  <AuthPageForm
+    :button-options="buttonOptions"
+    @main-button-click="sendLogin"
+  >
     <template #form-content>
       <h1 class="form-content__head gg-h1">Войти в аккаунт</h1>
       <div class="form-content">
         <div class="form-content__input-fields">
-          <KTInput v-model="userData.email" label="Почта" name="email" type="email" />
-          <KTInput v-model="userData.password" label="Пароль" type="password" name="password" />
+          <KTInput v-model="userData.email" label="Почта" name="email" type="email"/>
+          <KTInput
+            v-model="userData.password"
+            label="Пароль"
+            type="password"
+            name="password"
+          />
         </div>
         <div class="form-content__forgot-password-block text-right">
           <span class="action-label">
@@ -14,12 +22,9 @@
         </div>
       </div>
     </template>
-    <template #form-footer>
+      <template #form-footer>
       <div class="form-footer">
-        <div class="form-footer__no-account">
-          Еще нет аккаунта?
-          <NuxtLink to="/auth/register" class="action-label">Зарегистрироваться </NuxtLink>
-        </div>
+        <div class="form-footer__no-account">Еще нет аккаунта? <NuxtLink to="/auth/register" class="action-label">Зарегистрироваться </NuxtLink></div>
       </div>
     </template>
   </AuthPageForm>
@@ -27,23 +32,23 @@
 
 <script setup lang="ts">
 definePageMeta({
-  layout: "auth"
+  layout: "auth",
 });
 
 const userData = ref<UserAuthData>({
   email: "",
-  password: ""
+  password: "",
 });
 const showAuthError = ref(false);
 const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
   main: {
     designType: "primary",
     label: "Войти",
-    loading: false
+    loading: false,
   },
   sub: {
-    show: false
-  }
+    show: false,
+  },
 });
 
 function sendLogin() {

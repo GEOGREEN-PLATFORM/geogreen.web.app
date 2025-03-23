@@ -1,5 +1,11 @@
 <template>
-  <q-form ref="formRef" novalidate greedy class="auth-form" @submit="checkFormValid">
+  <q-form
+    ref="formRef"
+    novalidate
+    greedy
+    class="auth-form"
+    @submit="checkFormValid"
+  >
     <slot name="form-content" />
     <div class="auth-form__action-buttons">
       <slot name="main-button">
@@ -19,13 +25,13 @@
         @click="sendActionEvent('sub')"
       />
     </div>
-    <slot name="form-footer" />
+    <slot name="form-footer"></slot>
   </q-form>
 </template>
 
 <script setup lang="ts">
 interface Props {
-  buttonOptions?: {
+  buttonOptions: {
     main: ButtonOptions;
     sub: ButtonOptions;
   };
@@ -37,14 +43,14 @@ withDefaults(defineProps<Props>(), {
       main: {
         designType: "primary",
         label: "Отправить",
-        loading: false
+        loading: false,
       },
       sub: {
         designType: "secondary",
-        label: "Отменить"
-      }
+        label: "Отменить",
+      },
     };
-  }
+  },
 });
 const emits = defineEmits<{
   subButtonClick: [];
@@ -54,11 +60,7 @@ const emits = defineEmits<{
 const { formRef, formBindValidation, formHasError } = useFormValidation();
 
 function sendActionEvent(eventType: "sub" | "main") {
-  if (eventType === "main") {
-    emits("mainButtonClick");
-  } else {
-    emits("subButtonClick");
-  }
+  eventType === "main" ? emits("mainButtonClick") : emits("subButtonClick");
 }
 
 function checkFormValid() {

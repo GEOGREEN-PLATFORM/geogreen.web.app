@@ -1,17 +1,25 @@
 <template>
   <div
-    style="height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center"
+    style="
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    "
   >
     <div style="width: 100vw; height: 100vh">
-      <CMap
+      <Map
         :markers="markers"
-        :short-info-keys="shortMarkerInfoNameKeys"
-        :data-status-styles="workStageStyles"
         @add-marker="addMarker"
         @delete-marker="deleteMarker"
         @edit-marker="editMarker"
+        :shortInfoKeys="shortMarkerInfoNameKeys"
+        :dataStatusStyles="workStageStyles"
       />
-      <div class="text-center" @click="navigateTo('/auth/register')">В регистрацию</div>
+      <div class="text-center" @click="navigateTo('/auth/register')">
+        В регистрацию
+      </div>
       ТЕСТИРОВАНИЕ ACTIONS
       <!-- <GGDialogConfirm v-model="showConfirm"></GGDialogConfirm> -->
     </div>
@@ -24,33 +32,33 @@ import { useMainStore } from "~/store/main";
 const shortMarkerInfoNameKeys = ref({
   owner: {
     name: "Владелец",
-    type: "text"
+    type: "text",
   },
   landType: {
     name: "Тип земель",
-    type: "text"
+    type: "text",
   },
   workStage: {
     name: "Статус работы",
-    type: "status"
+    type: "status",
   },
   problemAreaType: {
     name: "Тип проблемы",
-    type: "text"
+    type: "text",
   },
   eliminationMethod: {
     name: "Метод по устранению",
-    type: "text"
+    type: "text",
   },
   contractingOrganisation: {
     name: "Подрядная организация",
-    type: "text"
-  }
+    type: "text",
+  },
 });
 const workStageStyles = {
   Создано: "background-color: var(--app-blue-400)",
   "В работе": "background-color: var(--app-green-400)",
-  Завершено: "background-color: var(--app-grey-400)"
+  Завершено: "background-color: var(--app-grey-400)",
 };
 const store = useMainStore();
 const markers = ref<Marker[]>([]);
@@ -65,7 +73,7 @@ async function getMarkers() {
   }
 }
 async function addMarker(coordinate: Coordinate, relatedZone?: Zone) {
-  await $fetch(`${store.api}/geo/info`, {
+  const data = await $fetch(`${store.api}/geo/info`, {
     method: "POST",
     body: {
       coordinate: coordinate,
@@ -79,26 +87,26 @@ async function addMarker(coordinate: Coordinate, relatedZone?: Zone) {
         images: [],
         problemAreaType: "Борщевик",
         comment: "",
-        density: relatedZone?.density
+        density: relatedZone?.density,
       },
       relatedTaskId: null,
-      coordinates: relatedZone?.coordinates[0] || []
-    }
+      coordinates: relatedZone?.coordinates[0] || [],
+    },
   });
   getMarkers();
 }
 async function deleteMarker(id: string) {
-  await $fetch(`${store.api}/geo/info/${id}`, {
-    method: "DELETE"
+  const data = await $fetch(`${store.api}/geo/info/${id}`, {
+    method: "DELETE",
   });
   getMarkers();
 }
 async function editMarker(id: string, marker: Marker) {
   marker.id = undefined;
   marker.relatedTaskId = undefined;
-  await $fetch(`${store.api}/geo/info/${id}`, {
+  const data = await $fetch(`${store.api}/geo/info/${id}`, {
     method: "PATCH",
-    body: marker
+    body: marker,
   });
   getMarkers();
 }

@@ -42,7 +42,9 @@
         :point-radius="64"
         @select="selectMarker"
       >
-        <ol-style :override-style-function="overrideMarkerStyleFunction">
+        <ol-style
+          :override-style-function="overrideMarkerStyleFunction"
+        >
           <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
           <ol-style-circle :radius="48">
             <ol-style-stroke color="black" :width="1" line-cap="round" />
@@ -55,8 +57,13 @@
       </ol-interaction-clusterselect>
 
       <ol-vector-layer>
-        <ol-source-vector :features="gGreenCluster.zonesFeatures" :format="gGreenCluster.geoJSON" />
-        <ol-style :override-style-function="overrideZoneStyleFunction" />
+        <ol-source-vector
+          :features="gGreenCluster.zonesFeatures"
+          :format="gGreenCluster.geoJSON"
+        />
+        <ol-style
+          :override-style-function="overrideZoneStyleFunction"
+        />
       </ol-vector-layer>
       <ol-vector-layer>
         <ol-source-vector :key="upKey">
@@ -66,10 +73,14 @@
             @drawend="createZone"
           >
             <ol-style
-              :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density)"
+              :override-style-function="() =>
+                getPolygonStyleByDensity(gGreenZone.density)"
             />
           </ol-interaction-draw>
-          <ol-style :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density)" />
+          <ol-style
+            :override-style-function="() =>
+              getPolygonStyleByDensity(gGreenZone.density)"
+          />
         </ol-source-vector>
       </ol-vector-layer>
       <ol-animated-clusterlayer :animation-duration="500" :distance="40">
@@ -77,7 +88,9 @@
           :features="gGreenCluster.markerFeatures"
           :format="gGreenCluster.geoJSON"
         />
-        <ol-style :override-style-function="overrideMarkerStyleFunction">
+        <ol-style
+          :override-style-function="overrideMarkerStyleFunction"
+        >
           <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
           <ol-style-circle :radius="48">
             <ol-style-stroke color="black" :width="1" line-cap="round" />
@@ -105,22 +118,14 @@
           />
           <ul v-if="marker.details" class="data-list">
             <li
-              v-for="[name, value] in Object.entries(marker.details || {}).filter(
-                ([name, value]) => shortInfoKeys[name]
-              )"
+              v-for="[name, value] in Object.entries(marker.details || {}).filter(([name, value]) => shortInfoKeys[name])"
               :key="name"
               class="data-list__item"
             >
               <div class="data-list__name">{{ shortInfoKeys[name].name }}</div>
               <div class="data-list__value">
                 <div v-if="shortInfoKeys[name].type === 'text'">{{ value || "Нет данных" }}</div>
-                <div
-                  v-else-if="shortInfoKeys[name].type === 'status' && typeof value === 'string'"
-                  :style="getStatusStyles(value)"
-                  class="data-list__status-block"
-                >
-                  {{ value || "Нет данных" }}
-                </div>
+                <div v-else-if="shortInfoKeys[name].type === 'status' && typeof value === 'string'" :style="getStatusStyles(value)" class="data-list__status-block">{{ value || "Нет данных" }}</div>
               </div>
             </li>
           </ul>
@@ -135,16 +140,13 @@
               >
                 <GGHint>
                   Выбранный маркер будет автоматически перемещён внутрь
-                  {{ marker.coordinates.length > 0 ? "измененной" : "добавленной" }} зоны
+                  {{ marker.coordinates.length > 0 ? 'измененной' : 'добавленной' }} зоны
                 </GGHint>
               </q-icon>
               <span class="actions-label__text" @click="addZone(id)"
-                >{{ marker.coordinates.length > 0 ? "Изменить" : "Добавить" }} зону</span
+                >{{ marker.coordinates.length > 0 ? 'Изменить' : 'Добавить' }} зону</span
               >
-              <q-icon
-                class="actions-label__icon"
-                :name="marker.coordinates.length > 0 ? mdiPencil : mdiPlus"
-              />
+              <q-icon class="actions-label__icon" :name="marker.coordinates.length > 0 ? mdiPencil : mdiPlus" />
             </li>
             <li class="actions-label__action">
               <span class="actions-label__text">Плотность:</span>
@@ -156,13 +158,13 @@
               />
             </li>
             <li class="actions-label__action">
-              <GGButton label="Подробнее" size="small" stretch="fill" design-type="secondary" />
+              <GGButton label="Подробнее" size="small" stretch="fill" design-type="secondary"></GGButton>
             </li>
           </ul>
         </div>
       </ol-overlay>
-      <ol-fullscreen-control />
-      <ol-zoom-control :zoom-in-label="plusElem" :zoom-out-label="minusElem" />
+      <ol-fullscreen-control/>
+      <ol-zoom-control :zoomInLabel="plusElem" :zoomOutLabel="minusElem" />
     </ol-map>
     <GGDialogConfirm
       v-model="confirmationDialog.isOpened"
@@ -171,14 +173,19 @@
       @confirm="deleteMarker"
     />
     <div v-show="false" class="html-control-elements">
-      <img ref="plusElem" src="/icons/plus.svg" />
-      <img ref="minusElem" src="/icons/minus.svg" />
+      <img src="/icons/plus.svg" ref="plusElem">
+      <img src="/icons/minus.svg" ref="minusElem">
     </div>
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
-import { mdiClose, mdiInformation, mdiPencil, mdiPlus } from "@quasar/extras/mdi-v6";
+import {
+  mdiClose,
+  mdiInformation,
+  mdiPencil,
+  mdiPlus,
+} from "@quasar/extras/mdi-v6";
 import type { Feature, MapBrowserEvent } from "ol";
 import type { MapControls, SelectCluster } from "ol-ext";
 import type { FeatureLike } from "ol/Feature";
@@ -196,7 +203,7 @@ import markerIconOrangeSrc from "/icons/map_marker_orange.png";
 import markerIconRedSrc from "/icons/map_marker_red.png";
 
 interface Props {
-  markers?: Marker[];
+  markers: Marker[];
   shortInfoKeys: {
     [key: string]: {
       name: string;
@@ -208,7 +215,7 @@ interface Props {
   };
 }
 const props = withDefaults(defineProps<Props>(), {
-  markers: () => []
+  markers: () => [],
 });
 const emit = defineEmits<{
   addMarker: [coordinate: Coordinate, zone?: unknown];
@@ -219,7 +226,7 @@ const emit = defineEmits<{
 const confirmationDialog = reactive({
   isOpened: false,
   mainText: "",
-  buttonText: ""
+  buttonText: "",
 });
 const plusElem = ref<HTMLElement>();
 const minusElem = ref<HTMLElement>();
@@ -228,25 +235,25 @@ const markersSrcByDensity = ref({
   default: markerIconDefaultSrc,
   low: markerIconGreenSrc,
   medium: markerIconOrangeSrc,
-  high: markerIconRedSrc
+  high: markerIconRedSrc,
 });
 
 const densityOptions = [
   {
     value: "low",
     color: "green-500",
-    keepColor: true
+    keepColor: true,
   },
   {
     value: "medium",
     color: "orange-500",
-    keepColor: true
+    keepColor: true,
   },
   {
     value: "high",
     color: "red-500",
-    keepColor: true
-  }
+    keepColor: true,
+  },
 ];
 
 const isAllZonesVisible = ref(false);
@@ -260,11 +267,11 @@ const gGreenOlMap = reactive({
   rotation: 0,
   interactionType: "none",
   projection: "EPSG:3857",
-  url: "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}@2x.png"
+  url: "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}@2x.png",
 });
 
 const gGreenZone = reactive({
-  density: "default" as Density
+  density: "default" as Density,
 });
 
 const gGreenCluster = reactive({
@@ -273,14 +280,14 @@ const gGreenCluster = reactive({
   zonesFeatures: [] as Feature<Geometry>[],
   markersDict: new Map<string, Marker>(),
   currentSelectedMarkerId: "",
-  geoJSON: new GeoJSON()
+  geoJSON: new GeoJSON(),
 });
 
-// function openConfirmationDialog(mainText: string, buttonText: string) {
-//   confirmationDialog.mainText = mainText;
-//   confirmationDialog.buttonText = buttonText;
-//   confirmationDialog.isOpened = true;
-// }
+function openConfirmationDialog(mainText: string, buttonText: string) {
+  confirmationDialog.mainText = mainText;
+  confirmationDialog.buttonText = buttonText;
+  confirmationDialog.isOpened = true;
+}
 
 function convertMarkersToFeatures(markers: Marker[]) {
   const features = markers
@@ -289,11 +296,11 @@ function convertMarkersToFeatures(markers: Marker[]) {
       type: "Feature",
       properties: {},
       geometry: { type: "Point", coordinates: marker.coordinate! },
-      id: marker.id
+      id: marker.id,
     }));
   const providerFeatureCollection = {
     type: "FeatureCollection",
-    features
+    features,
   };
   return gGreenCluster.geoJSON.readFeatures(providerFeatureCollection);
 }
@@ -305,11 +312,11 @@ function convertZonesToFeatures(markers: Marker[]) {
       type: "Feature",
       properties: { density: marker.details?.density || "default" },
       geometry: { type: "Polygon", coordinates: [marker.coordinates] },
-      id: marker.id
+      id: marker.id,
     }));
   const providerFeatureCollection = {
     type: "FeatureCollection",
-    features
+    features,
   };
   return gGreenCluster.geoJSON.readFeatures(providerFeatureCollection);
 }
@@ -325,7 +332,7 @@ function getMemberStyle(clusterMember: FeatureLike) {
   const marker = gGreenCluster.markersDict.get(markerId);
   return new Style({
     geometry: clusterMember.getGeometry() as Geometry,
-    image: getMarkerIconByDensity(marker?.details?.density || "default")
+    image: getMarkerIconByDensity(marker?.details?.density || "default"),
   });
 }
 
@@ -337,7 +344,7 @@ function selectMarker(event: SelectEvent) {
     const marker = gGreenCluster.markersDict.get(markerId);
     if (marker) {
       gGreenCluster.zonesFeatures = convertZonesToFeatures(
-        Array.from(gGreenCluster.markersDict.values())
+        Array.from(gGreenCluster.markersDict.values()),
       );
       openMarkerPopup(markerId);
     }
@@ -409,9 +416,11 @@ function overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
   return style;
 }
 
-function getMarkerIconByDensity(density?: "default" | "low" | "medium" | "high") {
+function getMarkerIconByDensity(
+  density?: "default" | "low" | "medium" | "high",
+) {
   return new Icon({
-    src: markersSrcByDensity.value[density || "default"]
+    src: markersSrcByDensity.value[density || "default"],
   });
 }
 function getStatusStyles(status: string) {
@@ -419,10 +428,10 @@ function getStatusStyles(status: string) {
 }
 function updateFeatures(id: string, marker: Marker) {
   gGreenCluster.zonesFeatures = convertZonesToFeatures(
-    Array.from(gGreenCluster.markersDict.values())
+    Array.from(gGreenCluster.markersDict.values()),
   );
   gGreenCluster.markerFeatures = convertMarkersToFeatures(
-    Array.from(gGreenCluster.markersDict.values())
+    Array.from(gGreenCluster.markersDict.values()),
   );
   emit("editMarker", id, marker);
 }
@@ -466,10 +475,10 @@ function toggleZoneAdd() {
   }
 }
 
-// function suggestDeleteMarker(id: string) {
-//   openConfirmationDialog("удалить метку", "Удалить");
-//   gGreenCluster.currentSelectedMarkerId = id;
-// }
+function suggestDeleteMarker(id: string) {
+  openConfirmationDialog("удалить метку", "Удалить");
+  gGreenCluster.currentSelectedMarkerId = id;
+}
 
 function handleMapClick(event: MapBrowserEvent<UIEvent>) {
   if (gGreenOlMap.interactionType === "marker_add") {
@@ -477,7 +486,9 @@ function handleMapClick(event: MapBrowserEvent<UIEvent>) {
   }
 }
 
-function getPolygonStyleByDensity(density: "default" | "low" | "medium" | "high") {
+function getPolygonStyleByDensity(
+  density: "default" | "low" | "medium" | "high",
+) {
   let fillColor = "";
   switch (density) {
     case "low":
@@ -496,21 +507,21 @@ function getPolygonStyleByDensity(density: "default" | "low" | "medium" | "high"
   return new Style({
     stroke: new Stroke({
       color: "#1E1E1E",
-      width: 1
+      width: 1,
     }),
     fill: new Fill({
-      color: fillColor
+      color: fillColor,
     }),
     image: new Circle({
       radius: 6,
       fill: new Fill({
-        color: fillColor
+        color: fillColor,
       }),
       stroke: new Stroke({
         color: "#1E1E1E",
-        width: 1
-      })
-    })
+        width: 1,
+      }),
+    }),
   });
 }
 
@@ -536,7 +547,9 @@ function toggleControlBar(targetButton: HTMLElement) {
 
 function createZone(event: DrawEvent) {
   if (gGreenCluster.currentSelectedMarkerId && event.feature) {
-    const marker = gGreenCluster.markersDict.get(gGreenCluster.currentSelectedMarkerId);
+    const marker = gGreenCluster.markersDict.get(
+      gGreenCluster.currentSelectedMarkerId,
+    );
     if (marker) {
       marker.coordinate = getCenter(event.feature.getGeometry()!.getExtent());
       marker.coordinates = event.feature.getGeometry()!.getCoordinates();
@@ -553,11 +566,11 @@ function createZone(event: DrawEvent) {
     const newMarker: Marker = {
       coordinate,
       coordinates: zoneCoordinates,
-      details: { square: 0, density: gGreenZone.density }
+      details: { square: 0, density: gGreenZone.density },
     };
     addMakrer(newMarker.coordinate, {
       coordinates: newMarker.coordinates,
-      density: gGreenZone.density
+      density: gGreenZone.density,
     });
   }
   upKey.value++;
@@ -569,12 +582,14 @@ watch(
     gGreenCluster.markersDict = convertMarkersToDictionary(newMarkers);
     gGreenCluster.markerFeatures = convertMarkersToFeatures(newMarkers);
     gGreenCluster.zonesFeatures = convertZonesToFeatures(
-      Array.from(gGreenCluster.markersDict.values())
+      Array.from(gGreenCluster.markersDict.values()),
     );
   },
-  { deep: true }
+  { deep: true },
 );
 </script>
+
+
 
 <style scoped lang="scss">
 .g-green-map {
@@ -618,35 +633,36 @@ watch(
       cursor: default;
       user-select: auto;
       .data-list__name {
-        font-size: 13px;
-        min-width: 120px;
-        max-width: 120px;
-        padding: 8px 0px;
-        color: var(--app-grey-400);
-        &::after {
-          content: ":";
-        }
-      }
-      .data-list__value {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin: 8px 0px;
-        overflow-wrap: anywhere;
-        .data-list__status-block {
-          font-size: 13px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 4px 8px;
-          color: var(--app-white);
-          border-radius: 12px;
-          height: 24px;
-        }
+      font-size: 13px;
+      min-width: 120px;
+      max-width: 120px;
+      padding: 8px 0px;
+      color: var(--app-grey-400);
+      &::after {
+        content: ":";
       }
     }
+    .data-list__value {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 8px 0px;
+      overflow-wrap: anywhere;
+      .data-list__status-block {
+        font-size: 13px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4px 8px;
+        color: var(--app-white);
+        border-radius: 12px;
+        height: 24px;
+      }
+    }
+    }
+
   }
   .actions-label {
     list-style: none;
@@ -683,7 +699,7 @@ watch(
   .ol-control.ol-bar.g-green-control-bar {
     display: flex;
     flex-direction: column;
-    background: var(--app-white);
+    background:  var(--app-white);
     position: absolute;
     left: 0;
     top: calc(50% - 250px / 2);
@@ -696,7 +712,7 @@ watch(
     overflow: hidden;
     z-index: 1;
     &::before {
-      content: "";
+      content: '';
       position: absolute;
       top: 0;
       left: 0;
@@ -862,7 +878,7 @@ watch(
       width: 32px;
       height: 32px;
       cursor: pointer;
-      box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
+      box-shadow: 2px 2px 2px rgba(0,0,0, 0.25);
       border-radius: 2px;
       img {
         width: 24px;
