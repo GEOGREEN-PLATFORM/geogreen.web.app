@@ -140,7 +140,7 @@
     <section class="profile-page__table-section">
       <!-- Future table will go here -->
     </section>
-    <GGDialog
+    <GGDialogConfirm
       v-model="showBlockDialog"
       actionMainText="заблокировать сотрудника"
       actionButtonConfirmText="Заблокировать"
@@ -267,6 +267,7 @@ function onFileSelected(event) {
       max-width: 100%;
     }
     &__field-input {
+      margin-left: -12px;
     }
     &__content {
       width: 100%;
@@ -283,7 +284,7 @@ function onFileSelected(event) {
       align-items: center;
 
       &-label {
-        min-width: 184px;
+        min-width: 196px;
         color: var(--app-grey-300);
       }
 
