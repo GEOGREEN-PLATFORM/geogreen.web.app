@@ -1,71 +1,65 @@
 <template>
-    <main class="report-form">
-      <section class="report-form__header">
-        <h1 class="report-form__title gg-h1">Сообщите о проблеме</h1>
-        <p class="report-form__sub-info">Вы зафиксировали 5 проблем за последний месяц</p>
-      </section>
-  
-      <section class="report-form__content">
-        <q-form
-            ref="formRef"
-            novalidate
-            greedy
-            class="report-form__form"
-            @submit=""
-        >
-          <fieldset class="report-form__fieldset">
-            <legend class="report-form__legend gg-h3 report-form__legend--required">Тип</legend>
-            <div class="report-form__types">
-              <button
-                v-for="type in types"
-                :key="type.value"
-                :class="[
-                  'report-form__type-button',
-                  { 'report-form__type-button--active': selectedType === type.value }
-                ]"
-                type="button"
-                @click="selectProblemType(type.value)"
-              >
-                {{ type.label }}
-              </button>
-            </div>
-          </fieldset>
-          <fieldset class="report-form__fieldset">
-            <legend class="report-form__legend gg-h3 report-form__legend--required">Локация</legend>
-            <p class="report-form__sub-info">
-              Оставьте точку на карте, соответствующую расположению проблемы
-            </p>
-            <article class="report-form__map-container">
-                <Map :markers="[]"></Map>
-            </article>
-          </fieldset>
-          <fieldset class="report-form__fieldset">
-            <legend class="report-form__legend gg-h3">Комментарий</legend>
-            <KTInputTextarea
-              class="report-form__comment"
-              placeholder="Кратко опишите проблему"
-              v-model="comment"
-            ></KTInputTextarea>
-          </fieldset>
-          <fieldset class="report-form__fieldset">
-            <legend class="report-form__legend gg-h3">Фотографии</legend>
-            <DragDrop @add="uploadFiles" class="report-form__upload-file-container"></DragDrop>
-            <section  v-if="attachedFiles.length > 0" class="report-form__added-images">
-                <p class="report-form__block-caption gg-cap">Загруженные изображения</p>
-                <FileContainers :fileUrls="attachedFiles"></FileContainers>
-            </section>
-          </fieldset>
-           <GGButton class="report-form__submit-button" label="Отправить"></GGButton>
-        </q-form>
-      </section>
-    </main>
-  </template>
-  
-  <script setup lang="ts">
+  <main class="report-form">
+    <section class="report-form__header">
+      <h1 class="report-form__title gg-h1">Сообщите о проблеме</h1>
+      <p class="report-form__sub-info">Вы зафиксировали 5 проблем за последний месяц</p>
+    </section>
+
+    <section class="report-form__content">
+      <q-form ref="formRef" novalidate greedy class="report-form__form">
+        <fieldset class="report-form__fieldset">
+          <legend class="report-form__legend gg-h3 report-form__legend--required">Тип</legend>
+          <div class="report-form__types">
+            <button
+              v-for="type in types"
+              :key="type.value"
+              :class="[
+                'report-form__type-button',
+                { 'report-form__type-button--active': selectedType === type.value }
+              ]"
+              type="button"
+              @click="selectProblemType(type.value)"
+            >
+              {{ type.label }}
+            </button>
+          </div>
+        </fieldset>
+        <fieldset class="report-form__fieldset">
+          <legend class="report-form__legend gg-h3 report-form__legend--required">Локация</legend>
+          <p class="report-form__sub-info">
+            Оставьте точку на карте, соответствующую расположению проблемы
+          </p>
+          <article class="report-form__map-container">
+            <CMap :markers="[]" />
+          </article>
+        </fieldset>
+        <fieldset class="report-form__fieldset">
+          <legend class="report-form__legend gg-h3">Комментарий</legend>
+          <KTInputTextarea
+            v-model="comment"
+            class="report-form__comment"
+            placeholder="Кратко опишите проблему"
+          />
+        </fieldset>
+        <fieldset class="report-form__fieldset">
+          <legend class="report-form__legend gg-h3">Фотографии</legend>
+          <DragDrop class="report-form__upload-file-container" @add="uploadFiles" />
+          <section v-if="attachedFiles.length > 0" class="report-form__added-images">
+            <p class="report-form__block-caption gg-cap">Загруженные изображения</p>
+            <FileContainers :file-urls="attachedFiles" />
+          </section>
+        </fieldset>
+        <GGButton class="report-form__submit-button" label="Отправить" />
+      </q-form>
+    </section>
+  </main>
+</template>
+
+<script setup lang="ts">
 const types = [
   { value: "hogweed", label: "Борщевик" },
   { value: "fire", label: "Пожар" },
-  { value: "landfill", label: "Свалка" },
+  { value: "landfill", label: "Свалка" }
 ];
 const selectedType = ref<string | null>(null);
 const comment = ref<string>("");
@@ -79,20 +73,20 @@ async function uploadFiles(files: File[]) {
 function selectProblemType(type: string) {
   selectedType.value = type;
 }
-const onSubmit = () => {
-  console.log("Submitted:", {
-    type: selectedType.value,
-    comment: comment.value,
-    files: attachedFiles.value,
-  });
-};
+// const onSubmit = () => {
+//   console.log("Submitted:", {
+//     type: selectedType.value,
+//     comment: comment.value,
+//     files: attachedFiles.value
+//   });
+// };
 </script>
 <style scoped lang="scss">
 .report-form {
-$app-desktop: 1294px;
-$app-laptop: 960px;
-$app-mobile: 600px;
-$app-narrow-mobile: 364px;
+  $app-desktop: 1294px;
+  $app-laptop: 960px;
+  $app-mobile: 600px;
+  $app-narrow-mobile: 364px;
   background-color: var(--app-white);
   max-width: 75vw;
   margin: 0 auto;
@@ -123,13 +117,13 @@ $app-narrow-mobile: 364px;
     padding-bottom: 12px;
   }
   &__legend {
+  }
+  &__legend--required {
+    &::after {
+      content: "*";
+      color: var(--app-red-500);
     }
-    &__legend--required {
-        &::after {
-            content: "*";
-            color: var(--app-red-500);
-        }
-    }
+  }
 
   &__types {
     display: flex;
@@ -144,12 +138,12 @@ $app-narrow-mobile: 364px;
       cursor: pointer;
     }
     .report-form__type-button--active {
-        background: var(--app-green-500);
-        color: var(--app-white);
+      background: var(--app-green-500);
+      color: var(--app-white);
     }
     .report-form__type-button--disabled {
-        background: var(--app-grey-050);
-        color: var(--app-white);
+      background: var(--app-grey-050);
+      color: var(--app-white);
     }
   }
   &__map-container {

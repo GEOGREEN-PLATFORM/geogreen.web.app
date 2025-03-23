@@ -1,5 +1,10 @@
 pre-commit:
+  parallel: true
   commands:
     check:
       glob: "*.{js,vue,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
-      run: npx biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      run: npx eslint .
+      stage_fixed: true
+    prettier:
+      glob: "*.{js,vue,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: npx prettier --write .

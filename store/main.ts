@@ -10,12 +10,8 @@ interface MainState {
 
 export const useMainStore = defineStore("main", {
   state: (): MainState => ({
-    host:
-      process.env?.PORTAL_API_HOST ||
-      (useRuntimeConfig().public.PORTAL_API_HOST as string),
-    port:
-      process.env?.PORTAL_PORT ||
-      (useRuntimeConfig().public.PORTAL_PORT as string),
+    host: process.env?.PORTAL_API_HOST || (useRuntimeConfig().public.PORTAL_API_HOST as string),
+    port: process.env?.PORTAL_PORT || (useRuntimeConfig().public.PORTAL_PORT as string),
     protocol:
       process.env?.PORTAL_HTTP_PROTOCOL ||
       (useRuntimeConfig().public.PORTAL_HTTP_PROTOCOL as string),
@@ -24,7 +20,7 @@ export const useMainStore = defineStore("main", {
       (useRuntimeConfig().public.PORTAL_SOCKETS_PROTOCOL as string),
     serverHost:
       process.env?.PORTAL_INTERNAL_SERVER_HOST ||
-      (useRuntimeConfig().public.PORTAL_INTERNAL_SERVER_HOST as string),
+      (useRuntimeConfig().public.PORTAL_INTERNAL_SERVER_HOST as string)
   }),
   getters: {
     api: (state) => {
@@ -38,6 +34,6 @@ export const useMainStore = defineStore("main", {
     },
     baseURL: (state) => {
       return `${state.protocol}://${state.host}:`;
-    },
-  },
+    }
+  }
 });

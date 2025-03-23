@@ -1,65 +1,85 @@
 <template>
-    <main class="employees-page">
-        <section class="employees-page__header">
-            <h1 class="employees-page__title gg-h1">Сотрудники</h1>
-            <div class="employees-page__actions-wrapper">
-                <GGButton @click="openEmployeeDialog" class="employees-page__add-employee" label="Добавить сотрудника" size="medium"></GGButton>
-                <KTInput class="employees-page__search-employee" v-model="searchEmployee" label="Поиск сотрудника" hideBottomSpace height="48px" :required="false">
-                    <template #append>
-                        <q-icon
-                            :name="mdiMagnify"
-                        />
-                    </template>
-                </KTInput>
-            </div>
-        </section>
-        <section class="employees-page__content">
-            <div class="filter-container">
-                <CFilter v-model="filters"></CFilter>
-            </div>
-            <div class="table-container">
-              <CTable :columns="tableHeaders" :rows="tableRows" row-key="name" :slots="['status']" 
-              @click:row="(row: any) => goToEmployee(row.id)">
-                <template v-slot:body-cell-status="slotProps">
-                  <div class="status-wrapper">
-                  <div class="account-status gg-t-small" :class="{
-                    'account-status--active': slotProps.row.status === 'Активен',
-                    'account-status--blocked': slotProps.row.status === 'Заблокирован',
-                  }">{{slotProps.row.status}}</div>
-                  </div>
-                </template>
-              </CTable>
-            </div>
-        </section>
-        <EmployeesPageAddDialog 
-        v-model="isEmployeeDialogOpen"
-        @employeeCreated="handleEmployeeCreated"
+  <main class="employees-page">
+    <section class="employees-page__header">
+      <h1 class="employees-page__title gg-h1">Сотрудники</h1>
+      <div class="employees-page__actions-wrapper">
+        <GGButton
+          class="employees-page__add-employee"
+          label="Добавить сотрудника"
+          size="medium"
+          @click="openEmployeeDialog"
         />
-    </main>
+        <KTInput
+          v-model="searchEmployee"
+          class="employees-page__search-employee"
+          label="Поиск сотрудника"
+          hide-bottom-space
+          height="48px"
+          :required="false"
+        >
+          <template #append>
+            <q-icon :name="mdiMagnify" />
+          </template>
+        </KTInput>
+      </div>
+    </section>
+    <section class="employees-page__content">
+      <div class="filter-container">
+        <CFilter v-model="filters" />
+      </div>
+      <div class="table-container">
+        <CTable
+          :columns="tableHeaders"
+          :rows="tableRows"
+          row-key="name"
+          :slots="['status']"
+          @click:row="(row: any) => goToEmployee(row.id)"
+        >
+          <template #body-cell-status="slotProps">
+            <div class="status-wrapper">
+              <div
+                class="account-status gg-t-small"
+                :class="{
+                  'account-status--active': slotProps.row.status === 'Активен',
+                  'account-status--blocked': slotProps.row.status === 'Заблокирован'
+                }"
+              >
+                {{ slotProps.row.status }}
+              </div>
+            </div>
+          </template>
+        </CTable>
+      </div>
+    </section>
+    <EmployeesPageAddDialog
+      v-model="isEmployeeDialogOpen"
+      @employee-created="handleEmployeeCreated"
+    />
+  </main>
 </template>
 
 <script setup lang="ts">
-import { mdiContentCopy, mdiMagnify } from "@quasar/extras/mdi-v6";
+import { mdiMagnify } from "@quasar/extras/mdi-v6";
 
 const statusOptions = [
   {
     name: "Активен",
-    value: "active",
+    value: "active"
   },
   {
     name: "Заблокирован",
-    value: "blocked",
-  },
+    value: "blocked"
+  }
 ];
 const roleOptions = [
   {
     name: "Оператор",
-    value: "operator",
+    value: "operator"
   },
   {
     name: "Администратор",
-    value: "administrator",
-  },
+    value: "administrator"
+  }
 ];
 const isEmployeeDialogOpen = ref(false);
 function openEmployeeDialog() {
@@ -74,21 +94,21 @@ const filters = reactive<FilterItem[]>([
     key: "role",
     label: "Роль",
     selected: "",
-    data: roleOptions,
+    data: roleOptions
   },
   {
     type: "select",
     key: "status",
     selected: "",
     label: "Статус аккаунта",
-    data: statusOptions,
+    data: statusOptions
   },
   {
     type: "date-range",
     key: "status",
     selected: ["", ""],
-    label: "Дата создания",
-  },
+    label: "Дата создания"
+  }
 ]);
 const searchEmployee = ref("");
 const tableHeaders = [
@@ -97,29 +117,29 @@ const tableHeaders = [
     align: "left",
     label: "ФИО",
     field: "initials",
-    sortable: true,
+    sortable: true
   },
   {
     name: "role",
     align: "center",
     label: "Роль",
     field: "role",
-    sortable: true,
+    sortable: true
   },
   {
     name: "status",
     align: "center",
     label: "Статус аккаунта",
     field: "status",
-    sortable: true,
+    sortable: true
   },
   {
     name: "dateCreated",
     align: "right",
     label: "Дата создания",
     field: "dateCreated",
-    sortable: true,
-  },
+    sortable: true
+  }
 ];
 const tableRows = [
   {
@@ -127,8 +147,8 @@ const tableRows = [
     role: "Оператор",
     status: "Активен",
     dateCreated: "23.02.2025",
-    id: "213-de32-2312",
-  },
+    id: "213-de32-2312"
+  }
 ];
 
 function goToEmployee(id: string) {
@@ -138,52 +158,51 @@ function goToEmployee(id: string) {
 
 <style scoped lang="scss">
 .employees-page {
-$app-desktop: 1294px;
-$app-laptop: 960px;
-$app-mobile: 600px;
-$app-narrow-mobile: 364px;
+  $app-desktop: 1294px;
+  $app-laptop: 960px;
+  $app-mobile: 600px;
+  $app-narrow-mobile: 364px;
 
-    padding: 0px 32px;
-    &__header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 24px 0px;
-        .employees-page__actions-wrapper {
-            display: flex;
-            align-items: center;
-            width: 728px;
-            gap: 32px;
-            .employees-page__add-employee {
-                width: 40%;
-            }
-            .employees-page__search-employee {
-                width: 60%;
-            }
-        }
-    }
-    .status-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      .account-status {
+  padding: 0px 32px;
+  &__header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    width: max-content;
-    height: 32px;
-    padding: 4px 16px;
-    border-radius: 16px;
-    color: var(--app-white);
-    &--active {
-      background-color: var(--app-green-300);
-    }
-    &--blocked {
-      background-color: var(--app-grey-300);
+    padding: 24px 0px;
+    .employees-page__actions-wrapper {
+      display: flex;
+      align-items: center;
+      width: 728px;
+      gap: 32px;
+      .employees-page__add-employee {
+        width: 40%;
+      }
+      .employees-page__search-employee {
+        width: 60%;
+      }
     }
   }
+  .status-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .account-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: max-content;
+      height: 32px;
+      padding: 4px 16px;
+      border-radius: 16px;
+      color: var(--app-white);
+      &--active {
+        background-color: var(--app-green-300);
+      }
+      &--blocked {
+        background-color: var(--app-grey-300);
+      }
     }
-
+  }
 }
 .dialog-employee-add {
   display: flex;

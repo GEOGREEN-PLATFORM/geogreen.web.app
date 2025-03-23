@@ -1,7 +1,10 @@
 <template>
-  <div class="kt-input-main" :class="{
-    required: required
-  }">
+  <div
+    class="kt-input-main"
+    :class="{
+      required: required
+    }"
+  >
     <q-input
       ref="qInputRef"
       v-model="inputValue"
@@ -15,11 +18,11 @@
       :hide-bottom-space="hideBottomSpace"
       :placeholder="placeholder"
       :name="name"
-      @update:model-value="updateValue"
       :autogrow="autogrow"
       :autocomplete="autocomplete"
       :mask="maska"
       :hint="hint"
+      @update:model-value="updateValue"
     >
       <template #append>
         <slot name="append">
@@ -40,7 +43,7 @@ import { mdiEyeOffOutline, mdiEyeOutline } from "@quasar/extras/mdi-v6";
 import type { ValidationRule } from "quasar";
 
 interface Props {
-  modelValue: string;
+  modelValue?: string;
   rounded?: boolean;
   outlined?: boolean;
   label: string;
@@ -71,7 +74,6 @@ interface Props {
   hint?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
-  modelValue: "",
   rounded: true,
   outlined: true,
   required: true,
@@ -82,6 +84,10 @@ const props = withDefaults(defineProps<Props>(), {
   hideBottomSpace: false,
   autogrow: false,
   height: "56px",
+  name: "input",
+  autocomplete: "",
+  maska: "",
+  hint: ""
 });
 
 const emits = defineEmits<{
@@ -107,9 +113,7 @@ function togglePassword() {
 onMounted(() => {
   inputValue.value = props.modelValue;
   if (props.required) {
-    validationRules.value = [
-      (val) => (val && val.length > 0) || "Поле не может быть пустым",
-    ];
+    validationRules.value = [(val) => (val && val.length > 0) || "Поле не может быть пустым"];
   } else {
     validationRules.value = props.rules;
   }
@@ -118,7 +122,7 @@ watch(
   () => props.modelValue,
   (newVal) => {
     inputValue.value = newVal;
-  },
+  }
 );
 </script>
 
@@ -143,8 +147,7 @@ watch(
     border-color: var(--app-green-500);
     border-width: 1px;
   }
-  .q-field--outlined.q-field--highlighted.q-field--error
-    .q-field__control:after {
+  .q-field--outlined.q-field--highlighted.q-field--error .q-field__control:after {
     border-color: var(--app-red-500);
   }
   .q-field--outlined.q-field--highlighted.q-field--error {

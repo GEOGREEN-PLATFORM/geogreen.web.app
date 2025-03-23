@@ -1,23 +1,23 @@
 <template>
-    <div class="c-table-container">
-        <q-table
-            :title="title"
-            :rows="rows"
-            :columns="columns"
-            :row-key="rowKey"
-            flat
-            bordered
-            table-class="c-table-container__table"
-            :rows-per-page-options="[10, 20, 50, 0]"
-            @row-click="onRowClick"
-        >
-        <template v-for="slot in props.slots" v-slot:[`body-cell-${slot}`]="slotProps">
+  <div class="c-table-container">
+    <q-table
+      :title="title"
+      :rows="rows"
+      :columns="columns"
+      :row-key="rowKey"
+      flat
+      bordered
+      table-class="c-table-container__table"
+      :rows-per-page-options="[10, 20, 50, 0]"
+      @row-click="onRowClick"
+    >
+      <template v-for="slot in props.slots" :key="slot" #[`body-cell-${slot}`]="slotProps">
         <q-td :props="slotProps">
-          <slot :name="`body-cell-${slot}`" v-bind="slotProps"></slot>
+          <slot :name="`body-cell-${slot}`" v-bind="slotProps" />
         </q-td>
       </template>
-      </q-table>
-    </div>
+    </q-table>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -49,7 +49,8 @@ function onRowClick(evt: Event, row: unknown) {
 <style lang="scss">
 .c-table-container {
   &__table {
-    .q-table tbody td, .q-table thead th {
+    .q-table tbody td,
+    .q-table thead th {
       font-size: 14px;
     }
     .q-table__sort-icon {

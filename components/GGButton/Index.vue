@@ -6,7 +6,7 @@
         disabled,
         [stretch]: true,
         [size]: true,
-        icon: icon,
+        icon: icon
       }"
       no-caps
       :label="!props.icon ? label : ''"
@@ -18,13 +18,14 @@
       :loading="loading"
       :icon="icon"
       :style="`background-color: ${bgColor}; color: ${textColor}`"
-    ><slot></slot></q-btn>
+      ><slot
+    /></q-btn>
   </div>
 </template>
 
 <script setup lang="ts">
 interface Props {
-  label?: string;
+  label: string;
   designType?: "primary" | "secondary" | "tertiary";
   stretch?: "fill" | "hug";
   disabled?: boolean;
@@ -42,12 +43,17 @@ const props = withDefaults(defineProps<Props>(), {
   stretch: "fill",
   disabled: false,
   size: "large",
+  type: "submit",
+  icon: "",
+  iconColor: "",
+  bgColor: "",
+  textColor: ""
 });
 const buttonDesignTypeSettings = ref({
   outline: false,
   rounded: true,
   flat: false,
-  loading: false,
+  loading: false
 });
 
 onMounted(() => {

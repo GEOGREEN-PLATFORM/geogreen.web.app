@@ -23,7 +23,9 @@ interface Option {
 }
 type Group = T | T[];
 
-withDefaults(defineProps<Props>(), {});
+withDefaults(defineProps<Props>(), {
+  color: "var(--app-blue-500)"
+});
 const emits = defineEmits<{
   "update:modelValue": [Group];
 }>();

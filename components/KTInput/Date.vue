@@ -26,7 +26,7 @@
                 size="small"
                 design-type="tertiary"
                 stretch="hug"
-              ></GGButton>
+              />
             </div>
           </q-date>
         </q-popup-proxy>
@@ -47,18 +47,15 @@ const props = defineProps<Props>();
 const emit = defineEmits(["update:modelValue"]);
 
 const myLocale: object = {
-  days: "Воскресенье_Понедельник_Вторник_Среда_Четверг_Пятница_Суббота".split(
-    "_",
-  ),
+  days: "Воскресенье_Понедельник_Вторник_Среда_Четверг_Пятница_Суббота".split("_"),
   daysShort: "Вс_Пн_Вт_Ср_Чт_Пт_Сб".split("_"),
-  months:
-    "Январь_Февраль_Март_Апрель_Май_Июнь_Июль_Август_Сентябрь_Октябрь_Ноябрь_Декабрь".split(
-      "_",
-    ),
+  months: "Январь_Февраль_Март_Апрель_Май_Июнь_Июль_Август_Сентябрь_Октябрь_Ноябрь_Декабрь".split(
+    "_"
+  ),
   monthsShort: "Янв_Фев_Мар_Апр_Май_Июн_Июл_Авг_Сен_Окт_Ноя_Дек".split("_"),
   firstDayOfWeek: 1,
   format24h: true,
-  pluralDay: "дня",
+  pluralDay: "дня"
 };
 
 function isValidDate(dateStr: string): boolean {
@@ -66,11 +63,7 @@ function isValidDate(dateStr: string): boolean {
   if (!regex.test(dateStr)) return false;
   const [day, month, year] = dateStr.split(".").map(Number);
   const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
 }
 
 const dateRules = [
@@ -78,7 +71,7 @@ const dateRules = [
     // Если значение не полностью заполнено (не 10 символов), правило не срабатывает
     if (!val || val.length < 10) return true;
     return isValidDate(val) || "Используйте формат ДД.ММ.ГГГГ";
-  },
+  }
 ];
 
 function updateDate(val: string | number) {

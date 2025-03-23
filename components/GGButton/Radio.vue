@@ -17,9 +17,7 @@ interface Props {
   color: string;
   keepColor: boolean;
 }
-withDefaults(defineProps<Props>(), {
-  modelValue: false,
-});
+withDefaults(defineProps<Props>(), {});
 const emits = defineEmits<{
   "update:modelValue": [boolean];
 }>();

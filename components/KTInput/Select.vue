@@ -1,26 +1,29 @@
 <template>
-    <div class="kt-input-select" :class="{
+  <div
+    class="kt-input-select"
+    :class="{
       required: required
-    }">
-        <q-select 
-        :model-value="modelValue" 
-        @update:model-value="selectValue"
-        :options="props.options" 
-        :outlined="outlined" 
-        :label="label" 
-        ref="qInputRef"
-        :rounded="rounded"
-        :rules="validationRules"
-        :no-error-icon="hideErrorIcon"
-        :hide-bottom-space="hideBottomSpace"
-        :placeholder="placeholder"
-        :name="name"
-        :option-value="optionValue"
-        :option-label="optionLabel"
-        emit-value
-        map-options
-        />
-    </div>
+    }"
+  >
+    <q-select
+      ref="qInputRef"
+      :model-value="modelValue"
+      :options="props.options"
+      :outlined="outlined"
+      :label="label"
+      :rounded="rounded"
+      :rules="validationRules"
+      :no-error-icon="hideErrorIcon"
+      :hide-bottom-space="hideBottomSpace"
+      :placeholder="placeholder"
+      :name="name"
+      :option-value="optionValue"
+      :option-label="optionLabel"
+      emit-value
+      map-options
+      @update:model-value="selectValue"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -46,7 +49,6 @@ interface Props {
   optionLabel?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
-  modelValue: "",
   rounded: true,
   outlined: true,
   required: true,
@@ -57,6 +59,7 @@ const props = withDefaults(defineProps<Props>(), {
   height: "56px",
   optionValue: "value",
   optionLabel: "name",
+  name: "select"
 });
 const emits = defineEmits<{
   "update:modelValue": [string];
@@ -67,9 +70,7 @@ function selectValue(value: string) {
 }
 onMounted(() => {
   if (props.required) {
-    validationRules.value = [
-      (val) => (val && val.length > 0) || "Поле не может быть пустым",
-    ];
+    validationRules.value = [(val) => (val && val.length > 0) || "Поле не может быть пустым"];
   } else {
     validationRules.value = props.rules;
   }
@@ -96,8 +97,7 @@ onMounted(() => {
     border-color: var(--app-green-500);
     border-width: 1px;
   }
-  .q-field--outlined.q-field--highlighted.q-field--error
-    .q-field__control:after {
+  .q-field--outlined.q-field--highlighted.q-field--error .q-field__control:after {
     border-color: var(--app-red-500);
   }
   .q-field--outlined.q-field--highlighted.q-field--error {
