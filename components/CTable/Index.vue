@@ -9,6 +9,7 @@
             bordered
             table-class="c-table-container__table"
             :rows-per-page-options="[10, 20, 50, 0]"
+            @row-click="onRowClick"
         >
         <template v-for="slot in props.slots" v-slot:[`body-cell-${slot}`]="slotProps">
         <q-td :props="slotProps">
@@ -37,6 +38,12 @@ interface Props {
   slots?: string[];
 }
 const props = defineProps<Props>();
+const emits = defineEmits<{
+  "click:row": [row: unknown];
+}>();
+function onRowClick(evt: Event, row: unknown) {
+  emits("click:row", row);
+}
 </script>
 
 <style lang="scss">

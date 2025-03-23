@@ -129,15 +129,19 @@ onMounted(() => {
   .q-field__input {
     color: var(--app-grey-500);
     caret-color: var(--app-green-500);
+    height: v-bind(height);
+    min-height: v-bind(height);
   }
   .q-field--labeled .q-field__native {
     line-height: 20px;
   }
   .q-field__control {
     height: v-bind(height);
+    min-height: v-bind(height);
   }
   .q-field__marginal {
     height: v-bind(height);
+    min-height: v-bind(height);
   }
   input[type="password"]:not(:placeholder-shown) {
     font-family: Verdana;
