@@ -1,34 +1,34 @@
 <template>
     <main class="profile-page">
       <div class="profile-page__top-section">
-        <section class="profile-page__profile-card">
-          <div class="profile-page__user-info">
-            <div class="profile-page__user-header">
-              <div class="profile-page__avatar-container" @click="editMode && triggerFileUpload()">
-                <input type="file" ref="fileInput" class="profile-page__file-input" @change="onFileSelected" accept="image/*" />
-                <img v-if="!isDefaultAvatar" :src="avatarSrc" alt="User avatar" class="profile-page__avatar" />
-                <div v-else class="profile-page__avatar profile-page__avatar--placeholder">
-                  <span class="profile-page__avatar-icon">
+        <section class="profile-card">
+          <div class="profile-card__user-info">
+            <div class="profile-card__user-header">
+              <div class="avatar-container" @click="editMode && triggerFileUpload()">
+                <input type="file" ref="fileInput" class="avatar-container__file-input" @change="onFileSelected" accept="image/*" />
+                <img v-if="!isDefaultAvatar" :src="avatarSrc" alt="User avatar" class="avatar-container__avatar" />
+                <div v-else class="avatar-container__avatar avatar-container__avatar--placeholder">
+                  <span class="avatar-container__avatar-icon">
                     <q-icon :name="editMode ? mdiUpload : mdiAccountOutline" color="grey-400" size="32px"></q-icon>
                   </span>
                 </div>
-                <div v-if="editMode" class="profile-page__avatar-overlay">
+                <div v-if="editMode" class="avatar-container__avatar-overlay">
                   <q-icon :name="mdiUpload" color="grey-050" size="32px"></q-icon>
                 </div>
               </div>
               
-              <div class="profile-page__name-container">
-                <div class="profile-page__name-wrapper">
+              <div class="name-container">
+                <div class="name-container__name-wrapper">
                   <input 
                     type="text" 
                     v-model="userData.fullName" 
-                    class="profile-page__name-input gg-h1" 
-                    :class="{ 'profile-page__name-input--edit': editMode }"
+                    class="name-container__name-input gg-h1" 
+                    :class="{ 'name-container__name-input--edit': editMode }"
                     :readonly="!editMode" 
                   />
                   <span 
                     v-if="!editMode" 
-                    class="profile-page__block-icon" 
+                    class="name-container__block-icon" 
                     @click="openBlockDialog"
                   >
                     <q-icon :name="mdiCancel" color="red-500" size="24px"></q-icon>
@@ -36,48 +36,48 @@
                 </div>
               </div>
             </div>
-            <div class="profile-page__content">
-              <div v-if="editMode" class="profile-page__form">
-                <div class="profile-page__field">
-                  <div class="profile-page__field-label gg-t-big">Роль:</div>
-                  <div class="profile-page__field-value gg-t-base">{{ userData.role }}</div>
+            <div class="profile-card__content">
+              <div v-if="editMode" class="profile-card__form">
+                <div class="profile-card__field">
+                  <div class="profile-card__field-label gg-t-big">Роль:</div>
+                  <div class="profile-card__field-value gg-t-base">{{ userData.role }}</div>
                 </div>
   
-                <div class="profile-page__field">
-                  <div class="profile-page__field-label gg-t-big">Дата рождения:</div>
+                <div class="profile-card__field">
+                  <div class="profile-card__field-label gg-t-big">Дата рождения:</div>
                   <KTInputDate 
                     v-model="userData.birthDate"
-                    class="profile-page__field-input"
+                    class="profile-card__field-input"
                                         height="44px"
                   ></KTInputDate>
                 </div>
   
-                <div class="profile-page__field">
-                  <div class="profile-page__field-label gg-t-big">Email:</div>
+                <div class="profile-card__field">
+                  <div class="profile-card__field-label gg-t-big">Email:</div>
                   <KTInput
                     v-model="userData.email" 
                     type="email"
-                    class="profile-page__field-input"
+                    class="profile-card__field-input"
                     height="44px"
                   ></KTInput>
                 </div>
   
-                <div class="profile-page__field">
-                  <div class="profile-page__field-label gg-t-big">Номер телефона:</div>
+                <div class="profile-card__field">
+                  <div class="profile-card__field-label gg-t-big">Номер телефона:</div>
                   <KTInput
                     v-model="userData.phone" 
                     type="tel"
-                    class="profile-page__field-input"
+                    class="profile-card__field-input"
                                         height="44px"
                   ></KTInput>
                 </div>
   
-                <div class="profile-page__actions">
+                <div class="profile-card__actions">
                   <GGButton 
                     @click="cancelEdit"
                     size="medium" 
                     design-type="secondary"
-                    class="profile-page__button profile-page__button--cancel"
+                    class="profile-card__button profile-card__button--cancel"
                   >
                     Отменить
                   </GGButton>
@@ -85,36 +85,36 @@
                   <GGButton 
                     @click="saveChanges"
                     size="medium" 
-                    class="profile-page__button profile-page__button--save"
+                    class="profile-card__button profile-card__button--save"
                   >
                     Сохранить
                   </GGButton>
                 </div>
               </div>
   
-              <div v-else class="profile-page__info-list">
-                <div class="profile-page__field">
-                  <div class="profile-page__field-label gg-t-big">Роль:</div>
-                  <div class="profile-page__field-value gg-t-base">{{ userData.role }}</div>
+              <div v-else class="profile-card__info-list">
+                <div class="profile-card__field">
+                  <div class="profile-card__field-label gg-t-big">Роль:</div>
+                  <div class="profile-card__field-value gg-t-base">{{ userData.role }}</div>
                 </div>
-                <div class="profile-page__field">
-                  <div class="profile-page__field-label gg-t-big">Дата рождения:</div>
-                  <div class="profile-page__field-value gg-t-base">{{ userData.birthDate }}</div>
+                <div class="profile-card__field">
+                  <div class="profile-card__field-label gg-t-big">Дата рождения:</div>
+                  <div class="profile-card__field-value gg-t-base">{{ userData.birthDate }}</div>
                 </div>
-                <div class="profile-page__field">
-                  <div class="profile-page__field-label gg-t-big">Email:</div>
-                  <div class="profile-page__field-value gg-t-base">{{ userData.email }}</div>
+                <div class="profile-card__field">
+                  <div class="profile-card__field-label gg-t-big">Email:</div>
+                  <div class="profile-card__field-value gg-t-base">{{ userData.email }}</div>
                 </div>
-                <div class="profile-page__field">
-                  <div class="profile-page__field-label gg-t-big">Номер телефона:</div>
-                  <div class="profile-page__field-value gg-t-base">{{ userData.phone }}</div>
+                <div class="profile-card__field">
+                  <div class="profile-card__field-label gg-t-big">Номер телефона:</div>
+                  <div class="profile-card__field-value gg-t-base">{{ userData.phone }}</div>
                 </div>
                 
                 <GGButton 
                   @click="toggleEditMode"
                   size="medium" 
                   stretch="fill"
-                  class="profile-page__edit-button"
+                  class="profile-card__edit-button"
                 >
                   Редактировать
                 </GGButton>
@@ -236,33 +236,13 @@ function onFileSelected(event) {
       }
     }
   
-    &__profile-card {
+    .profile-card {
       background-color: var(--app-white);
       padding: 24px;
       border-radius: 8px;
       flex: 1;
       max-width: 560px;
-      
-      @media screen and (max-width: $app-laptop) {
-        max-width: 100%;
-      }
-    }
-  
-    &__data-card {
-      background-color: #FFF5E6;
-      border-radius: 8px;
-      flex: 1;
-      min-height: 250px;
-    }
-  
-    &__table-section {
-      background-color: var(--app-grey-100);
-      border-radius: 8px;
-      width: 100%;
-      min-height: 360px;
-    }
-  
-    &__user-header {
+      &__user-header {
       display: flex;
       align-items: center;
       gap: 16px;
@@ -272,99 +252,12 @@ function onFileSelected(event) {
     &__user-info {
       width: 100%;
     }
-  
-    &__avatar-container {
-      position: relative;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      overflow: hidden;
-      background-color: var(--app-grey-050);
-      cursor: pointer;
-    }
-    &__field-input {
-    }
-    &__file-input {
-      position: absolute;
-      width: 0;
-      height: 0;
-      opacity: 0;
-    }
-  
-    &__avatar {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-  
-      &--placeholder {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: var(--app-grey-100);
-        color: var(--app-grey-500);
+      @media screen and (max-width: $app-laptop) {
+        max-width: 100%;
       }
-    }
-  
-    &__avatar-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-  
-      &:hover {
-        opacity: 1;
+      &__field-input {
       }
-    }
-  
-    &__avatar-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  
-    &__name-container {
-      flex: 1;
-    }
-  
-    &__name-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-  
-    &__name-input {
-      background: transparent;
-      border: none;
-      padding: 4px 0;
-      outline: none;
-      width:fit-content;
-      border-bottom: 1px solid transparent;
-  
-      &--edit {
-        border-bottom: 1px solid var(--app-grey-300);
-      }
-  
-      &:focus {
-        border-bottom: 1px solid var(--app-green-500);
-      }
-  
-      &[readonly] {
-        cursor: default;
-      }
-    }
-  
-    &__block-icon {
-      cursor: pointer;
-    }
-  
-    &__content {
+      &__content {
       width: 100%;
     }
     &__info-list {
@@ -409,6 +302,106 @@ function onFileSelected(event) {
     }
   
     &__button {
+    }
+    }
+    .avatar-container {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: var(--app-grey-050);
+      cursor: pointer;
+      &__file-input {
+      position: absolute;
+      width: 0;
+      height: 0;
+      opacity: 0;
+    }
+      &__avatar {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+  
+      &--placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--app-grey-100);
+        color: var(--app-grey-500);
+      }
+    }
+  
+    &__avatar-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+  
+      &:hover {
+        opacity: 1;
+      }
+    }
+  
+    &__avatar-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    }
+    &__data-card {
+      background-color: #FFF5E6;
+      border-radius: 8px;
+      flex: 1;
+      min-height: 250px;
+    }
+  
+    &__table-section {
+      background-color: var(--app-grey-100);
+      border-radius: 8px;
+      width: 100%;
+      min-height: 360px;
+    }
+  
+    .name-container {
+      flex: 1;
+      &__name-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  
+    &__name-input {
+      background: transparent;
+      border: none;
+      padding: 4px 0;
+      outline: none;
+      width:fit-content;
+      border-bottom: 1px solid transparent;
+  
+      &--edit {
+        border-bottom: 1px solid var(--app-grey-300);
+      }
+  
+      &:focus {
+        border-bottom: 1px solid var(--app-green-500);
+      }
+  
+      &[readonly] {
+        cursor: default;
+      }
+    }
+  
+    &__block-icon {
+      cursor: pointer;
+    }
     }
   }
   </style>
