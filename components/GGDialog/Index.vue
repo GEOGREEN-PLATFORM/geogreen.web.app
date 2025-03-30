@@ -1,6 +1,11 @@
 <template>
   <div class="gg-dialog">
-    <q-dialog :model-value="modelValue" @update:model-value="toggleOpenState" :auto-close="false">
+    <q-dialog
+      :model-value="modelValue"
+      @update:model-value="toggleOpenState"
+      :auto-close="false"
+      backdrop-filter="blur(4px)"
+    >
       <slot />
     </q-dialog>
   </div>
@@ -20,4 +25,7 @@ function toggleOpenState(newState: boolean) {
 onMounted(() => {});
 </script>
 
-<style scoped lang="scss"></style>
+<style lang="scss">
+.gg-dialog {
+}
+</style>

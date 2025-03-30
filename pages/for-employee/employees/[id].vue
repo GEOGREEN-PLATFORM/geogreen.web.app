@@ -258,6 +258,10 @@ function onFileSelected(event) {
       align-items: center;
       gap: 16px;
       margin-bottom: 32px;
+      @media screen and (max-width: $app-mobile) {
+        display: flex;
+        flex-direction: column;
+      }
     }
 
     &__user-info {
@@ -265,6 +269,9 @@ function onFileSelected(event) {
     }
     @media screen and (max-width: $app-laptop) {
       max-width: 100%;
+    }
+    @media screen and (max-width: $app-mobile) {
+      padding: 0px;
     }
     &__field-input {
       margin-left: -12px;
@@ -324,6 +331,11 @@ function onFileSelected(event) {
     overflow: hidden;
     background-color: var(--app-grey-050);
     cursor: pointer;
+    @media screen and (max-width: $app-mobile) {
+      width: 100%;
+      height: 120px;
+      border-radius: 4px;
+    }
     &__file-input {
       position: absolute;
       width: 0;
@@ -413,6 +425,12 @@ function onFileSelected(event) {
 
     &__block-icon {
       cursor: pointer;
+    }
+    @media screen and (max-width: $app-mobile) {
+      max-width: 100%;
+      &__name-input {
+        width: calc(100% - 32px);
+      }
     }
   }
 }

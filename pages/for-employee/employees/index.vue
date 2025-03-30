@@ -1,27 +1,34 @@
 <template>
   <main class="employees-page">
     <section class="employees-page__header">
-      <h1 class="employees-page__title gg-h1">Сотрудники</h1>
-      <div class="employees-page__actions-wrapper">
+      <div class="employees-page__title-wrapper">
+        <h1 class="employees-page__title gg-h1">Сотрудники</h1>
         <GGButton
           @click="openEmployeeDialog"
           class="employees-page__add-employee"
-          label="Добавить сотрудника"
+          label="Добавить оператора"
           size="medium"
         ></GGButton>
-        <KTInput
-          class="employees-page__search-employee"
-          v-model="searchEmployee"
-          label="Поиск сотрудника"
-          hideBottomSpace
-          height="48px"
-          :required="false"
-        >
-          <template #append>
-            <q-icon :name="mdiMagnify" />
-          </template>
-        </KTInput>
+        <GGButton
+          @click="openEmployeeDialog"
+          class="employees-page__add-employee--mobile"
+          :icon="mdiPlus"
+          iconColor="var(--app-white)"
+          stretch="hug"
+        ></GGButton>
       </div>
+      <KTInput
+        class="employees-page__search-employee"
+        v-model="searchEmployee"
+        label="Поиск сотрудника"
+        hideBottomSpace
+        height="48px"
+        :required="false"
+      >
+        <template #append>
+          <q-icon :name="mdiMagnify" />
+        </template>
+      </KTInput>
     </section>
     <section class="employees-page__content">
       <div class="filter-container">
@@ -59,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { mdiContentCopy, mdiMagnify } from "@quasar/extras/mdi-v6";
+import { mdiContentCopy, mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
 
 const statusOptions = [
   {
@@ -106,8 +113,8 @@ const filters = reactive<FilterItem[]>([
   {
     type: "date-range",
     key: "status",
-    selected: ["", ""],
-    label: "Дата создания",
+    selected: "",
+    label: "Дата/период создания",
   },
 ]);
 const searchEmployee = ref("");
@@ -168,17 +175,42 @@ function goToEmployee(id: string) {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 32px;
     padding: 24px 0px;
-    .employees-page__actions-wrapper {
+    @media screen and (max-width: $app-laptop) {
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .employees-page__title-wrapper {
       display: flex;
       align-items: center;
-      width: 728px;
-      gap: 32px;
-      .employees-page__add-employee {
-        width: 40%;
+      justify-content: space-between;
+      width: 100%;
+      @media screen and (max-width: $app-mobile) {
+        justify-content: center;
+        gap: 24px;
       }
-      .employees-page__search-employee {
-        width: 60%;
+    }
+    .employees-page__add-employee {
+      width: 40%;
+      max-width: 288px;
+      min-width: max-content;
+      &--mobile {
+        display: none;
+      }
+      @media screen and (max-width: $app-mobile) {
+        &--mobile {
+          display: block;
+        }
+        display: none;
+      }
+    }
+    .employees-page__search-employee {
+      width: 60%;
+      max-width: 412px;
+      @media screen and (max-width: $app-mobile) {
+        width: 100%;
+        max-width: 100%;
       }
     }
   }

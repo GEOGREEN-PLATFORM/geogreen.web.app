@@ -1,16 +1,17 @@
 <template>
   <KTInput
     type="text"
-    :model-value="props.modelValue"
+    :model-value="formattedDate"
     placeholder="01.01.2024"
     :required="false"
     :label="label"
-    maska="##.##.####"
+    :maska="!range ? '##.##.####' : ''"
     :rules="dateRules"
     @update:model-value="updateDate"
+    :readonly="range"
   >
     <template #append>
-      <q-icon :name="mdiCalendarMonthOutline">
+      <q-icon :name="mdiCalendarMonthOutline" class="cursor-pointer">
         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
           <q-date
             mask="DD.MM.YYYY"
@@ -18,6 +19,7 @@
             :locale="myLocale"
             color="green-500"
             @update:model-value="updateDate"
+            :range="range"
           >
             <div class="row items-center justify-end">
               <GGButton
@@ -39,8 +41,9 @@
 import { mdiCalendarMonthOutline } from "@quasar/extras/mdi-v6";
 
 interface Props {
-  modelValue: string;
+  modelValue: string | DateRange;
   label: string;
+  range?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -61,6 +64,15 @@ const myLocale: object = {
   pluralDay: "дня",
 };
 
+const formattedDate = computed(() => {
+  if (!props.modelValue) return "";
+  if (typeof props.modelValue === "string") return props.modelValue;
+  if (typeof props.modelValue === "object" && props.range) {
+    return `${props.modelValue.from} - ${props.modelValue.to}`;
+  }
+  return "";
+});
+
 function isValidDate(dateStr: string): boolean {
   const regex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
   if (!regex.test(dateStr)) return false;
@@ -75,14 +87,13 @@ function isValidDate(dateStr: string): boolean {
 
 const dateRules = [
   (val: string) => {
-    // Если значение не полностью заполнено (не 10 символов), правило не срабатывает
     if (!val || val.length < 10) return true;
     return isValidDate(val) || "Используйте формат ДД.ММ.ГГГГ";
   },
 ];
 
-function updateDate(val: string | number) {
-  emit("update:modelValue", String(val));
+function updateDate(val: string | number | DateRange) {
+  emit("update:modelValue", val);
 }
 </script>
 

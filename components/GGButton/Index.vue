@@ -1,5 +1,5 @@
 <template>
-  <div class="kt-button-main">
+  <div class="kt-button-main" :class="{ 'button-icon': icon }">
     <q-btn
       :class="{
         [designType]: true,
@@ -120,6 +120,13 @@ onMounted(() => {
   }
   .q-btn.disabled {
     opacity: 1 !important;
+  }
+}
+.kt-button-main.button-icon {
+  .q-btn__content {
+    .q-icon {
+      color: v-bind(iconColor);
+    }
   }
 }
 </style>

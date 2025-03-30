@@ -23,15 +23,19 @@
           <div v-for="item in filterItems" class="filter-items__item">
             <div class="filter-items__select" v-if="item.type === 'select' && item.data">
               <KTInputSelect
-                v-model="item.selected as string"
+                v-model="item.selected"
                 :options="item.data"
                 :label="item.label"
+                :required="false"
               ></KTInputSelect>
             </div>
             <div class="filter-items__date-range" v-if="item.type === 'date-range'">
-              <KTInputDate :label="item.label + ' с'" v-model="item.selected[0]"></KTInputDate>
-              <span class="filter-items__date-range-divider"></span>
-              <KTInputDate :label="item.label + ' по'" v-model="item.selected[1]"></KTInputDate>
+              <KTInputDate
+                :label="item.label"
+                v-model="item.selected"
+                :required="false"
+                range
+              ></KTInputDate>
             </div>
           </div>
         </div>
@@ -69,7 +73,7 @@ function resetFilters() {
       return { ...item, selected: "" };
     }
     if (item.type === "date-range") {
-      return { ...item, selected: ["", ""] };
+      return { ...item, selected: { from: "", to: "" } };
     }
     return item;
   });
@@ -83,8 +87,8 @@ function calculateActiveFiltersCount() {
       count++;
     } else if (
       item.type === "date-range" &&
-      Array.isArray(item.selected) &&
-      (item.selected[0] || item.selected[1])
+      typeof item.selected === "object" &&
+      (item.selected.from || item.selected.to)
     ) {
       count++;
     }
@@ -101,6 +105,11 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
+
 .c-filter-container {
   display: flex;
   flex-direction: column;
@@ -128,21 +137,13 @@ onMounted(() => {
     .filter-items {
       display: flex;
       flex-wrap: wrap;
-      gap: 32px;
+      gap: 16px;
       &__item {
+        margin-right: 8px;
+        width: 252px;
         .filter-items__select {
-          width: 252px;
         }
         .filter-items__date-range {
-          display: flex;
-          width: calc(252px * 2 + 56px);
-          .filter-items__date-range-divider {
-            min-width: 24px;
-            height: 2px;
-            background-color: var(--app-grey-050);
-            display: inline-block;
-            margin: 28px 12px;
-          }
         }
       }
     }

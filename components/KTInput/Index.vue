@@ -23,6 +23,7 @@
       :autocomplete="autocomplete"
       :mask="maska"
       :hint="hint"
+      :readonly="readonly"
     >
       <template #append>
         <slot name="append">
@@ -72,6 +73,7 @@ interface Props {
   maska?: string;
   height?: string;
   hint?: string;
+  readonly?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",

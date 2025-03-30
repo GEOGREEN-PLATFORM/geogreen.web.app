@@ -1,6 +1,6 @@
 <template>
   <GGDialog v-model="dialogVisible" class="employee-add-dialog">
-    <div class="employee-add-dialog__container">
+    <q-card class="employee-add-dialog__container">
       <header class="employee-add-dialog__header">
         <h1 class="employee-add-dialog__title gg-h1">Создание оператора</h1>
         <p v-if="subTitle" class="employee-add-dialog__subtitle">{{ subTitle }}</p>
@@ -44,7 +44,7 @@
               <KTInput
                 v-model="form.contacts.email"
                 label="Email"
-                hint="Электронная почта сотрудника для входа в систему."
+                hint="Электронная почта сотрудника"
                 class="employee-add-dialog__field"
               />
               <KTInput
@@ -116,7 +116,7 @@
           <GGButton :label="applyLabel" :disabled="formHasError" type="submit" />
         </footer>
       </q-form>
-    </div>
+    </q-card>
   </GGDialog>
 </template>
 
@@ -270,6 +270,11 @@ function copyPassword() {
 </script>
 
 <style scoped lang="scss">
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
+
 .employee-add-dialog {
   &__container {
     display: flex;
@@ -279,6 +284,10 @@ function copyPassword() {
     background-color: var(--app-white);
     border-radius: 12px;
     padding: 24px 32px;
+    @media screen and (max-width: $app-mobile) {
+      padding: 12px 24px;
+      width: 100%;
+    }
   }
   &__header {
     padding: 16px 0 20px;
@@ -308,6 +317,10 @@ function copyPassword() {
   &__fields-row {
     display: flex;
     gap: 12px;
+    @media screen and (max-width: $app-mobile) {
+      flex-direction: column;
+      gap: 0px;
+    }
   }
   &__field {
     flex: 1;
