@@ -366,6 +366,9 @@ $app-narrow-mobile: 364px;
       .employee-add-dialog__copy-tooltip {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
+        @media screen and (max-width: $app-mobile) {
+          transform: translateX(-100%) translateY(0);
+        }
       }
     }
   }
@@ -388,6 +391,10 @@ $app-narrow-mobile: 364px;
     transition:
       opacity 0.3s ease,
       transform 0.3s ease;
+    @media screen and (max-width: $app-mobile) {
+      left: 100%;
+      transform: translateX(-100%) translateY(10px);
+    }
   }
   &__footer {
     display: flex;

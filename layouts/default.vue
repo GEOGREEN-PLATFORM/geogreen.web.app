@@ -10,6 +10,7 @@
     <q-page-container>
       <NuxtPage></NuxtPage>
     </q-page-container>
+    <PhotoViewer />
   </q-layout>
 </template>
 

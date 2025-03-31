@@ -17,6 +17,7 @@
                 :src="avatarSrc"
                 alt="User avatar"
                 class="avatar-container__avatar"
+                @click="openPhoto(avatarSrc)"
               />
               <div v-else class="avatar-container__avatar avatar-container__avatar--placeholder">
                 <span class="avatar-container__avatar-icon">
@@ -129,6 +130,16 @@
               >
                 Редактировать
               </GGButton>
+
+              <GGButton
+                @click="openBlockDialog"
+                size="medium"
+                stretch="fill"
+                bg-color="var(--app-red-500)"
+                class="profile-card__block-button"
+              >
+                Заблокировать
+              </GGButton>
             </div>
           </div>
         </div>
@@ -159,7 +170,7 @@ const isDefaultAvatar = ref(true);
 const avatarSrc = ref("");
 const showBlockDialog = ref(false);
 const fileInput = ref(null);
-
+const { openPhoto } = usePhotoViewer();
 const initialUserData = {
   fullName: "Иванов Иван Иванович",
   role: "Оператор",
@@ -230,7 +241,6 @@ function onFileSelected(event) {
 
   background-color: var(--app-white);
   width: 100%;
-  margin: 0 auto;
   padding: 24px;
 
   @media screen and (max-width: $app-mobile) {
@@ -263,7 +273,6 @@ function onFileSelected(event) {
         flex-direction: column;
       }
     }
-
     &__user-info {
       width: 100%;
     }
@@ -293,9 +302,15 @@ function onFileSelected(event) {
       &-label {
         min-width: 196px;
         color: var(--app-grey-300);
+        @media screen and (max-width: $app-mobile) {
+          min-width: 140px;
+          width: 140px;
+          overflow-wrap: break-word;
+        }
       }
 
       &-value {
+        overflow-wrap: anywhere;
       }
 
       &-input {
@@ -306,7 +321,13 @@ function onFileSelected(event) {
     &__edit-button {
       margin-top: 24px;
     }
-
+    &__block-button {
+      display: none;
+      margin-top: 12px;
+      @media screen and (max-width: $app-mobile) {
+        display: block;
+      }
+    }
     &__form {
       width: 100%;
       display: flex;
@@ -409,7 +430,7 @@ function onFileSelected(event) {
       outline: none;
       width: fit-content;
       border-bottom: 1px solid transparent;
-
+      color: var(--app-grey-500);
       &--edit {
         border-bottom: 1px solid var(--app-grey-300);
       }
@@ -425,11 +446,14 @@ function onFileSelected(event) {
 
     &__block-icon {
       cursor: pointer;
+      @media screen and (max-width: $app-mobile) {
+        display: none;
+      }
     }
     @media screen and (max-width: $app-mobile) {
       max-width: 100%;
       &__name-input {
-        width: calc(100% - 32px);
+        width: 100%;
       }
     }
   }

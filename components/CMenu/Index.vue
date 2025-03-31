@@ -125,6 +125,9 @@ function goToPage(page: Page) {
       }
     });
     navigateTo(page.path);
+    if (isMobileMenuOpened.value) {
+      toggleMenu();
+    }
   }
 }
 function selectNestedPage(page: Page, nestedKey: string) {
@@ -132,6 +135,9 @@ function selectNestedPage(page: Page, nestedKey: string) {
   if (nestedPage) {
     nestedPage.selected = true;
     navigateTo(`${page.path}${nestedPage.path}`);
+    if (isMobileMenuOpened.value) {
+      toggleMenu();
+    }
   }
 }
 function handleAccountClick() {
@@ -141,7 +147,7 @@ onMounted(() => {
   props.pages.forEach((page) => {
     if (page.hasNested) {
       page.nestedItems?.forEach((nested) => {
-        if (`${page.path}${nested.path}` === route.path) {
+        if (route.path.includes(`${page.path}${nested.path}`)) {
           currentPage.value = page;
           nested.selected = true;
         }
@@ -212,30 +218,30 @@ onMounted(() => {
     align-items: center;
   }
   .burger {
-    width: 40px;
-    height: 28px;
+    width: 32px;
+    height: 21px;
     justify-content: space-between;
     display: flex;
     flex-direction: column;
     cursor: pointer;
     .bar {
       width: 100%;
-      height: 4px;
+      height: 3px;
       background-color: var(--app-grey-500);
       transition:
         transform 0.3s ease,
         opacity 0.3s ease;
-      border-radius: 5px;
+      border-radius: 2px;
     }
   }
   .burger.active .bar:nth-child(1) {
-    transform: translateY(12px) rotate(45deg);
+    transform: translateY(9px) rotate(45deg);
   }
   .burger.active .bar:nth-child(2) {
     opacity: 0;
   }
   .burger.active .bar:nth-child(3) {
-    transform: translateY(-12px) rotate(-45deg);
+    transform: translateY(-9px) rotate(-45deg);
   }
   &__mobile {
     position: fixed;

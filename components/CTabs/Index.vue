@@ -118,10 +118,12 @@ watch(
   display: flex;
   height: v-bind(height);
   :global(.c-tabs__dropdown-content) {
-    box-shadow: none;
     background-color: var(--app-green-050);
     margin-top: 4px !important;
     border-radius: 0px 0px 8px 8px;
+    @media screen and (max-width: $app-laptop) {
+      width: calc(90vw - 1px);
+    }
   }
   :global(.c-tabs__dropdown-content .c-tabs__dropdown-list .active) {
     background-color: var(--app-green-200);
