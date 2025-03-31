@@ -114,7 +114,6 @@ $app-narrow-mobile: 364px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 24px;
   .filter-button {
     &__content {
       display: flex;

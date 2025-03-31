@@ -1,154 +1,145 @@
 <template>
-  <main class="profile-page">
-    <div class="profile-page__top-section">
-      <section class="profile-card">
-        <div class="profile-card__user-info">
-          <div class="profile-card__user-header">
-            <div class="avatar-container" @click="editMode && triggerFileUpload()">
-              <input
-                type="file"
-                ref="fileInput"
-                class="avatar-container__file-input"
-                @change="onFileSelected"
-                accept="image/*"
-              />
-              <img
-                v-if="!isDefaultAvatar"
-                :src="avatarSrc"
-                alt="User avatar"
-                class="avatar-container__avatar"
-                @click="openPhoto(avatarSrc)"
-              />
-              <div v-else class="avatar-container__avatar avatar-container__avatar--placeholder">
-                <span class="avatar-container__avatar-icon">
-                  <q-icon
-                    :name="editMode ? mdiUpload : mdiAccountOutline"
-                    color="grey-400"
-                    size="32px"
-                  ></q-icon>
-                </span>
-              </div>
-              <div v-if="editMode" class="avatar-container__avatar-overlay">
-                <q-icon :name="mdiUpload" color="grey-050" size="32px"></q-icon>
-              </div>
+  <main class="b-page">
+    <div class="b-page__top-section">
+      <section class="b-profile-card">
+        <div class="b-profile-card__user-header">
+          <div class="b-avatar" @click="editMode && triggerFileUpload()">
+            <input
+              type="file"
+              ref="fileInput"
+              class="b-avatar__file-input"
+              @change="onFileSelected"
+              accept="image/*"
+            />
+            <img
+              v-if="!isDefaultAvatar"
+              :src="avatarSrc"
+              alt="User avatar"
+              class="b-avatar__item"
+              @click="openPhoto(avatarSrc)"
+            />
+            <div v-else class="b-avatar__item b-avatar__item--placeholder">
+              <span class="b-avatar__item-icon">
+                <q-icon
+                  :name="editMode ? mdiUpload : mdiAccountOutline"
+                  color="grey-400"
+                  size="32px"
+                ></q-icon>
+              </span>
             </div>
-
-            <div class="name-container">
-              <div class="name-container__name-wrapper">
-                <input
-                  type="text"
-                  v-model="userData.fullName"
-                  class="name-container__name-input gg-h1"
-                  :class="{ 'name-container__name-input--edit': editMode }"
-                  :readonly="!editMode"
-                />
-                <span v-if="!editMode" class="name-container__block-icon" @click="openBlockDialog">
-                  <q-icon :name="mdiCancel" color="red-500" size="24px"></q-icon>
-                </span>
-              </div>
+            <div v-if="editMode" class="b-avatar__item-overlay">
+              <q-icon :name="mdiUpload" color="grey-050" size="32px"></q-icon>
             </div>
           </div>
-          <div class="profile-card__content">
-            <div v-if="editMode" class="profile-card__form">
-              <div class="profile-card__field">
-                <div class="profile-card__field-label gg-t-big">Роль:</div>
-                <div class="profile-card__field-value gg-t-base">{{ userData.role }}</div>
-              </div>
-
-              <div class="profile-card__field">
-                <div class="profile-card__field-label gg-t-big">Дата рождения:</div>
-                <KTInputDate
-                  v-model="userData.birthDate"
-                  class="profile-card__field-input"
-                  height="44px"
-                ></KTInputDate>
-              </div>
-
-              <div class="profile-card__field">
-                <div class="profile-card__field-label gg-t-big">Email:</div>
-                <KTInput
-                  v-model="userData.email"
-                  type="email"
-                  class="profile-card__field-input"
-                  height="44px"
-                ></KTInput>
-              </div>
-
-              <div class="profile-card__field">
-                <div class="profile-card__field-label gg-t-big">Номер телефона:</div>
-                <KTInput
-                  v-model="userData.phone"
-                  type="tel"
-                  class="profile-card__field-input"
-                  height="44px"
-                ></KTInput>
-              </div>
-
-              <div class="profile-card__actions">
-                <GGButton
-                  @click="cancelEdit"
-                  size="medium"
-                  design-type="secondary"
-                  class="profile-card__button profile-card__button--cancel"
-                >
-                  Отменить
-                </GGButton>
-
-                <GGButton
-                  @click="saveChanges"
-                  size="medium"
-                  class="profile-card__button profile-card__button--save"
-                >
-                  Сохранить
-                </GGButton>
-              </div>
+          <div class="b-name">
+            <input
+              type="text"
+              v-model="userData.fullName"
+              class="b-name__name-input gg-h1"
+              :class="{ 'b-name__name-input--edit': editMode }"
+              :readonly="!editMode"
+            />
+            <span v-if="!editMode" class="block-icon" @click="openBlockDialog">
+              <q-icon :name="mdiCancel" color="red-500" size="24px"></q-icon>
+            </span>
+          </div>
+        </div>
+        <div class="b-profile-card__content">
+          <div v-if="editMode" class="b-profile-card__form">
+            <div class="b-labeled-field">
+              <div class="b-labeled-field__label gg-t-big">Роль:</div>
+              <div class="b-labeled-field__value gg-t-base">{{ userData.role }}</div>
+            </div>
+            <div class="b-labeled-field">
+              <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
+              <KTInputDate
+                v-model="userData.birthDate"
+                class="b-labeled-field__input"
+                height="44px"
+              ></KTInputDate>
+            </div>
+            <div class="b-labeled-field">
+              <div class="b-labeled-field__label gg-t-big">Email:</div>
+              <KTInput
+                v-model="userData.email"
+                type="email"
+                class="b-labeled-field__input"
+                height="44px"
+              ></KTInput>
+            </div>
+            <div class="b-labeled-field">
+              <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
+              <KTInput
+                v-model="userData.phone"
+                type="tel"
+                class="b-labeled-field__input"
+                height="44px"
+              ></KTInput>
             </div>
 
-            <div v-else class="profile-card__info-list">
-              <div class="profile-card__field">
-                <div class="profile-card__field-label gg-t-big">Роль:</div>
-                <div class="profile-card__field-value gg-t-base">{{ userData.role }}</div>
-              </div>
-              <div class="profile-card__field">
-                <div class="profile-card__field-label gg-t-big">Дата рождения:</div>
-                <div class="profile-card__field-value gg-t-base">{{ userData.birthDate }}</div>
-              </div>
-              <div class="profile-card__field">
-                <div class="profile-card__field-label gg-t-big">Email:</div>
-                <div class="profile-card__field-value gg-t-base">{{ userData.email }}</div>
-              </div>
-              <div class="profile-card__field">
-                <div class="profile-card__field-label gg-t-big">Номер телефона:</div>
-                <div class="profile-card__field-value gg-t-base">{{ userData.phone }}</div>
-              </div>
-
+            <div class="b-profile-card__actions">
               <GGButton
-                @click="toggleEditMode"
+                @click="cancelEdit"
                 size="medium"
-                stretch="fill"
-                class="profile-card__edit-button"
+                design-type="secondary"
+                class="b-profile-card__button b-profile-card__button--cancel"
               >
-                Редактировать
+                Отменить
               </GGButton>
 
               <GGButton
-                @click="openBlockDialog"
+                @click="saveChanges"
                 size="medium"
-                stretch="fill"
-                bg-color="var(--app-red-500)"
-                class="profile-card__block-button"
+                class="b-profile-card__button b-profile-card__button--save"
               >
-                Заблокировать
+                Сохранить
               </GGButton>
             </div>
+          </div>
+          <div v-else class="b-profile-card__info-list">
+            <div class="b-profile-card__field">
+              <div class="b-profile-card__field-label gg-t-big">Роль:</div>
+              <div class="b-profile-card__field-value gg-t-base">{{ userData.role }}</div>
+            </div>
+            <div class="b-profile-card__field">
+              <div class="b-profile-card__field-label gg-t-big">Дата рождения:</div>
+              <div class="b-profile-card__field-value gg-t-base">{{ userData.birthDate }}</div>
+            </div>
+            <div class="b-profile-card__field">
+              <div class="b-profile-card__field-label gg-t-big">Email:</div>
+              <div class="b-profile-card__field-value gg-t-base">{{ userData.email }}</div>
+            </div>
+            <div class="b-profile-card__field">
+              <div class="b-profile-card__field-label gg-t-big">Номер телефона:</div>
+              <div class="b-profile-card__field-value gg-t-base">{{ userData.phone }}</div>
+            </div>
+
+            <GGButton
+              @click="toggleEditMode"
+              size="medium"
+              stretch="fill"
+              class="b-profile-card__edit-button"
+            >
+              Редактировать
+            </GGButton>
+
+            <GGButton
+              @click="openBlockDialog"
+              size="medium"
+              stretch="fill"
+              bg-color="var(--app-red-500)"
+              class="b-profile-card__block-button"
+            >
+              Заблокировать
+            </GGButton>
           </div>
         </div>
       </section>
-      <section class="profile-page__data-card">
+      <section class="b-page__data-card">
         <!-- Future content will go here -->
       </section>
     </div>
-    <section class="profile-page__table-section">
+    <section class="b-page__table-section">
       <!-- Future table will go here -->
     </section>
     <GGDialogConfirm
@@ -233,7 +224,7 @@ function onFileSelected(event) {
 </script>
 
 <style scoped lang="scss">
-.profile-page {
+.b-page {
   $app-desktop: 1294px;
   $app-laptop: 960px;
   $app-mobile: 600px;
@@ -257,7 +248,7 @@ function onFileSelected(event) {
     }
   }
 
-  .profile-card {
+  .b-profile-card {
     background-color: var(--app-white);
     padding: 24px;
     border-radius: 8px;
@@ -272,9 +263,6 @@ function onFileSelected(event) {
         display: flex;
         flex-direction: column;
       }
-    }
-    &__user-info {
-      width: 100%;
     }
     @media screen and (max-width: $app-laptop) {
       max-width: 100%;
@@ -344,7 +332,7 @@ function onFileSelected(event) {
     &__button {
     }
   }
-  .avatar-container {
+  .b-avatar {
     position: relative;
     width: 64px;
     height: 64px;
@@ -363,7 +351,7 @@ function onFileSelected(event) {
       height: 0;
       opacity: 0;
     }
-    &__avatar {
+    &__item {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -377,7 +365,7 @@ function onFileSelected(event) {
       }
     }
 
-    &__avatar-overlay {
+    &__item-overlay {
       position: absolute;
       top: 0;
       left: 0;
@@ -395,7 +383,7 @@ function onFileSelected(event) {
       }
     }
 
-    &__avatar-icon {
+    &__item-icon {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -415,14 +403,10 @@ function onFileSelected(event) {
     min-height: 360px;
   }
 
-  .name-container {
-    flex: 1;
-    &__name-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+  .b-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     &__name-input {
       background: transparent;
       border: none;
@@ -444,7 +428,7 @@ function onFileSelected(event) {
       }
     }
 
-    &__block-icon {
+    .block-icon {
       cursor: pointer;
       @media screen and (max-width: $app-mobile) {
         display: none;
