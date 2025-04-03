@@ -14,7 +14,7 @@
             <img
               v-if="!isDefaultAvatar"
               :src="avatarSrc"
-              alt="User avatar"
+              alt="Аватар"
               class="b-avatar__item"
               @click="openPhoto(avatarSrc)"
             />
@@ -39,7 +39,7 @@
               :class="{ 'b-name__name-input--edit': editMode }"
               :readonly="!editMode"
             />
-            <span v-if="!editMode" class="block-icon" @click="openBlockDialog">
+            <span v-if="!editMode" class="b-name__block-icon" @click="openBlockDialog">
               <q-icon :name="mdiCancel" color="red-500" size="24px"></q-icon>
             </span>
           </div>
@@ -76,8 +76,7 @@
                 height="44px"
               ></KTInput>
             </div>
-
-            <div class="b-profile-card__actions">
+            <div class="b-profile-card__form-actions">
               <GGButton
                 @click="cancelEdit"
                 size="medium"
@@ -97,23 +96,22 @@
             </div>
           </div>
           <div v-else class="b-profile-card__info-list">
-            <div class="b-profile-card__field">
-              <div class="b-profile-card__field-label gg-t-big">Роль:</div>
-              <div class="b-profile-card__field-value gg-t-base">{{ userData.role }}</div>
+            <div class="b-labeled-field">
+              <div class="b-labeled-field__label gg-t-big">Роль:</div>
+              <div class="b-labeled-field__value gg-t-base">{{ userData.role }}</div>
             </div>
-            <div class="b-profile-card__field">
-              <div class="b-profile-card__field-label gg-t-big">Дата рождения:</div>
-              <div class="b-profile-card__field-value gg-t-base">{{ userData.birthDate }}</div>
+            <div class="b-labeled-field">
+              <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
+              <div class="b-labeled-field__value gg-t-base">{{ userData.birthDate }}</div>
             </div>
-            <div class="b-profile-card__field">
-              <div class="b-profile-card__field-label gg-t-big">Email:</div>
-              <div class="b-profile-card__field-value gg-t-base">{{ userData.email }}</div>
+            <div class="b-labeled-field">
+              <div class="b-labeled-field__label gg-t-big">Email:</div>
+              <div class="b-labeled-field__value gg-t-base">{{ userData.email }}</div>
             </div>
-            <div class="b-profile-card__field">
-              <div class="b-profile-card__field-label gg-t-big">Номер телефона:</div>
-              <div class="b-profile-card__field-value gg-t-base">{{ userData.phone }}</div>
+            <div class="b-labeled-field">
+              <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
+              <div class="b-labeled-field__value gg-t-base">{{ userData.phone }}</div>
             </div>
-
             <GGButton
               @click="toggleEditMode"
               size="medium"
@@ -122,7 +120,6 @@
             >
               Редактировать
             </GGButton>
-
             <GGButton
               @click="openBlockDialog"
               size="medium"
@@ -160,7 +157,7 @@ const editMode = ref(false);
 const isDefaultAvatar = ref(true);
 const avatarSrc = ref("");
 const showBlockDialog = ref(false);
-const fileInput = ref(null);
+const fileInput = ref<HTMLInputElement>();
 const { openPhoto } = usePhotoViewer();
 const initialUserData = {
   fullName: "Иванов Иван Иванович",
@@ -207,15 +204,15 @@ function confirmBlockAction() {
 }
 
 function triggerFileUpload() {
-  fileInput.value.click();
+  fileInput.value?.click();
 }
 
-function onFileSelected(event) {
-  const file = event.target.files[0];
+function onFileSelected(event: Event) {
+  const file = event.target?.files[0];
   if (file) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      avatarSrc.value = e.target.result;
+      avatarSrc.value = e.target?.result;
       isDefaultAvatar.value = false;
     };
     reader.readAsDataURL(file);
@@ -233,21 +230,17 @@ function onFileSelected(event) {
   background-color: var(--app-white);
   width: 100%;
   padding: 24px;
-
   @media screen and (max-width: $app-mobile) {
     padding: 16px;
   }
-
   &__top-section {
     display: flex;
     gap: 24px;
     margin-bottom: 24px;
-
     @media screen and (max-width: $app-laptop) {
       flex-direction: column;
     }
   }
-
   .b-profile-card {
     background-color: var(--app-white);
     padding: 24px;
@@ -270,9 +263,6 @@ function onFileSelected(event) {
     @media screen and (max-width: $app-mobile) {
       padding: 0px;
     }
-    &__field-input {
-      margin-left: -12px;
-    }
     &__content {
       width: 100%;
     }
@@ -281,13 +271,23 @@ function onFileSelected(event) {
       flex-direction: column;
       gap: 8px;
     }
-    &__field {
+    &__form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    &__form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .b-labeled-field {
       display: flex;
       min-height: 64px;
       height: 64px;
       align-items: center;
-
-      &-label {
+      &__label {
         min-width: 196px;
         color: var(--app-grey-300);
         @media screen and (max-width: $app-mobile) {
@@ -296,16 +296,14 @@ function onFileSelected(event) {
           overflow-wrap: break-word;
         }
       }
-
-      &-value {
+      &__value {
         overflow-wrap: anywhere;
       }
-
-      &-input {
+      &__input {
+        margin-left: -12px;
         margin-top: 20px;
       }
     }
-
     &__edit-button {
       margin-top: 24px;
     }
@@ -316,20 +314,40 @@ function onFileSelected(event) {
         display: block;
       }
     }
-    &__form {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+  }
+  .b-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    &__name-input {
+      background: transparent;
+      border: none;
+      padding: 4px 0;
+      outline: none;
+      width: fit-content;
+      border-bottom: 1px solid transparent;
+      color: var(--app-grey-500);
+      &--edit {
+        border-bottom: 1px solid var(--app-grey-300);
+      }
+      &:focus {
+        border-bottom: 1px solid var(--app-green-500);
+      }
+      &[readonly] {
+        cursor: default;
+      }
     }
-
-    &__actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
+    &__block-icon {
+      cursor: pointer;
+      @media screen and (max-width: $app-mobile) {
+        display: none;
+      }
     }
-
-    &__button {
+    @media screen and (max-width: $app-mobile) {
+      max-width: 100%;
+      &__name-input {
+        width: 100%;
+      }
     }
   }
   .b-avatar {
@@ -395,51 +413,11 @@ function onFileSelected(event) {
     flex: 1;
     min-height: 250px;
   }
-
   &__table-section {
     background-color: var(--app-grey-100);
     border-radius: 8px;
     width: 100%;
     min-height: 360px;
-  }
-
-  .b-name {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    &__name-input {
-      background: transparent;
-      border: none;
-      padding: 4px 0;
-      outline: none;
-      width: fit-content;
-      border-bottom: 1px solid transparent;
-      color: var(--app-grey-500);
-      &--edit {
-        border-bottom: 1px solid var(--app-grey-300);
-      }
-
-      &:focus {
-        border-bottom: 1px solid var(--app-green-500);
-      }
-
-      &[readonly] {
-        cursor: default;
-      }
-    }
-
-    .block-icon {
-      cursor: pointer;
-      @media screen and (max-width: $app-mobile) {
-        display: none;
-      }
-    }
-    @media screen and (max-width: $app-mobile) {
-      max-width: 100%;
-      &__name-input {
-        width: 100%;
-      }
-    }
   }
 }
 </style>
