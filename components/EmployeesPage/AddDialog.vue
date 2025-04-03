@@ -1,95 +1,92 @@
 <template>
-  <GGDialog v-model="dialogVisible" class="employee-add-dialog">
-    <q-card class="employee-add-dialog__container">
-      <header class="employee-add-dialog__header">
-        <h1 class="employee-add-dialog__title gg-h1">Создание оператора</h1>
-        <p v-if="subTitle" class="employee-add-dialog__subtitle">{{ subTitle }}</p>
+  <GGDialog v-model="dialogVisible" class="b-dialog">
+    <q-card class="b-dialog__container">
+      <header class="b-dialog__header">
+        <h2 class="b-dialog__title gg-h2">Создание оператора</h2>
+        <p v-if="subTitle" class="b-dialog__subtitle">{{ subTitle }}</p>
       </header>
-
-      <q-form ref="formRef" novalidate greedy class="employee-add-dialog__form" @submit="onSubmit">
+      <q-form ref="formRef" novalidate greedy class="b-dialog__form" @submit="onSubmit">
         <template v-if="currentStep === 1">
-          <section class="employee-add-dialog__section">
-            <h2 class="employee-add-dialog__section-title gg-h3">Личные данные</h2>
-            <div class="employee-add-dialog__section-content">
-              <div class="employee-add-dialog__fields-row">
+          <section class="b-dialog__section">
+            <h3 class="b-dialog__section-title gg-h3">Личные данные</h3>
+            <div class="b-dialog__section-content">
+              <div class="b-dialog__fields-row">
                 <KTInput
                   v-model="form.personalData.lastName"
                   label="Фамилия"
                   required
-                  class="employee-add-dialog__field"
+                  class="b-dialog__field"
                 />
                 <KTInput
                   v-model="form.personalData.firstName"
                   label="Имя"
                   required
-                  class="employee-add-dialog__field"
+                  class="b-dialog__field"
                 />
                 <KTInput
                   v-model="form.personalData.secondName"
                   label="Отчество"
                   required
-                  class="employee-add-dialog__field"
+                  class="b-dialog__field"
                 />
               </div>
               <KTInputDate
                 v-model="form.personalData.dateOfBirth"
                 label="Дата рождения"
-                class="employee-add-dialog__field"
+                class="b-dialog__field"
               />
             </div>
           </section>
-          <section class="employee-add-dialog__section">
-            <h2 class="employee-add-dialog__section-title gg-h3">Контакты</h2>
-            <div class="employee-add-dialog__section-content">
+          <section class="b-dialog__section">
+            <h3 class="b-dialog__section-title gg-h3">Контакты</h3>
+            <div class="b-dialog__section-content">
               <KTInput
                 v-model="form.contacts.email"
                 label="Email"
                 hint="Электронная почта сотрудника"
-                class="employee-add-dialog__field"
+                class="b-dialog__field"
               />
               <KTInput
                 v-model="form.contacts.phoneNumber"
                 label="Номер телефона"
                 :required="false"
-                class="employee-add-dialog__field"
+                class="b-dialog__field"
               />
             </div>
           </section>
         </template>
         <template v-else-if="currentStep === 2">
-          <section class="employee-add-dialog__section">
-            <h2 class="employee-add-dialog__section-title gg-h3">Личные данные</h2>
-            <div class="employee-add-dialog__info-row gg-t-base">
-              <span class="employee-add-dialog__info-label">ФИО:</span>
-              <span class="employee-add-dialog__info-value">{{ fullName }}</span>
+          <section class="b-dialog__section">
+            <h3 class="b-dialog__section-title gg-h3">Личные данные</h3>
+            <div class="b-dialog__info-row gg-t-base">
+              <span class="b-dialog__info-label">ФИО:</span>
+              <span class="b-dialog__info-value">{{ fullName }}</span>
             </div>
-            <div class="employee-add-dialog__info-row gg-t-base">
-              <span class="employee-add-dialog__info-label">Дата рождения:</span>
-              <span class="employee-add-dialog__info-value">{{
-                form.personalData.dateOfBirth
-              }}</span>
+            <div class="b-dialog__info-row gg-t-base">
+              <span class="b-dialog__info-label">Дата рождения:</span>
+              <span class="b-dialog__info-value">{{ form.personalData.dateOfBirth }}</span>
             </div>
           </section>
-          <section class="employee-add-dialog__section">
-            <h2 class="employee-add-dialog__section-title gg-h3">Контакты</h2>
-            <div class="employee-add-dialog__info-row gg-t-base">
-              <span class="employee-add-dialog__info-label">Email:</span>
-              <span class="employee-add-dialog__info-value">{{ form.contacts.email }}</span>
+          <section class="b-dialog__section">
+            <h3 class="b-dialog__section-title gg-h3">Контакты</h3>
+            <div class="b-dialog__info-row gg-t-base">
+              <span class="b-dialog__info-label">Email:</span>
+              <span class="b-dialog__info-value">{{ form.contacts.email }}</span>
             </div>
-            <div class="employee-add-dialog__info-row gg-t-base">
-              <span class="employee-add-dialog__info-label">Номер телефона:</span>
-              <span class="employee-add-dialog__info-value">{{ form.contacts.phoneNumber }}</span>
+            <div class="b-dialog__info-row gg-t-base">
+              <span class="b-dialog__info-label">Номер телефона:</span>
+              <span class="b-dialog__info-value">{{ form.contacts.phoneNumber }}</span>
             </div>
           </section>
         </template>
         <template v-else-if="currentStep === 3">
-          <section class="employee-add-dialog__section">
-            <div class="employee-add-dialog__password-container">
-              <h2 class="employee-add-dialog__password-title gg-h2">Пароль</h2>
-              <div class="employee-add-dialog__password-wrapper">
-                <div class="employee-add-dialog__password">{{ password }}</div>
+          <section class="b-dialog__section">
+            <div class="b-dialog__password-container">
+              <h3 class="b-dialog__password-title gg-h2">Пароль</h3>
+              <div class="b-dialog__password-wrapper">
+                <div class="b-dialog__password">{{ password }}</div>
                 <div
-                  class="employee-add-dialog__copy-wrapper"
+                  class="b-dialog__copy-wrapper"
                   @mouseenter="onCopyMouseEnter"
                   @mouseleave="onCopyMouseLeave"
                   @click="copyPassword"
@@ -98,20 +95,18 @@
                     :class="{ 'pop-animation': isAnimating }"
                     :name="mdiContentCopy"
                     size="32px"
-                    class="employee-add-dialog__copy-icon"
+                    class="b-dialog__copy-icon"
                   />
-                  <span
-                    :style="`opacity: ${Number(showTooltip)}`"
-                    class="employee-add-dialog__copy-tooltip"
-                    >{{ tooltipText }}</span
-                  >
+                  <span :style="`opacity: ${Number(showTooltip)}`" class="b-dialog__copy-tooltip">{{
+                    tooltipText
+                  }}</span>
                 </div>
               </div>
             </div>
           </section>
         </template>
 
-        <footer class="employee-add-dialog__footer">
+        <footer class="b-dialog__footer">
           <GGButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
           <GGButton :label="applyLabel" :disabled="formHasError" type="submit" />
         </footer>
@@ -275,7 +270,7 @@ $app-laptop: 960px;
 $app-mobile: 600px;
 $app-narrow-mobile: 364px;
 
-.employee-add-dialog {
+.b-dialog {
   &__container {
     display: flex;
     flex-direction: column;
@@ -360,10 +355,10 @@ $app-narrow-mobile: 364px;
     position: relative;
     cursor: pointer;
     &:hover {
-      .employee-add-dialog__copy-icon {
+      .b-dialog__copy-icon {
         transform: scale(1.1);
       }
-      .employee-add-dialog__copy-tooltip {
+      .b-dialog__copy-tooltip {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
         @media screen and (max-width: $app-mobile) {
