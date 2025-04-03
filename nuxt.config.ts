@@ -17,14 +17,14 @@ export default defineNuxtConfig({
     "@nuxt/test-utils/module",
   ],
   colorMode: {
-    preference: "dark", // default value of $colorMode.preference
-    fallback: "light", // fallback value if not system preference found
+    preference: "light",
+    fallback: "light",
     hid: "nuxt-color-mode-script",
     globalName: "__NUXT_COLOR_MODE__",
     componentName: "ColorScheme",
     classPrefix: "",
     classSuffix: "-mode",
-    storage: "localStorage", // or 'sessionStorage' or 'cookie'
+    storage: "cookie",
     storageKey: "nuxt-color-mode",
   },
   css: [
@@ -36,11 +36,12 @@ export default defineNuxtConfig({
     "@/assets/styles/main.scss",
   ],
   quasar: {
+    lang: "ru",
     config: {
       brand: {
-        primary: "var(--app-blue-9)",
+        primary: "var(--app-green-500)",
         dark: "",
-        negative: "#FA5738",
+        negative: "var(--app-red-500)",
         positive: "#BC0909",
       },
     },

@@ -4,8 +4,7 @@ body {
   color: var(--app-grey-500);
   font-size: 14px;
   font-weight: 500;
-  height: 100vh;
-  width: 100vw;
+  height: 100dvh;
 }
 
 fieldset {
@@ -19,12 +18,18 @@ button {
   outline: none;
   padding: 0;
 }
-ul, li {
+ul,
+li {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
 }
 a {

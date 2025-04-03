@@ -11,11 +11,7 @@
           <span>{{ pageState.hintText }}</span>
         </div>
         <div class="form-content__input-fields">
-          <KTInput
-            v-if="pageState.step === 0"
-            v-model="userData.email"
-            label="Почта"
-          />
+          <KTInput v-if="pageState.step === 0" v-model="userData.email" label="Почта" />
           <KTInputOTP
             v-if="pageState.step === 1"
             v-model:is-error="isWrongCode"
@@ -39,9 +35,13 @@
         </div>
       </div>
     </template>
-    <template v-if="pageState.step === 1 && (isWrongCode || userData.confirmationCode.length < 4)" #main-button>
-      <GGButton design-type="secondary" :disabled="sendCodeTimer !== 0"><div class="button-timer-slot">
-        {{ `Отправить код ${sendCodeTimer !== 0 ? 'через' : ''}` }}
+    <template
+      v-if="pageState.step === 1 && (isWrongCode || userData.confirmationCode.length < 4)"
+      #main-button
+    >
+      <GGButton design-type="secondary" :disabled="sendCodeTimer !== 0"
+        ><div class="button-timer-slot">
+          {{ `Отправить код ${sendCodeTimer !== 0 ? "через" : ""}` }}
           <span v-show="sendCodeTimer !== 0" class="button-timer-slot__time">
             {{ formattedSendTimer }}
           </span>

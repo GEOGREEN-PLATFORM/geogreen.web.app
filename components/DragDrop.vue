@@ -11,17 +11,15 @@
   >
     <div class="drag-drop-container__content">
       <div>
-        <p class="drag-drop-container__main-text gg-t-big">
-        Перетащите сюда ваши файлы
-        </p>
+        <p class="drag-drop-container__main-text gg-t-big">Перетащите сюда ваши файлы</p>
         <p class="drag-drop-container__sub-text gg-cap">JPG, PNG, Max 20MB</p>
       </div>
       <p class="drag-drop-container__main-text gg-t-big">или</p>
-      <GGButton 
-        label="Выберите файл" 
+      <GGButton
+        label="Выберите файл"
         size="small"
         stretch="hug"
-        design-type="secondary" 
+        design-type="secondary"
         @click="triggerFileInput"
       ></GGButton>
       <input
@@ -33,7 +31,7 @@
         @change="handleFileInput"
       />
     </div>
-    </section>
+  </section>
 </template>
 
 <script lang="ts" setup>
@@ -95,7 +93,9 @@ const emitFiles = (files: File[]) => {
   border: 2px dashed var(--app-grey-100);
   padding: 56px 24px;
   border-radius: 8px;
-  transition: background-color 0.3s, border-color 0.3s;
+  transition:
+    background-color 0.3s,
+    border-color 0.3s;
   cursor: pointer;
   &__content {
     display: flex;
@@ -106,21 +106,19 @@ const emitFiles = (files: File[]) => {
     color: var(--app-grey-500);
     text-align: center;
     .drag-drop-container__main-text {
-        font-weight: bold;
+      font-weight: bold;
     }
     .drag-drop-container__sub-text {
       margin-top: 8px;
       font-weight: normal;
     }
   }
-
 }
 .drag-drop-container.is-dragover {
-    border-color: var(--app-blue-500);
-    background-color: var(--app-blue-050);
+  border-color: var(--app-blue-500);
+  background-color: var(--app-blue-050);
 }
 .drag-drop-container.has-bg {
-    background-color: var(--app-white);
+  background-color: var(--app-white);
 }
-
 </style>

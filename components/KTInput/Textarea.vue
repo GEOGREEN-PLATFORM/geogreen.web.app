@@ -1,26 +1,27 @@
 <template>
-    <div class="c-textarea">
-      <KTInput
-        ref="inputRef"
-        v-model="inputValue"
-        :rounded="rounded"
-        :outlined="outlined"
-        :label="label"
-        type="textarea"
-        :autogrow="autogrow"
-        :rules="rules"
-        lazy-rules
-        :no-error-icon="hideErrorIcon"
-        :hide-bottom-space="hideBottomSpace"
-        :placeholder="placeholder"
-        :name="name"
-        @update:model-value="updateValue"
-      >
-      </KTInput>
-    </div>
-  </template>
-  
-  <script setup lang="ts">
+  <div class="c-textarea">
+    <KTInput
+      ref="inputRef"
+      v-model="inputValue"
+      :rounded="rounded"
+      :outlined="outlined"
+      :label="label"
+      type="textarea"
+      :autogrow="autogrow"
+      :rules="rules"
+      lazy-rules
+      :no-error-icon="hideErrorIcon"
+      :hide-bottom-space="hideBottomSpace"
+      :placeholder="placeholder"
+      :name="name"
+      @update:model-value="updateValue"
+      height="96px"
+    >
+    </KTInput>
+  </div>
+</template>
+
+<script setup lang="ts">
 import { mdiEyeOffOutline, mdiEyeOutline } from "@quasar/extras/mdi-v6";
 import type { ValidationRule } from "quasar";
 import { KTInput } from "#components";
@@ -29,7 +30,7 @@ interface Props {
   modelValue: string;
   rounded?: boolean;
   outlined?: boolean;
-  label?: string;
+  label: string;
   required?: boolean;
   rules?: ValidationRule[];
   hideBottomSpace?: boolean;
@@ -66,14 +67,13 @@ function updateValue(value: string | number | null) {
   });
 }
 </script>
-  
-  <style lang="scss">
-  .c-textarea {
-    .kt-input-main .q-field__control {
-      height: auto;
-      min-height: 96px;
-      background-color: var(--app-green-050);
-    }
+
+<style lang="scss">
+.c-textarea {
+  .kt-input-main .q-field__control {
+    height: auto;
+    min-height: 96px;
+    background-color: var(--app-green-050);
   }
-  </style>
-  
+}
+</style>

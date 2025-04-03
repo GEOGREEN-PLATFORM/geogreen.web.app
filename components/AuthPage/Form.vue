@@ -1,11 +1,5 @@
 <template>
-  <q-form
-    ref="formRef"
-    novalidate
-    greedy
-    class="auth-form"
-    @submit="checkFormValid"
-  >
+  <q-form ref="formRef" novalidate greedy class="auth-form" @submit="checkFormValid">
     <slot name="form-content" />
     <div class="auth-form__action-buttons">
       <slot name="main-button">

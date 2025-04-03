@@ -1,5 +1,5 @@
 <template>
-  <div class="kt-button-main">
+  <div class="kt-button-main" :class="{ 'button-icon': icon }">
     <q-btn
       :class="{
         [designType]: true,
@@ -17,7 +17,9 @@
       :type="type"
       :loading="loading"
       :icon="icon"
-    ><slot></slot></q-btn>
+      :style="`background-color: ${bgColor}; color: ${textColor}`"
+      ><slot></slot
+    ></q-btn>
   </div>
 </template>
 
@@ -32,6 +34,8 @@ interface Props {
   size?: "large" | "medium" | "small";
   icon?: string;
   iconColor?: string;
+  bgColor?: string;
+  textColor?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
   rounded: true,
@@ -117,8 +121,12 @@ onMounted(() => {
   .q-btn.disabled {
     opacity: 1 !important;
   }
-  .q-icon {
-    fill: v-bind(iconColor);
+}
+.kt-button-main.button-icon {
+  .q-btn__content {
+    .q-icon {
+      color: v-bind(iconColor);
+    }
   }
 }
 </style>

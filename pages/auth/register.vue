@@ -1,8 +1,5 @@
 <template>
-  <AuthPageForm
-    :button-options="buttonOptions"
-    @main-button-click="sendRegister"
-  >
+  <AuthPageForm :button-options="buttonOptions" @main-button-click="sendRegister">
     <template #form-content>
       <div class="form-content">
         <h1 class="form-content__head gg-h1">Создать аккаунт</h1>
@@ -11,19 +8,32 @@
             <KTInput v-model="userData.firstName" label="Имя" />
             <KTInput v-model="userData.lastName" label="Фамилия" />
           </div>
-          <KTInput v-model="userData.email" label="Почта" type="email" autocomplete="new-email"/>
-          <KTInput v-model="userData.password" label="Пароль" type="password" autocomplete="new-password"/>
-          <KTInput v-model="userData.repeatedPassword" label="Подтвердите пароль" autocomplete="new-password" type="password"/>
+          <KTInput v-model="userData.email" label="Почта" type="email" autocomplete="new-email" />
+          <KTInput
+            v-model="userData.password"
+            label="Пароль"
+            type="password"
+            autocomplete="new-password"
+          />
+          <KTInput
+            v-model="userData.repeatedPassword"
+            label="Подтвердите пароль"
+            autocomplete="new-password"
+            type="password"
+          />
         </div>
       </div>
     </template>
     <template #form-footer>
       <div class="form-footer">
-        <div class="form-footer__have-account">Уже есть аккаунт? <NuxtLink to="/auth/login" class="action-label">Войти</NuxtLink></div>
+        <div class="form-footer__have-account">
+          Уже есть аккаунт? <NuxtLink to="/auth/login" class="action-label">Войти</NuxtLink>
+        </div>
         <div class="form-footer__accept-rules-block gg-cap">
-          Продолжая, вы соглашаетесь 
-          с <span class="link-label">условиями использования</span> 
-          и&nbsp;<span class="link-label">политикой конфидецинальности</span>
+          Продолжая, вы соглашаетесь с
+          <span class="link-label">условиями использования</span> и&nbsp;<span class="link-label"
+            >политикой конфидецинальности</span
+          >
         </div>
       </div>
     </template>
