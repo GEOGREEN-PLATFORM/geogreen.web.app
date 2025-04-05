@@ -11,6 +11,7 @@
       <NuxtPage></NuxtPage>
     </q-page-container>
     <PhotoViewer />
+    <CAlert></CAlert>
   </q-layout>
 </template>
 

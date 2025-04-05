@@ -55,7 +55,7 @@ const workStageStyles = {
 const store = useMainStore();
 const markers = ref<Marker[]>([]);
 async function getMarkers() {
-  const data = await $fetch<Marker[]>(`${store.api}/geo/info/getAll`);
+  const data = await $fetch<Marker[]>(`${store.apiGeospatial}/geo/info/getAll`);
   console.log(data);
   if (data) {
     markers.value = data;
@@ -65,7 +65,7 @@ async function getMarkers() {
   }
 }
 async function addMarker(coordinate: Coordinate, relatedZone?: Zone) {
-  const data = await $fetch(`${store.api}/geo/info`, {
+  const data = await $fetch(`${store.apiGeospatial}/geo/info`, {
     method: "POST",
     body: {
       coordinate: coordinate,
@@ -88,7 +88,7 @@ async function addMarker(coordinate: Coordinate, relatedZone?: Zone) {
   getMarkers();
 }
 async function deleteMarker(id: string) {
-  const data = await $fetch(`${store.api}/geo/info/${id}`, {
+  const data = await $fetch(`${store.apiGeospatial}/geo/info/${id}`, {
     method: "DELETE",
   });
   getMarkers();
@@ -96,7 +96,7 @@ async function deleteMarker(id: string) {
 async function editMarker(id: string, marker: Marker) {
   marker.id = undefined;
   marker.relatedTaskId = undefined;
-  const data = await $fetch(`${store.api}/geo/info/${id}`, {
+  const data = await $fetch(`${store.apiGeospatial}/geo/info/${id}`, {
     method: "PATCH",
     body: marker,
   });

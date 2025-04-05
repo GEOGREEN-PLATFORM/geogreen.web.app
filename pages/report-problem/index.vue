@@ -1,8 +1,7 @@
 <template>
   <main class="report-form">
     <section class="report-form__header">
-      <h1 class="report-form__title gg-h1">Сообщите о проблеме</h1>
-      <p class="report-form__sub-info">Вы зафиксировали 5 проблем за последний месяц</p>
+      <h1 class="report-form__title gg-h1" @click="showAlert">Сообщите о проблеме</h1>
     </section>
 
     <section class="report-form__content">
@@ -12,15 +11,15 @@
           <div class="report-form__types">
             <button
               v-for="type in types"
-              :key="type.value"
+              :key="type"
               :class="[
                 'report-form__type-button',
-                { 'report-form__type-button--active': selectedType === type.value },
+                { 'report-form__type-button--active': selectedType === type },
               ]"
               type="button"
-              @click="selectProblemType(type.value)"
+              @click="selectProblemType(type)"
             >
-              {{ type.label }}
+              {{ type }}
             </button>
           </div>
         </fieldset>
@@ -30,7 +29,15 @@
             Оставьте точку на карте, соответствующую расположению проблемы
           </p>
           <article class="report-form__map-container">
-            <Map :markers="[]"></Map>
+            <Map
+              @add-marker="addUserHotbed"
+              @delete-marker="deleteUserHotbed"
+              :dataStatusStyles="workStageStyles"
+              :markers="existingHotbeds"
+              :shortInfoKeys="shortMarkerInfoNameKeys"
+              :add-zone-enabled="false"
+              :forbidAddMarker="isAddMarker"
+            ></Map>
           </article>
         </fieldset>
         <fieldset class="report-form__fieldset">
@@ -56,22 +63,92 @@
 </template>
 
 <script setup lang="ts">
-const types = [
-  { value: "hogweed", label: "Борщевик" },
-  { value: "fire", label: "Пожар" },
-  { value: "landfill", label: "Свалка" },
-];
-const selectedType = ref<string | null>(null);
+import type { Coordinate } from "ol/coordinate";
+import { useMainStore } from "~/store/main";
+const types: ProblemAreaTypes[] = ["Борщевик", "Свалка", "Пожар"]; //TODO: fetch from server
+const selectedType = ref<ProblemAreaTypes | null>(null);
 const comment = ref<string>("");
 const attachedFiles = ref<string[]>([]);
-
+const store = useMainStore();
+const existingHotbeds = ref<Marker[]>([]);
+const isAddMarker = shallowRef(false);
+function showAlert() {
+  useState<Alert>("showAlert").value = {
+    show: true,
+    text: "Тестовыый текст для ошибка",
+  };
+}
+const shortMarkerInfoNameKeys = ref({
+  owner: {
+    name: "Владелец",
+    type: "text",
+  },
+  landType: {
+    name: "Тип земель",
+    type: "text",
+  },
+  workStage: {
+    name: "Статус работы",
+    type: "status",
+  },
+  problemAreaType: {
+    name: "Тип проблемы",
+    type: "text",
+  },
+  eliminationMethod: {
+    name: "Метод по устранению",
+    type: "text",
+  },
+  contractingOrganisation: {
+    name: "Подрядная организация",
+    type: "text",
+  },
+});
+const workStageStyles = {
+  Создано: "background-color: var(--app-blue-400)",
+  "В работе": "background-color: var(--app-green-400)",
+  Завершено: "background-color: var(--app-grey-400)",
+};
+async function getExistingHotbedsOfProblemsByType(
+  problemAreaType: ProblemAreaTypes,
+) {
+  const data = await $fetch<Marker[]>(
+    `${store.apiGeospatial}/geo/info/getAll/${problemAreaType}`,
+  );
+  existingHotbeds.value = data;
+}
+function addUserHotbed(coordinate: Coordinate) {
+  if (selectedType.value) {
+    existingHotbeds.value.push({
+      coordinate: coordinate,
+      userTempCreated: true,
+      details: {
+        square: 21879072,
+        owner: "",
+        landType: "",
+        contractingOrganization: "",
+        workStage: "",
+        eliminationMethod: "",
+        images: [],
+        problemAreaType: selectedType.value,
+        comment: "",
+        density: null,
+      },
+      relatedTaskId: null,
+      coordinates: [],
+    });
+  }
+  isAddMarker.value = true;
+}
+function deleteUserHotbed(marker: Marker) {}
 async function uploadFiles(files: File[]) {
   //api uploading
   files.forEach((file) => attachedFiles.value.push(URL.createObjectURL(file)));
   console.log(attachedFiles.value);
 }
-function selectProblemType(type: string) {
+function selectProblemType(type: ProblemAreaTypes) {
   selectedType.value = type;
+  getExistingHotbedsOfProblemsByType(selectedType.value);
 }
 const onSubmit = () => {
   console.log("Submitted:", {
@@ -80,6 +157,11 @@ const onSubmit = () => {
     files: attachedFiles.value,
   });
 };
+onMounted(() => {
+  if (selectedType.value) {
+    getExistingHotbedsOfProblemsByType(selectedType.value);
+  }
+});
 </script>
 <style scoped lang="scss">
 .report-form {

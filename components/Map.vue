@@ -25,6 +25,7 @@
           :on-toggle="toggleMarkerAdd"
         />
         <ol-toggle-control
+          v-if="props.addZoneEnabled"
           html="Добавить зону"
           class-name="g-green-control-bar__item g-green-control-bar__zone"
           :on-toggle="toggleZoneAdd"
@@ -103,10 +104,21 @@
             size="24px"
             @click="handleCloseMarkerPopup(id)"
           />
+          <div
+            v-if="marker.userTempCreated"
+            class="popup-marker__user-created text-center gg-t-base q-py-sm"
+          >
+            Вы сообщаете об этом очаге
+          </div>
           <ul v-if="marker.details" class="data-list">
             <li
               v-for="[name, value] in Object.entries(marker.details || {}).filter(
-                ([name, value]) => shortInfoKeys[name],
+                ([name, value]) =>
+                  marker.userTempCreated
+                    ? name === 'problemAreaType'
+                      ? true
+                      : false
+                    : shortInfoKeys[name],
               )"
               :key="name"
               class="data-list__item"
@@ -127,7 +139,7 @@
           <div v-else class="popup-marker__no-data">Данные не найдены</div>
           <div class="popup-marker__divider" />
           <ul class="actions-label">
-            <li class="actions-label__action">
+            <li class="actions-label__action" v-if="store.user?.role !== 'user'">
               <q-icon
                 class="actions-label__icon actions-label__icon--blue"
                 :name="mdiInformation"
@@ -146,7 +158,7 @@
                 :name="marker.coordinates.length > 0 ? mdiPencil : mdiPlus"
               />
             </li>
-            <li class="actions-label__action">
+            <li class="actions-label__action" v-if="store.user?.role !== 'user'">
               <span class="actions-label__text">Плотность:</span>
               <GGOptions
                 v-model="marker.details.density"
@@ -155,12 +167,20 @@
                 @update:model-value="updateFeatures(id, marker)"
               />
             </li>
-            <li class="actions-label__action">
+            <li class="actions-label__action" v-if="!marker.userTempCreated">
               <GGButton
                 label="Подробнее"
                 size="small"
                 stretch="fill"
                 design-type="secondary"
+              ></GGButton>
+            </li>
+            <li class="actions-label__action" v-else>
+              <GGButton
+                label="Удалить"
+                size="small"
+                stretch="fill"
+                bg-color="var(--app-red-500)"
               ></GGButton>
             </li>
           </ul>
@@ -200,6 +220,7 @@ import type { DrawEvent } from "ol/interaction/Draw";
 import type { SelectEvent } from "ol/interaction/Select";
 import { Circle, Fill, Icon, Stroke, Style } from "ol/style.js";
 import type CircleStyle from "ol/style/Circle";
+import { useMainStore } from "~/store/main";
 import markerIconDefaultSrc from "/icons/map_marker_default.png";
 import markerIconGreenSrc from "/icons/map_marker_green.png";
 import markerIconOrangeSrc from "/icons/map_marker_orange.png";
@@ -216,9 +237,14 @@ interface Props {
   dataStatusStyles: {
     [key: string]: string;
   };
+  addZoneEnabled?: boolean;
+  forbidAddMarker?: boolean;
 }
+const store = useMainStore();
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
+  addZoneEnabled: true,
+  forbidAddMarker: false,
 });
 const emit = defineEmits<{
   addMarker: [coordinate: Coordinate, zone?: unknown];
@@ -362,7 +388,9 @@ function deleteMarker() {
 }
 
 function addMakrer(coordinate: Coordinate, zone?: unknown) {
-  emit("addMarker", coordinate, zone);
+  if (!props.forbidAddMarker) {
+    emit("addMarker", coordinate, zone);
+  }
 }
 
 function openMarkerPopup(markerId: string) {
@@ -614,6 +642,8 @@ watch(
     &__no-data {
       display: flex;
       justify-content: center;
+    }
+    &__user-created {
     }
     &__close-img {
       position: absolute;
