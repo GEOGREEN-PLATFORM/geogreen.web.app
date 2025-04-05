@@ -12,7 +12,9 @@
     <div class="drag-drop-container__content">
       <div>
         <p class="drag-drop-container__main-text gg-t-big">Перетащите сюда ваши файлы</p>
-        <p class="drag-drop-container__sub-text gg-cap">JPG, PNG, Max 20MB</p>
+        <p class="drag-drop-container__sub-text gg-cap">
+          JPG, PNG, Max {{ props.maxSize / 1e6 }}MB
+        </p>
       </div>
       <p class="drag-drop-container__main-text gg-t-big">или</p>
       <GGButton
@@ -21,12 +23,12 @@
         stretch="hug"
         design-type="secondary"
         @click="triggerFileInput"
-      ></GGButton>
+      />
       <input
         ref="fileInput"
         type="file"
         :multiple="multiple"
-        :accept="accept"
+        :accept="accept.join(',')"
         v-show="false"
         @change="handleFileInput"
       />
@@ -37,12 +39,14 @@
 <script lang="ts" setup>
 interface Props {
   multiple?: boolean;
-  accept?: string;
+  accept?: string[];
+  maxSize?: number;
   background?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
-  accept: "image/jpeg, image/png",
-  multiple: false,
+  accept: () => ["image/jpeg", "image/png"],
+  maxSize: 10_000_000,
+  multiple: true,
 });
 
 const emits = defineEmits<{
@@ -55,33 +59,63 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const handleDragOver = () => {
   isDragOver.value = true;
 };
-
 const handleDragLeave = () => {
   isDragOver.value = false;
 };
 
 const handleDrop = (event: DragEvent) => {
   isDragOver.value = false;
-  const files = event.dataTransfer?.files;
-  if (files) {
-    emitFiles(Array.from(files));
-  }
+  const dt = event.dataTransfer;
+  if (!dt) return;
+  emitFiles(Array.from(dt.files));
 };
 
 const handleFileInput = (event: Event) => {
   const target = event.target as HTMLInputElement;
-  const files = target.files;
-  if (files) {
-    emitFiles(Array.from(files));
-  }
+  if (!target.files) return;
+  emitFiles(Array.from(target.files));
 };
 
 const triggerFileInput = () => {
   fileInput.value?.click();
 };
 
+function processFiles(files: File[]): File[] {
+  const filtered = files.filter((f) => props.accept.includes(f.type));
+  if (!filtered.length) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Среди добавляемых файлов нет подходящих по формату",
+    };
+    return [];
+  }
+  let total = 0;
+  const accepted: File[] = [];
+  for (const f of filtered) {
+    if (total + f.size <= props.maxSize!) {
+      accepted.push(f);
+      total += f.size;
+    } else {
+      break;
+    }
+  }
+  if (!accepted.length) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: `Добавляемые файлы превышают ${props.maxSize / 1e6} MB`,
+    };
+    return [];
+  }
+  return accepted;
+}
+
 const emitFiles = (files: File[]) => {
-  emits("add", files);
+  const acceptedFiles = processFiles(files);
+  if (!acceptedFiles.length) return;
+  const toEmit = props.multiple ? acceptedFiles : [acceptedFiles[0]];
+  emits("add", toEmit);
 };
 </script>
 

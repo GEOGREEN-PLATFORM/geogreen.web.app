@@ -6,7 +6,10 @@ export default defineNuxtConfig({
     public: {
       PORTAL_HTTP_PROTOCOL: "",
       PORTAL_API_HOST: "",
-      PORTAL_PORT: "",
+      PORTAL_PORT_GEOSPATIAL: "",
+      PORTAL_PORT_FILE_SERVER: "",
+      PORTAL_PORT_PHOTO_ANALYSE: "",
+      PORTAL_PORT_USER_REPORT: "",
     },
   },
   modules: [

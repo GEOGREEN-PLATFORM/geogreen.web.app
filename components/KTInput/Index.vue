@@ -47,7 +47,7 @@ interface Props {
   modelValue: string;
   rounded?: boolean;
   outlined?: boolean;
-  label: string;
+  label?: string;
   type?:
     | "number"
     | "password"
@@ -144,12 +144,21 @@ watch(
     border-color: var(--app-green-300);
     border-width: 1px;
   }
+  .q-field--outlined .q-field__control:hover:before {
+    border: 1px solid transparent;
+  }
   .q-field--outlined.q-field--highlighted .q-field__control:after {
     border-color: var(--app-green-500);
     border-width: 1px;
   }
+  .q-field--outlined.q-field--highlighted .q-field__control:before {
+    border: 1px solid transparent;
+  }
   .q-field--outlined.q-field--highlighted.q-field--error .q-field__control:after {
     border-color: var(--app-red-500);
+  }
+  .q-field--outlined.q-field--highlighted.q-field--error .q-field__control:before {
+    border-color: transparent;
   }
   .q-field--outlined.q-field--highlighted.q-field--error {
     .q-field__label {
@@ -163,18 +172,23 @@ watch(
   }
   .q-field__label {
     top: 50%;
-    transform: translateY(-48%);
+    transform: translateY(-50%) scale(1);
     color: var(--input-label);
+    will-change: transform;
+    transition:
+      transform 0.36s cubic-bezier(0.4, 0, 0.2, 1),
+      max-width 0.324s cubic-bezier(0.4, 0, 0.2, 1),
+      color 0.3s ease;
   }
   .q-field--highlighted .q-field__label {
     color: currentColor;
   }
   .q-field--float .q-field__label {
-    transform: translateY(-96%) scale(0.85);
+    transform: translateY(-100%) scale(0.85);
   }
   .q-field__native:-webkit-autofill + .q-field__label,
   .q-field__input:-webkit-autofill + .q-field__label {
-    transform: translateY(-96%) scale(0.85);
+    transform: translateY(-100%) scale(0.85);
   }
   .q-field__native,
   .q-field__input {

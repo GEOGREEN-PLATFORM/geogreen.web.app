@@ -5,10 +5,16 @@ declare global {
     loading?: boolean;
     show?: boolean;
   }
+  interface Alert {
+    show: boolean;
+    text: string;
+    type?: "error" | "success" | "info";
+  }
   interface UserAuthData {
     password: string;
     email: string;
   }
+  type ProblemAreaTypes = "Борщевик" | "Пожар" | "Свалка";
   interface UserRegisterData extends UserAuthData {
     repeatedPassword: string;
     firstName: string;
@@ -53,6 +59,7 @@ declare global {
     };
     relatedTaskId?: string | null;
     coordinates?: Coordinate[];
+    userTempCreated?: true;
   }
   type Density = "default" | "low" | "medium" | "high";
   interface Tab {

@@ -4,10 +4,12 @@
       :load-tiles-while-animating="true"
       :load-tiles-while-interacting="true"
       class="g-green-map"
+      id="gg-map"
       :controls="[]"
       @click="handleMapClick"
       @precompose.once="configureMap"
       @pointermove="handleMapPointerMove"
+      ref="mapRef"
     >
       <ol-view
         :center="gGreenOlMap.center"
@@ -25,6 +27,7 @@
           :on-toggle="toggleMarkerAdd"
         />
         <ol-toggle-control
+          v-if="props.addZoneEnabled"
           html="Добавить зону"
           class-name="g-green-control-bar__item g-green-control-bar__zone"
           :on-toggle="toggleZoneAdd"
@@ -103,10 +106,21 @@
             size="24px"
             @click="handleCloseMarkerPopup(id)"
           />
+          <div
+            v-if="marker.userTempCreated"
+            class="popup-marker__user-created text-center gg-t-base q-py-sm"
+          >
+            Вы сообщаете об этом очаге
+          </div>
           <ul v-if="marker.details" class="data-list">
             <li
               v-for="[name, value] in Object.entries(marker.details || {}).filter(
-                ([name, value]) => shortInfoKeys[name],
+                ([name, value]) =>
+                  marker.userTempCreated
+                    ? name === 'problemAreaType'
+                      ? true
+                      : false
+                    : shortInfoKeys[name],
               )"
               :key="name"
               class="data-list__item"
@@ -127,7 +141,7 @@
           <div v-else class="popup-marker__no-data">Данные не найдены</div>
           <div class="popup-marker__divider" />
           <ul class="actions-label">
-            <li class="actions-label__action">
+            <li class="actions-label__action" v-if="store.user?.role !== 'user'">
               <q-icon
                 class="actions-label__icon actions-label__icon--blue"
                 :name="mdiInformation"
@@ -146,7 +160,7 @@
                 :name="marker.coordinates.length > 0 ? mdiPencil : mdiPlus"
               />
             </li>
-            <li class="actions-label__action">
+            <li class="actions-label__action" v-if="store.user?.role !== 'user'">
               <span class="actions-label__text">Плотность:</span>
               <GGOptions
                 v-model="marker.details.density"
@@ -155,12 +169,21 @@
                 @update:model-value="updateFeatures(id, marker)"
               />
             </li>
-            <li class="actions-label__action">
+            <li class="actions-label__action" v-if="!marker.userTempCreated">
               <GGButton
                 label="Подробнее"
                 size="small"
                 stretch="fill"
                 design-type="secondary"
+              ></GGButton>
+            </li>
+            <li class="actions-label__action" v-else>
+              <GGButton
+                label="Удалить"
+                size="small"
+                stretch="fill"
+                bg-color="var(--app-red-500)"
+                @click="suggestDeleteMarker(marker.id)"
               ></GGButton>
             </li>
           </ul>
@@ -200,6 +223,7 @@ import type { DrawEvent } from "ol/interaction/Draw";
 import type { SelectEvent } from "ol/interaction/Select";
 import { Circle, Fill, Icon, Stroke, Style } from "ol/style.js";
 import type CircleStyle from "ol/style/Circle";
+import { useMainStore } from "~/store/main";
 import markerIconDefaultSrc from "/icons/map_marker_default.png";
 import markerIconGreenSrc from "/icons/map_marker_green.png";
 import markerIconOrangeSrc from "/icons/map_marker_orange.png";
@@ -216,14 +240,21 @@ interface Props {
   dataStatusStyles: {
     [key: string]: string;
   };
+  addZoneEnabled?: boolean;
+  forbidAddMarker?: boolean;
 }
+const store = useMainStore();
+const mapRef = ref();
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
+  addZoneEnabled: true,
+  forbidAddMarker: false,
 });
 const emit = defineEmits<{
   addMarker: [coordinate: Coordinate, zone?: unknown];
   deleteMarker: [id: string];
   editMarker: [id: string, marker: Marker];
+  forbiddenAddTry: [];
 }>();
 
 const confirmationDialog = reactive({
@@ -362,7 +393,11 @@ function deleteMarker() {
 }
 
 function addMakrer(coordinate: Coordinate, zone?: unknown) {
-  emit("addMarker", coordinate, zone);
+  if (!props.forbidAddMarker) {
+    emit("addMarker", coordinate, zone);
+  } else {
+    emit("forbiddenAddTry");
+  }
 }
 
 function openMarkerPopup(markerId: string) {
@@ -478,8 +513,8 @@ function toggleZoneAdd() {
   }
 }
 
-function suggestDeleteMarker(id: string) {
-  openConfirmationDialog("удалить метку", "Удалить");
+function suggestDeleteMarker(id = "") {
+  openConfirmationDialog("удалить очаг", "Удалить");
   gGreenCluster.currentSelectedMarkerId = id;
 }
 
@@ -590,12 +625,31 @@ watch(
   },
   { deep: true },
 );
+// const onMapClick = (event: MouseEvent) => {
+//   const mapElement = mapRef.value?.map?.getTargetElement();
+//   if (!mapElement) return;
+//   const clickedInside = (event.target as Element).closest
+//     ? (event.target as Element).closest(`#${mapElement.id}`) === mapElement
+//     : event.target === mapElement;
+
+//   mapElement.classList.toggle("is-active", clickedInside);
+// };
+// onMounted(() => {
+//   document.addEventListener("click", onMapClick);
+// });
+
+// onBeforeUnmount(() => {
+//   document.removeEventListener("click", onMapClick);
+// });
 </script>
 
 <style scoped lang="scss">
 .g-green-map {
   height: 100%;
   width: 100%;
+  // &:not(.is-active) * {
+  //   pointer-events: none;
+  // }
   .popup-marker {
     display: flex;
     flex-direction: column;
@@ -614,6 +668,8 @@ watch(
     &__no-data {
       display: flex;
       justify-content: center;
+    }
+    &__user-created {
     }
     &__close-img {
       position: absolute;
@@ -702,10 +758,10 @@ watch(
     background: var(--app-white);
     position: absolute;
     left: 0;
-    top: calc(50% - 250px / 2);
+    top: 50%;
+    transform: translateY(-50%);
     width: 44px;
     height: fit-content;
-    transform: none;
     padding: 48px 0px 8px 0px;
     transition: width 0.3s ease;
     border-radius: 0px 16px 16px 0px;
