@@ -4,10 +4,12 @@
       :load-tiles-while-animating="true"
       :load-tiles-while-interacting="true"
       class="g-green-map"
+      id="gg-map"
       :controls="[]"
       @click="handleMapClick"
       @precompose.once="configureMap"
       @pointermove="handleMapPointerMove"
+      ref="mapRef"
     >
       <ol-view
         :center="gGreenOlMap.center"
@@ -181,6 +183,7 @@
                 size="small"
                 stretch="fill"
                 bg-color="var(--app-red-500)"
+                @click="suggestDeleteMarker(marker.id)"
               ></GGButton>
             </li>
           </ul>
@@ -241,6 +244,7 @@ interface Props {
   forbidAddMarker?: boolean;
 }
 const store = useMainStore();
+const mapRef = ref();
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
   addZoneEnabled: true,
@@ -250,6 +254,7 @@ const emit = defineEmits<{
   addMarker: [coordinate: Coordinate, zone?: unknown];
   deleteMarker: [id: string];
   editMarker: [id: string, marker: Marker];
+  forbiddenAddTry: [];
 }>();
 
 const confirmationDialog = reactive({
@@ -390,6 +395,8 @@ function deleteMarker() {
 function addMakrer(coordinate: Coordinate, zone?: unknown) {
   if (!props.forbidAddMarker) {
     emit("addMarker", coordinate, zone);
+  } else {
+    emit("forbiddenAddTry");
   }
 }
 
@@ -506,8 +513,8 @@ function toggleZoneAdd() {
   }
 }
 
-function suggestDeleteMarker(id: string) {
-  openConfirmationDialog("удалить метку", "Удалить");
+function suggestDeleteMarker(id = "") {
+  openConfirmationDialog("удалить очаг", "Удалить");
   gGreenCluster.currentSelectedMarkerId = id;
 }
 
@@ -618,12 +625,31 @@ watch(
   },
   { deep: true },
 );
+// const onMapClick = (event: MouseEvent) => {
+//   const mapElement = mapRef.value?.map?.getTargetElement();
+//   if (!mapElement) return;
+//   const clickedInside = (event.target as Element).closest
+//     ? (event.target as Element).closest(`#${mapElement.id}`) === mapElement
+//     : event.target === mapElement;
+
+//   mapElement.classList.toggle("is-active", clickedInside);
+// };
+// onMounted(() => {
+//   document.addEventListener("click", onMapClick);
+// });
+
+// onBeforeUnmount(() => {
+//   document.removeEventListener("click", onMapClick);
+// });
 </script>
 
 <style scoped lang="scss">
 .g-green-map {
   height: 100%;
   width: 100%;
+  // &:not(.is-active) * {
+  //   pointer-events: none;
+  // }
   .popup-marker {
     display: flex;
     flex-direction: column;
@@ -732,10 +758,10 @@ watch(
     background: var(--app-white);
     position: absolute;
     left: 0;
-    top: calc(50% - 250px / 2);
+    top: 50%;
+    transform: translateY(-50%);
     width: 44px;
     height: fit-content;
-    transform: none;
     padding: 48px 0px 8px 0px;
     transition: width 0.3s ease;
     border-radius: 0px 16px 16px 0px;

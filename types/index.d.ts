@@ -8,7 +8,7 @@ declare global {
   interface Alert {
     show: boolean;
     text: string;
-    type?: "error" | "success";
+    type?: "error" | "success" | "info";
   }
   interface UserAuthData {
     password: string;

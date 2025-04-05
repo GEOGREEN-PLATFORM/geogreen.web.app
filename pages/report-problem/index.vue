@@ -1,7 +1,7 @@
 <template>
   <main class="report-form">
     <section class="report-form__header">
-      <h1 class="report-form__title gg-h1" @click="showAlert">Сообщите о проблеме</h1>
+      <h1 class="report-form__title gg-h1">Сообщите о проблеме</h1>
     </section>
 
     <section class="report-form__content">
@@ -14,7 +14,9 @@
               :key="type"
               :class="[
                 'report-form__type-button',
-                { 'report-form__type-button--active': selectedType === type },
+                {
+                  'report-form__type-button--active': userReport.details.problemAreaType === type,
+                },
               ]"
               type="button"
               @click="selectProblemType(type)"
@@ -26,12 +28,14 @@
         <fieldset class="report-form__fieldset">
           <legend class="report-form__legend gg-h3 report-form__legend--required">Локация</legend>
           <p class="report-form__sub-info">
-            Оставьте точку на карте, соответствующую расположению проблемы
+            Оставьте точку на карте, соответствующую расположению проблемы. Вы можете оставить
+            только один очаг на карте.
           </p>
           <article class="report-form__map-container">
             <Map
               @add-marker="addUserHotbed"
               @delete-marker="deleteUserHotbed"
+              @forbiddenAddTry="handleForbiddenAddTry"
               :dataStatusStyles="workStageStyles"
               :markers="existingHotbeds"
               :shortInfoKeys="shortMarkerInfoNameKeys"
@@ -45,18 +49,27 @@
           <KTInputTextarea
             class="report-form__comment"
             placeholder="Кратко опишите проблему"
-            v-model="comment"
+            v-model="userReport.details.comment"
           ></KTInputTextarea>
         </fieldset>
         <fieldset class="report-form__fieldset">
           <legend class="report-form__legend gg-h3">Фотографии</legend>
-          <DragDrop @add="uploadFiles" class="report-form__upload-file-container"></DragDrop>
+          <DragDrop
+            @add="uploadFiles"
+            class="report-form__upload-file-container"
+            :maxSize="FILES_MAX_SIZE"
+          ></DragDrop>
           <section v-if="attachedFiles.length > 0" class="report-form__added-images">
             <p class="report-form__block-caption gg-cap">Загруженные изображения</p>
-            <FileContainers :fileUrls="attachedFiles"></FileContainers>
+            <FileContainers v-model:files="attachedFiles" raw></FileContainers>
           </section>
         </fieldset>
-        <GGButton class="report-form__submit-button" label="Отправить"></GGButton>
+        <GGButton
+          class="report-form__submit-button"
+          label="Отправить"
+          :disabled="!requiredFieldsFilled"
+          @click="sendReport"
+        ></GGButton>
       </q-form>
     </section>
   </main>
@@ -65,19 +78,35 @@
 <script setup lang="ts">
 import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
-const types: ProblemAreaTypes[] = ["Борщевик", "Свалка", "Пожар"]; //TODO: fetch from server
-const selectedType = ref<ProblemAreaTypes | null>(null);
-const comment = ref<string>("");
-const attachedFiles = ref<string[]>([]);
-const store = useMainStore();
-const existingHotbeds = ref<Marker[]>([]);
-const isAddMarker = shallowRef(false);
-function showAlert() {
-  useState<Alert>("showAlert").value = {
-    show: true,
-    text: "Тестовыый текст для ошибка",
+interface UserReport {
+  coordinate: Coordinate;
+  details: {
+    images: string[];
+    problemAreaType: ProblemAreaTypes | "";
+    comment: string;
+  };
+  userDetails?: {
+    userPhone: string;
+    userEmail: string;
   };
 }
+const types: ProblemAreaTypes[] = ["Борщевик", "Свалка", "Пожар"]; //TODO: fetch from server
+const FILES_MAX_SIZE = 10_000_000;
+const attachedFiles = ref<File[]>([]);
+const store = useMainStore();
+const existingHotbeds = ref<Marker[]>([]);
+const requiredFieldsFilled = computed(
+  () => userReport.details.problemAreaType && isAddMarker.value,
+);
+const userReport = reactive<UserReport>({
+  coordinate: [],
+  details: {
+    images: [],
+    problemAreaType: "",
+    comment: "",
+  },
+});
+const isAddMarker = shallowRef(false);
 const shortMarkerInfoNameKeys = ref({
   owner: {
     name: "Владелец",
@@ -117,9 +146,17 @@ async function getExistingHotbedsOfProblemsByType(
   );
   existingHotbeds.value = data;
 }
+function handleForbiddenAddTry() {
+  useState<Alert>("showAlert").value = {
+    show: true,
+    text: "Вы уже добавили очаг на карту. Удалите его, чтобы добавить новый.",
+  };
+}
 function addUserHotbed(coordinate: Coordinate) {
-  if (selectedType.value) {
+  if (userReport.details.problemAreaType) {
+    userReport.coordinate = coordinate;
     existingHotbeds.value.push({
+      id: "user-temp-created",
       coordinate: coordinate,
       userTempCreated: true,
       details: {
@@ -130,36 +167,81 @@ function addUserHotbed(coordinate: Coordinate) {
         workStage: "",
         eliminationMethod: "",
         images: [],
-        problemAreaType: selectedType.value,
+        problemAreaType: userReport.details.problemAreaType,
         comment: "",
         density: null,
       },
       relatedTaskId: null,
       coordinates: [],
     });
+    isAddMarker.value = true;
+  } else {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      text: "Выберите тип проблемы",
+    };
   }
-  isAddMarker.value = true;
 }
-function deleteUserHotbed(marker: Marker) {}
+function deleteUserHotbed(marker: Marker) {
+  existingHotbeds.value = existingHotbeds.value.filter(
+    (m) => !m.userTempCreated,
+  );
+  isAddMarker.value = false;
+  userReport.coordinate = [];
+}
 async function uploadFiles(files: File[]) {
-  //api uploading
-  files.forEach((file) => attachedFiles.value.push(URL.createObjectURL(file)));
-  console.log(attachedFiles.value);
+  const currentTotal = attachedFiles.value.reduce((sum, f) => sum + f.size, 0);
+  const newFilesTotal = files.reduce((sum, f) => sum + f.size, 0);
+  if (newFilesTotal + currentTotal > FILES_MAX_SIZE) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: `Добавляемые файлы превышают ${FILES_MAX_SIZE / 1e6} MB`,
+    };
+    return;
+  }
+  files.forEach((file) => {
+    attachedFiles.value.push(file);
+  });
 }
 function selectProblemType(type: ProblemAreaTypes) {
-  selectedType.value = type;
-  getExistingHotbedsOfProblemsByType(selectedType.value);
+  userReport.details.problemAreaType = type;
+  getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
 }
-const onSubmit = () => {
-  console.log("Submitted:", {
-    type: selectedType.value,
-    comment: comment.value,
-    files: attachedFiles.value,
+async function sendReport() {
+  for (const f of attachedFiles.value) {
+    const formData = new FormData();
+    formData.append("file", f);
+
+    const uploadedPhoto = await $fetch(
+      `${store.apiFileServer}/file/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+    const { fullImageId } = uploadedPhoto;
+    userReport.details.images.push(fullImageId);
+  }
+  // for (const fullImageId of userReport.details.images) {
+  //   const result = await analysePhotoOnHogweedPresence(fullImageId);
+  //   //дописать логику на проверку борщевика
+  // }
+  const data = await $fetch(`${store.apiUserReport}/report`, {
+    method: "POST",
+    body: userReport,
   });
-};
+}
+
+async function analysePhotoOnHogweedPresence(photoId: string) {
+  return await $fetch(`${store.apiPhotoAnalyse}/analyse`, {
+    method: "POST",
+    photoId: photoId,
+  });
+}
 onMounted(() => {
-  if (selectedType.value) {
-    getExistingHotbedsOfProblemsByType(selectedType.value);
+  if (userReport.details.problemAreaType) {
+    getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
   }
 });
 </script>

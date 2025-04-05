@@ -3,6 +3,9 @@ import { defineStore } from "pinia";
 interface MainState {
   host: string;
   portGeospatial: string;
+  portFileServer: string;
+  portPhotoAnalyse: string;
+  portUserReport: string;
   protocol: string;
   protocolWS: string;
   serverHost: string;
@@ -19,6 +22,15 @@ export const useMainStore = defineStore("main", {
     portGeospatial:
       process.env?.PORTAL_PORT_GEOSPATIAL ||
       (useRuntimeConfig().public.PORTAL_PORT_GEOSPATIAL as string),
+    portFileServer:
+      process.env?.PORTAL_PORT_FILE_SERVER ||
+      (useRuntimeConfig().public.PORTAL_PORT_FILE_SERVER as string),
+    portPhotoAnalyse:
+      process.env?.PORTAL_PORT_PHOTO_ANALYSE ||
+      (useRuntimeConfig().public.PORTAL_PORT_PHOTO_ANALYSE as string),
+    portUserReport:
+      process.env?.PORTAL_PORT_USER_REPORT ||
+      (useRuntimeConfig().public.PORTAL_PORT_USER_REPORT as string),
     protocol:
       process.env?.PORTAL_HTTP_PROTOCOL ||
       (useRuntimeConfig().public.PORTAL_HTTP_PROTOCOL as string),
@@ -35,6 +47,15 @@ export const useMainStore = defineStore("main", {
   getters: {
     apiGeospatial: (state) => {
       return `${state.protocol}://${state.host}:${state.portGeospatial}`;
+    },
+    apiFileServer: (state) => {
+      return `${state.protocol}://${state.host}:${state.portFileServer}`;
+    },
+    apiPhotoAnalyse: (state) => {
+      return `${state.protocol}://${state.host}:${state.portPhotoAnalyse}`;
+    },
+    apiUserReport: (state) => {
+      return `${state.protocol}://${state.host}:${state.portUserReport}`;
     },
     wsURL: (state) => {
       return `${state.protocolWS}://${state.host}/`;

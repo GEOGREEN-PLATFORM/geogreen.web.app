@@ -1,9 +1,9 @@
 <template>
   <article class="file">
     <div class="file__preview">
-      <NuxtImg v-if="true" :src="url" alt="Файл" class="file__image" />
+      <NuxtImg v-if="localFileUrl" :src="localFileUrl" alt="Файл" class="file__image" />
       <video v-else-if="isVideo" controls class="file__video">
-        <source :src="url" type="video/mp4" />
+        <source :src="localFileUrl" type="video/mp4" />
       </video>
       <div v-else class="file__placeholder">Файл</div>
     </div>
@@ -17,14 +17,18 @@
 <script setup lang="ts">
 import { mdiDeleteOutline } from "@quasar/extras/mdi-v6";
 interface Props {
-  url: string;
+  file: string | File;
+  raw?: boolean;
 }
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  raw: false,
+});
 const emits = defineEmits<{
   remove: [];
 }>();
+const localFileUrl = shallowRef("");
 const fileExtension = computed(() => {
-  const parts = props.url.split(".");
+  const parts = localFileUrl.value.split(".");
   return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
 });
 
@@ -37,7 +41,14 @@ const isVideo = computed(() =>
   ["mp4", "webm", "mov"].some((ext) => fileExtension.value.includes(ext)),
 );
 
-const fileName = computed(() => props.url.split("/").pop());
+const fileName = computed(() => localFileUrl.value.split("/").pop());
+onMounted(() => {
+  if (typeof props.file === "string" && !props.raw) {
+    localFileUrl.value = props.file;
+  } else if (props.raw && typeof props.file !== "string") {
+    localFileUrl.value = URL.createObjectURL(props.file);
+  }
+});
 </script>
 
 <style scoped lang="scss">

@@ -16,13 +16,13 @@
       :name="name"
       @update:model-value="updateValue"
       height="96px"
+      :required="false"
     >
     </KTInput>
   </div>
 </template>
 
 <script setup lang="ts">
-import { mdiEyeOffOutline, mdiEyeOutline } from "@quasar/extras/mdi-v6";
 import type { ValidationRule } from "quasar";
 import { KTInput } from "#components";
 
@@ -30,7 +30,7 @@ interface Props {
   modelValue: string;
   rounded?: boolean;
   outlined?: boolean;
-  label: string;
+  label?: string;
   required?: boolean;
   rules?: ValidationRule[];
   hideBottomSpace?: boolean;
@@ -62,7 +62,7 @@ const inputRef = ref();
 
 function updateValue(value: string | number | null) {
   nextTick(() => {
-    inputRef.value?.validate();
+    inputRef.value.$refs.qInputRef?.validate();
     emits("update:modelValue", value);
   });
 }

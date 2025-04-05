@@ -31,18 +31,10 @@
 <script setup lang="ts">
 interface Props {
   modelValue: boolean;
-  /**
-   * Текст, который подставляется в вопрос:
-   * "Вы действительно хотите {{ actionMainText }}?"
-   */
   actionMainText?: string;
-  /**
-   * Текст на кнопке подтверждения (например, "Заблокировать" или "Подтвердить").
-   */
   actionButtonConfirmText?: string;
 }
 
-// Значения по умолчанию
 withDefaults(defineProps<Props>(), {
   actionMainText: "подтвердить действие",
   actionButtonConfirmText: "Подтвердить",
@@ -69,11 +61,11 @@ function toggleOpenState(newState: boolean) {
 
 <style scoped lang="scss">
 .confirm-dialog {
+  padding: 24px;
   &__title {
     font-size: 20px;
     font-weight: 600;
     color: var(--app-grey-900);
-    /* Можно добавить отступы при необходимости */
   }
 
   &__message {
