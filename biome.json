@@ -45,6 +45,9 @@
         "noForEach": "off",
         "noBannedTypes": "warn"
       },
+      "suspicious": {
+        "noExplicitAny": "warn"
+      },
       "style": {
         "noNonNullAssertion": "off"
       }
