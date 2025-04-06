@@ -68,6 +68,7 @@
           class="report-form__submit-button"
           label="Отправить"
           :disabled="!requiredFieldsFilled"
+          :loading="isFormSending"
           @click="sendReport"
         ></GGButton>
       </q-form>
@@ -93,6 +94,7 @@ interface UserReport {
 const types: ProblemAreaTypes[] = ["Борщевик", "Свалка", "Пожар"]; //TODO: fetch from server
 const FILES_MAX_SIZE = 10_000_000;
 const attachedFiles = ref<File[]>([]);
+const isFormSending = shallowRef(false);
 const store = useMainStore();
 const existingHotbeds = ref<Marker[]>([]);
 const requiredFieldsFilled = computed(
@@ -209,35 +211,67 @@ function selectProblemType(type: ProblemAreaTypes) {
   getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
 }
 async function sendReport() {
-  for (const f of attachedFiles.value) {
-    const formData = new FormData();
-    formData.append("file", f);
+  isFormSending.value = true;
+  try {
+    for (const file of attachedFiles.value) {
+      const fullImageId = await uploadPhoto(file);
+      userReport.details.images.push(fullImageId);
+    }
+    for (const fullImageId of userReport.details.images) {
+      const result = await analysePhotoOnHogweedPresence(fullImageId);
+      console.log("Анализ для", fullImageId, result);
+      //дописать логику на проверку борщевика
+    }
+    await $fetch(`${store.apiUserReport}/report`, {
+      method: "POST",
+      body: userReport,
+    });
+    attachedFiles.value = [];
+    userReport.details.images = [];
+    userReport.details.problemAreaType = "";
+    userReport.coordinate = [];
+    isAddMarker.value = false;
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "success",
+      text: "Отчет отправлен",
+    };
+  } catch (err: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: `Невозможно отправить отчёт: ${err.message}`,
+    };
+  } finally {
+    isFormSending.value = false;
+  }
+}
 
-    const uploadedPhoto = await $fetch(
+async function analysePhotoOnHogweedPresence(photoId: string) {
+  try {
+    return await $fetch(`${store.apiPhotoAnalyse}/analyse`, {
+      method: "POST",
+      body: { photoId },
+    });
+  } catch (err) {
+    throw new Error("Ошибка при анализе фото");
+  }
+}
+async function uploadPhoto(file: File) {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await $fetch<{ fullImageId: string }>(
       `${store.apiFileServer}/file/image/upload`,
       {
         method: "POST",
         body: formData,
       },
     );
-    const { fullImageId } = uploadedPhoto;
-    userReport.details.images.push(fullImageId);
+    return response.fullImageId;
+  } catch (err) {
+    throw new Error("Ошибка при загрузке фото");
   }
-  // for (const fullImageId of userReport.details.images) {
-  //   const result = await analysePhotoOnHogweedPresence(fullImageId);
-  //   //дописать логику на проверку борщевика
-  // }
-  const data = await $fetch(`${store.apiUserReport}/report`, {
-    method: "POST",
-    body: userReport,
-  });
-}
-
-async function analysePhotoOnHogweedPresence(photoId: string) {
-  return await $fetch(`${store.apiPhotoAnalyse}/analyse`, {
-    method: "POST",
-    photoId: photoId,
-  });
 }
 onMounted(() => {
   if (userReport.details.problemAreaType) {
