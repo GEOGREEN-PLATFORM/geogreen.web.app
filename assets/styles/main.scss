@@ -16,7 +16,9 @@ fieldset {
 button {
   border: none;
   outline: none;
+  appearance: none;
   padding: 0;
+  background-color: transparent;
 }
 ul,
 li {

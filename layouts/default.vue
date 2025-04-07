@@ -59,6 +59,12 @@ const pages: Page[] = [
         selected: false,
         path: "/tasks",
       },
+      {
+        key: "applications",
+        name: "Заявки",
+        selected: false,
+        path: "/applications",
+      },
     ],
   },
 ];
