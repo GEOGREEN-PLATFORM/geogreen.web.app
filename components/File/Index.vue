@@ -1,16 +1,22 @@
 <template>
   <article class="file">
     <div class="file__preview">
-      <NuxtImg v-if="localFileUrl" :src="localFileUrl" alt="Файл" class="file__image" />
+      <NuxtImg
+        @click="openPhoto(localFileUrl)"
+        v-if="localFileUrl"
+        :src="localFileUrl"
+        alt="Файл"
+        class="file__image"
+      />
       <video v-else-if="isVideo" controls class="file__video">
         <source :src="localFileUrl" type="video/mp4" />
       </video>
       <div v-else class="file__placeholder">Файл</div>
     </div>
-    <button class="file__delete" @click="emits('remove')">
+    <button v-if="clearable" class="file__delete" @click="emits('remove')">
       <q-icon color="red-400" :name="mdiDeleteOutline" size="24px"></q-icon>
     </button>
-    <p class="file__name gg-cap">{{ fileName }}</p>
+    <p v-if="!hideCaption" class="file__name gg-cap">{{ fileName }}</p>
   </article>
 </template>
 
@@ -19,13 +25,18 @@ import { mdiDeleteOutline } from "@quasar/extras/mdi-v6";
 interface Props {
   file: string | File;
   raw?: boolean;
+  clearable?: boolean;
+  hideCaption?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   raw: false,
+  clearable: true,
+  hideCaption: false,
 });
 const emits = defineEmits<{
   remove: [];
 }>();
+const { openPhoto } = usePhotoViewer();
 const localFileUrl = shallowRef("");
 const fileExtension = computed(() => {
   const parts = localFileUrl.value.split(".");
@@ -57,13 +68,13 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   position: relative;
-  width: 150px;
-
+  cursor: pointer;
   &__preview {
     width: 100%;
-    aspect-ratio: 16 / 9;
+    width: 118px;
+    height: 64px;
     background: var(--app-grey-050);
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     position: relative;
     display: flex;

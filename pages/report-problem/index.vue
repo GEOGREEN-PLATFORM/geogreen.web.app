@@ -60,7 +60,6 @@
             :maxSize="FILES_MAX_SIZE"
           ></DragDrop>
           <section v-if="attachedFiles.length > 0" class="report-form__added-images">
-            <p class="report-form__block-caption gg-cap">Загруженные изображения</p>
             <FileContainers v-model:files="attachedFiles" raw></FileContainers>
           </section>
         </fieldset>
@@ -370,18 +369,8 @@ onMounted(() => {
     max-width: 100%;
   }
   &__added-images {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 24px;
-    padding: 0px 8px;
-  }
-  &__block-caption {
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--app-grey-050);
     width: 100%;
+    margin-top: 24px;
   }
 }
 </style>

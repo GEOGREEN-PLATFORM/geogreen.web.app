@@ -1,52 +1,66 @@
 <template>
   <main class="b-page">
-    <header class="b-header q-my-lg">
-      <div class="b-header__title-wrapper">
-        <h1 class="b-header__title gg-h1">Заявки</h1>
+    <header class="b-page__header q-my-lg">
+      <div class="b-page__title-wrapper">
+        <h1 class="b-page__title gg-h1">Заявки</h1>
       </div>
     </header>
-    <section class="b-content">
+    <section class="b-page__content">
       <div class="b-filter q-mb-lg">
         <CFilter v-model="filters"></CFilter>
       </div>
-      <q-card v-for="request in requests" class="b-request-card">
-        <header class="b-request-card__header">
-          <div class="b-request-card__title">
-            <h2 class="b-request-card__title gg-h2">{{ request.problemType.code }}</h2>
-            <div class="b-reliability-photo-icon">
-              <q-icon :name="mdiCheck" size="24px" color="green-500" />
-            </div>
-          </div>
-          <span class="b-request-card__timestamp gg-caption"> {{ request.createDate }} </span>
-        </header>
-        <div class="b-request-card__line justify-start">
-          <button class="b-request-card__map-button g-label-button gg-t-small" @click="viewOnMap">
-            Посмотреть очаг на карте
-          </button>
-        </div>
-
-        <section class="b-request-card__line request-card__content">
-          <p class="b-request-card__comment gg-t-base">{{ request.userComment }}</p>
-          <div class="request-card__images">
-            <FileContainers :files="formatToUrl(request.images)"></FileContainers>
-          </div>
+      <q-scroll-area class="b-page__requests-container">
+        <section class="b-page__requests">
+          <q-card v-for="request in requests" class="b-request-card">
+            <header class="b-request-card__header">
+              <div class="b-request-card__title-wrapper">
+                <h2 class="b-request-card__title gg-h2">{{ request.problemType.code }}</h2>
+                <div class="b-request-card__reliability-icon">
+                  <q-icon
+                    :name="request.photoVerification ? mdiCheck : mdiAlert"
+                    size="24px"
+                    :color="request.photoVerification ? 'green-500' : 'red-500'"
+                  />
+                </div>
+              </div>
+              <span class="b-request-card__timestamp gg-caption"> {{ request.createDate }} </span>
+            </header>
+            <section class="b-request-card__content q-mb-lg">
+              <button class="b-request-card__open-map-button gg-t-small" @click="viewOnMap">
+                Посмотреть очаг на карте
+              </button>
+              <section class="b-request-card__main-info">
+                <p class="b-request-card__comment gg-t-base">{{ request.userComment }}</p>
+                <div class="b-request-card__images">
+                  <FileContainers
+                    :files="formatToUrl(request.images)"
+                    :clearable="false"
+                    hide-caption
+                  ></FileContainers>
+                </div>
+              </section>
+            </section>
+            <footer class="b-request-card__footer justify-between">
+              <div>
+                <GGButton @click="approveRequest(request.id)" label="Принять заявку"></GGButton>
+              </div>
+              <div>
+                <GGButton
+                  @click="rejectRequest(request.id)"
+                  label="Отклонить заявку"
+                  bg-color="var(--app-red-500)"
+                ></GGButton>
+              </div>
+            </footer>
+          </q-card>
         </section>
-        <footer class="b-request-card__line justify-between">
-          <GGButton @click="approveRequest" label="Принять заявку" stretch="hug"></GGButton>
-          <GGButton
-            @click="rejectRequest"
-            label="Отклонить заявку"
-            bg-color="var(--app-red-500)"
-            stretch="hug"
-          ></GGButton>
-        </footer>
-      </q-card>
+      </q-scroll-area>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
-import { mdiCheck } from "@quasar/extras/mdi-v6";
+import { mdiAlert, mdiCheck } from "@quasar/extras/mdi-v6";
 import { useMainStore } from "~/store/main";
 
 interface RequestData {
@@ -108,11 +122,25 @@ function formatToUrl(images: string[]) {
     (image) => `${store.apiFileServer}/file/image/download/${image}`,
   );
 }
-function approveRequest() {
-  emits("approve");
+async function approveRequest(id: string) {
+  requests.value = await $fetch(`${store.apiUserReport}/report/${id}`, {
+    method: "PUT",
+  });
+  getUserRequests();
 }
 
-function rejectRequest() {}
+async function rejectRequest(id: string) {
+  requests.value = await $fetch(`${store.apiUserReport}/report/${id}`, {
+    method: "PUT",
+    body: {
+      statusCode: "Отклонена",
+      operatorComment: "тут много борщевика",
+      operatorId: "fae85f64-5717-4562-b3fc-2c963f66afa6",
+      operatorName: "Иванов И.И.",
+    },
+  });
+  getUserRequests();
+}
 
 function viewOnMap() {
   emits("viewMap");
@@ -129,7 +157,13 @@ onMounted(() => {
   $app-mobile: 600px;
   $app-narrow-mobile: 364px;
   padding: 0px 32px;
-  .b-header {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  @media screen and (max-width: $app-mobile) {
+    padding: 0px 16px;
+  }
+  &__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -138,7 +172,7 @@ onMounted(() => {
       flex-wrap: wrap;
       gap: 16px;
     }
-    &__title-wrapper {
+    .b-page__title-wrapper {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -148,89 +182,113 @@ onMounted(() => {
         gap: 24px;
       }
     }
-    &__add-btn {
-      width: 40%;
-      max-width: 288px;
-      min-width: max-content;
-      &--mobile {
-        display: none;
-      }
-      @media screen and (max-width: $app-mobile) {
-        display: none;
-        &--mobile {
-          display: block;
-        }
-      }
-    }
-    &__search {
-      width: 60%;
-      max-width: 412px;
-      @media screen and (max-width: $app-mobile) {
-        width: 100%;
-        max-width: 100%;
-      }
-    }
   }
-  .b-account-status {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    &__item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: max-content;
-      height: 32px;
-      padding: 4px 16px;
-      border-radius: 16px;
-      color: var(--app-white);
-      &--active {
-        background-color: var(--app-green-300);
-      }
-      &--blocked {
-        background-color: var(--app-grey-300);
-      }
-    }
-  }
-  .b-request-card {
-    padding: 16px;
+  .b-page__content {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background-color: var(--app-green-050);
-    width: 860px;
-    &__header {
+    min-height: 0;
+    .b-page__requests-container {
+      flex: 1;
+      min-height: 380px;
+    }
+    .b-page__requests {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      width: 100%;
+      gap: 32px;
+      padding: 16px;
     }
-    &__timestamp {
-      color: var(--app-grey-400);
-    }
-    &__title {
+    .b-request-card {
+      padding: 16px;
       display: flex;
-    }
-    &__map-button {
-      color: var(--app-blue-500);
-    }
-    &__comment {
-      display: flex;
-      padding: 8px 12px;
-      background-color: var(--app-white);
-      color: var(--app-grey-500);
-      align-items: flex-start;
-      justify-content: flex-start;
-      border-radius: 8px;
-      width: 516px;
-      height: 112px;
-    }
-    &__line {
-      display: flex;
+      flex-direction: column;
       align-items: center;
-      width: 100%;
+      justify-content: center;
+      gap: 4px;
+      background-color: var(--app-green-050);
+      width: 860px;
+      &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      &__title-wrapper {
+        display: flex;
+        gap: 6px;
+        @media screen and (max-width: $app-narrow-mobile) {
+          justify-content: space-between;
+          width: 100%;
+        }
+      }
+      &__timestamp {
+        color: var(--app-grey-400);
+      }
+      &__content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+      }
+      &__open-map-button {
+        color: var(--app-blue-500);
+        cursor: pointer;
+        padding: 8px 0px;
+        @media screen and (max-width: $app-narrow-mobile) {
+          margin: 0 auto;
+        }
+      }
+      &__comment {
+        display: flex;
+        padding: 8px 12px;
+        background-color: var(--app-white);
+        color: var(--app-grey-500);
+        align-items: flex-start;
+        justify-content: flex-start;
+        border-radius: 8px;
+        min-width: 516px;
+        height: 112px;
+        overflow: auto;
+        @media screen and (max-width: $app-laptop) {
+          width: 100%;
+          height: 84px;
+          min-width: 120px;
+        }
+        @media screen and (max-width: $app-mobile) {
+          min-height: 84px;
+          max-height: 120px;
+          height: max-content;
+        }
+      }
+      &__images {
+        width: 100%;
+      }
+      &__footer {
+        display: flex;
+        width: 100%;
+        @media screen and (max-width: $app-mobile) {
+          flex-direction: column;
+          gap: 16px;
+        }
+      }
+      &__main-info {
+        display: flex;
+        align-items: flex-start;
+        width: 100%;
+        gap: 56px;
+        @media screen and (max-width: $app-laptop) {
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+      }
+      @media screen and (max-width: $app-laptop) {
+        width: 100%;
+      }
     }
   }
 }
