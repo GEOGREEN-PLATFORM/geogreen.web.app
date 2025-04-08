@@ -69,6 +69,7 @@ onMounted(() => {
   align-items: center;
   position: relative;
   cursor: pointer;
+  width: 118px;
   &__preview {
     width: 100%;
     width: 118px;

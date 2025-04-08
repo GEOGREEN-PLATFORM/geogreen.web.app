@@ -20,7 +20,7 @@
       <ol-tile-layer>
         <ol-source-xyz :url="gGreenOlMap.url" />
       </ol-tile-layer>
-      <ol-control-bar ref="controlBar">
+      <ol-control-bar ref="controlBar" v-if="!hideControls">
         <ol-toggle-control
           html="Добавить маркер"
           class-name="g-green-control-bar__item g-green-control-bar__marker"
@@ -110,7 +110,11 @@
             v-if="marker.userTempCreated"
             class="popup-marker__user-created text-center gg-t-base q-py-sm"
           >
-            Вы сообщаете об этом очаге
+            {{
+              store.user?.role === "user"
+                ? "Вы сообщаете об этом очаге"
+                : "Пользователь сообщает об этом очаге"
+            }}
           </div>
           <ul v-if="marker.details" class="data-list">
             <li
@@ -139,9 +143,17 @@
             </li>
           </ul>
           <div v-else class="popup-marker__no-data">Данные не найдены</div>
-          <div class="popup-marker__divider" />
+          <div
+            v-if="
+              !marker.userTempCreated || (marker.userTempCreated && store.user?.role === 'user')
+            "
+            class="popup-marker__divider"
+          />
           <ul class="actions-label">
-            <li class="actions-label__action" v-if="store.user?.role !== 'user'">
+            <li
+              class="actions-label__action"
+              v-if="store.user?.role !== 'user' && !marker.userTempCreated"
+            >
               <q-icon
                 class="actions-label__icon actions-label__icon--blue"
                 :name="mdiInformation"
@@ -160,7 +172,10 @@
                 :name="marker.coordinates.length > 0 ? mdiPencil : mdiPlus"
               />
             </li>
-            <li class="actions-label__action" v-if="store.user?.role !== 'user'">
+            <li
+              class="actions-label__action"
+              v-if="store.user?.role !== 'user' && !marker.userTempCreated"
+            >
               <span class="actions-label__text">Плотность:</span>
               <GGOptions
                 v-model="marker.details.density"
@@ -177,7 +192,12 @@
                 design-type="secondary"
               ></GGButton>
             </li>
-            <li class="actions-label__action" v-else>
+            <li
+              class="actions-label__action"
+              v-else-if="
+                !marker.userTempCreated || (marker.userTempCreated && store.user?.role === 'user')
+              "
+            >
               <GGButton
                 label="Удалить"
                 size="small"
@@ -242,6 +262,8 @@ interface Props {
   };
   addZoneEnabled?: boolean;
   forbidAddMarker?: boolean;
+  hideControls?: boolean;
+  selectedMarker?: Marker;
 }
 const store = useMainStore();
 const mapRef = ref();
@@ -249,6 +271,7 @@ const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
   addZoneEnabled: true,
   forbidAddMarker: false,
+  hideControls: false,
 });
 const emit = defineEmits<{
   addMarker: [coordinate: Coordinate, zone?: unknown];
@@ -564,7 +587,8 @@ function getPolygonStyleByDensity(
 }
 
 function configureMap() {
-  const controlElement = controlBarRef.value.control.element;
+  const controlElement = controlBarRef.value?.control.element;
+  if (!controlElement) return;
   controlElement.classList.add("g-green-control-bar");
   const burgerButton = document.createElement("button");
   burgerButton.setAttribute("type", "button");
@@ -634,9 +658,24 @@ watch(
 
 //   mapElement.classList.toggle("is-active", clickedInside);
 // };
-// onMounted(() => {
-//   document.addEventListener("click", onMapClick);
-// });
+onMounted(() => {
+  if (props.markers?.length) {
+    gGreenCluster.markersDict = convertMarkersToDictionary(props.markers);
+    gGreenCluster.markerFeatures = convertMarkersToFeatures(props.markers);
+    gGreenCluster.zonesFeatures = convertZonesToFeatures(
+      Array.from(gGreenCluster.markersDict.values()),
+    );
+  }
+  if (props.selectedMarker?.id) {
+    gGreenCluster.currentSelectedMarkerId = props.selectedMarker.id;
+    openMarkerPopup(props.selectedMarker.id);
+    const marker = gGreenCluster.markersDict.get(props.selectedMarker.id);
+    if (marker) {
+      gGreenOlMap.center = marker.coordinate;
+      gGreenOlMap.resolution = 16;
+    }
+  }
+});
 
 // onBeforeUnmount(() => {
 //   document.removeEventListener("click", onMapClick);

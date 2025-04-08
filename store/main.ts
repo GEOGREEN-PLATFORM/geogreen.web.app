@@ -41,7 +41,7 @@ export const useMainStore = defineStore("main", {
       process.env?.PORTAL_INTERNAL_SERVER_HOST ||
       (useRuntimeConfig().public.PORTAL_INTERNAL_SERVER_HOST as string),
     user: {
-      role: "user",
+      role: "admin",
     },
   }),
   getters: {

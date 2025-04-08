@@ -26,7 +26,10 @@
               <span class="b-request-card__timestamp gg-caption"> {{ request.createDate }} </span>
             </header>
             <section class="b-request-card__content q-mb-lg">
-              <button class="b-request-card__open-map-button gg-t-small" @click="viewOnMap">
+              <button
+                class="b-request-card__open-map-button gg-t-small"
+                @click="viewOnMap(request)"
+              >
                 Посмотреть очаг на карте
               </button>
               <section class="b-request-card__main-info">
@@ -56,6 +59,17 @@
         </section>
       </q-scroll-area>
     </section>
+    <GGDialog v-model="isMapOpen" class="b-dialog">
+      <div class="b-dialog__content">
+        <Map
+          :dataStatusStyles="workStageStyles"
+          :markers="existingHotbedsByType"
+          :shortInfoKeys="shortMarkerInfoNameKeys"
+          hide-controls
+          :selectedMarker="selectedHotbed"
+        ></Map>
+      </div>
+    </GGDialog>
   </main>
 </template>
 
@@ -95,6 +109,40 @@ const PROBLEM_AREA_TYPE_OPTIONS = [
     value: "Пожар",
   },
 ];
+const shortMarkerInfoNameKeys = ref({
+  owner: {
+    name: "Владелец",
+    type: "text",
+  },
+  landType: {
+    name: "Тип земель",
+    type: "text",
+  },
+  workStage: {
+    name: "Статус работы",
+    type: "status",
+  },
+  problemAreaType: {
+    name: "Тип проблемы",
+    type: "text",
+  },
+  eliminationMethod: {
+    name: "Метод по устранению",
+    type: "text",
+  },
+  contractingOrganisation: {
+    name: "Подрядная организация",
+    type: "text",
+  },
+});
+const workStageStyles = {
+  Создано: "background-color: var(--app-blue-400)",
+  "В работе": "background-color: var(--app-green-400)",
+  Завершено: "background-color: var(--app-grey-400)",
+};
+const isMapOpen = shallowRef(false);
+const existingHotbedsByType = ref<Marker[]>([]);
+const selectedHotbed = ref<Marker>();
 const filters = reactive<FilterItem[]>([
   {
     type: "select",
@@ -116,6 +164,14 @@ async function getUserRequests() {
   requests.value = await $fetch(`${store.apiUserReport}/report/getAll`, {
     method: "GET",
   });
+}
+async function getExistingHotbedsOfProblemsByType(
+  problemAreaType: ProblemAreaTypes,
+) {
+  const data = await $fetch<Marker[]>(
+    `${store.apiGeospatial}/geo/info/getAll/${problemAreaType}`,
+  );
+  existingHotbedsByType.value = data;
 }
 function formatToUrl(images: string[]) {
   return images.map(
@@ -142,8 +198,30 @@ async function rejectRequest(id: string) {
   getUserRequests();
 }
 
-function viewOnMap() {
-  emits("viewMap");
+async function viewOnMap(request: RequestData) {
+  await getExistingHotbedsOfProblemsByType(request.problemType.code);
+  existingHotbedsByType.value.push({
+    id: "user-temp-created",
+    coordinate: [request.x, request.y],
+    userTempCreated: true,
+    details: {
+      square: 21879072,
+      owner: "",
+      landType: "",
+      contractingOrganization: "",
+      workStage: "",
+      eliminationMethod: "",
+      images: [],
+      problemAreaType: request.problemType.code,
+      comment: "",
+      density: null,
+    },
+    relatedTaskId: null,
+    coordinates: [],
+  });
+  selectedHotbed.value =
+    existingHotbedsByType.value[existingHotbedsByType.value.length - 1];
+  isMapOpen.value = true;
 }
 onMounted(() => {
   getUserRequests();
@@ -290,6 +368,13 @@ onMounted(() => {
         width: 100%;
       }
     }
+  }
+}
+.b-dialog {
+  &__content {
+    width: 80dvw;
+    height: 90dvh;
+    max-width: 80dvw;
   }
 }
 </style>
