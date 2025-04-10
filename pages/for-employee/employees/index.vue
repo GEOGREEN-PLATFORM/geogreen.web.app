@@ -66,7 +66,20 @@
 
 <script setup lang="ts">
 import { mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
+import { date } from "quasar";
+import { useMainStore } from "~/store/main";
 
+interface EmployeeRaw {
+  id: string;
+  firstName: string;
+  lastName: string;
+  patronymic: string;
+  role: string;
+  enabled: boolean;
+  creationDate: string; // ISO
+}
+
+const store = useMainStore();
 const STATUS_OPTIONS = [
   {
     name: "Активен",
@@ -87,6 +100,9 @@ const ROLE_OPTIONS = [
     value: "administrator",
   },
 ];
+const page = ref(0);
+const size = ref(10);
+const totalPages = ref(0);
 const tableHeaders = [
   {
     name: "initials",
@@ -117,15 +133,16 @@ const tableHeaders = [
     sortable: true,
   },
 ];
-const tableRows = [
-  {
-    initials: "Иванов Иван Иванович",
-    role: "Оператор",
-    status: "Активен",
-    dateCreated: "23.02.2025",
-    id: "213-de32-2312",
-  },
-];
+const employees = ref<EmployeeRaw[]>([]);
+const tableRows = computed(() =>
+  employees.value.map((e) => ({
+    id: e.id,
+    initials: `${e.lastName} ${e.firstName} ${e.patronymic}`,
+    role: ROLE_OPTIONS.find((o) => o.value === e.role)?.name ?? e.role,
+    status: e.enabled ? "Активен" : "Заблокирован",
+    dateCreated: date.formatDate(new Date(e.creationDate), "DD.MM.YYYY"),
+  })),
+);
 const filters = reactive<FilterItem[]>([
   {
     type: "select",
@@ -154,14 +171,76 @@ const isEmployeeDialogOpen = ref(false);
 function openEmployeeDialog() {
   isEmployeeDialogOpen.value = true;
 }
+async function getEmployees() {
+  const params = new URLSearchParams();
+  if (searchEmployee.value) {
+    params.append("search", searchEmployee.value);
+  }
+  if (filters[0].selected) {
+    params.append("role", filters[0].selected);
+  }
+  if (filters[1].selected) {
+    params.append("status", filters[1].selected);
+  }
+  const { from, to } = filters[2].selected as {
+    from: string | null;
+    to: string | null;
+  };
+  if (from) {
+    params.append("fromDate", format(new Date(from), "yyyy-MM-dd"));
+  }
+  if (to) {
+    params.append("toDate", format(new Date(to), "yyyy-MM-dd"));
+  }
+  params.append("page", String(page.value));
+  params.append("size", String(size.value));
+  const url = `${store.apiAuth}/user?${params.toString()}`;
+  // const response = await $fetch<{
+  //   users: EmployeeRaw[];
+  //   currentPage: number;
+  //   totalItems: number;
+  //   totalPages: number;
+  // }>(url, {
+  //   method: "GET",
+  //   headers: { Authorization: useGetToken() },
+  // });
+  const response = {
+    users: [
+      {
+        id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        firstName: "string",
+        lastName: "string",
+        patronymic: "string",
+        email: "string",
+        number: "string",
+        birthdate: "2025-04-10",
+        image: {
+          previewImageId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          fullImageId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        },
+        role: "string",
+        enabled: true,
+        creationDate: "2025-04-10T21:48:51.609Z",
+      },
+    ],
+    currentPage: 0,
+    totalItems: 0,
+    totalPages: 0,
+  };
+  employees.value = response.users;
+  totalPages.value = response.totalPages;
+}
 
 function handleEmployeeCreated(newEmployeeData: unknown) {
-  console.log("Создан сотрудник:", newEmployeeData);
+  getEmployees();
 }
 
 function goToEmployee(id: string) {
   navigateTo(`/for-employee/employees/${id}`);
 }
+onMounted(() => {
+  getEmployees();
+});
 </script>
 
 <style scoped lang="scss">

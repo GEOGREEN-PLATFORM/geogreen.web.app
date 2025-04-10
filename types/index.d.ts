@@ -5,6 +5,27 @@ declare global {
     loading?: boolean;
     show?: boolean;
   }
+  interface User {
+    role: "user" | "admin" | "operator";
+    id: string;
+    firstName: string;
+    lastName: string;
+    patronymic: string | null;
+    email: string;
+    number: string | null;
+    birthdate: string | null;
+    image: string | null;
+    role: string;
+    enabled: boolean;
+    creationDate: string;
+  }
+  interface OauthToken {
+    access_token: string;
+    expires_in: number;
+    refresh_token: string;
+    refresh_token_expires_in: number;
+    token_type: string;
+  }
   interface Alert {
     show: boolean;
     text: string;

@@ -8,18 +8,29 @@
             <KTInput v-model="userData.firstName" label="Имя" />
             <KTInput v-model="userData.lastName" label="Фамилия" />
           </div>
-          <KTInput v-model="userData.email" label="Почта" type="email" autocomplete="new-email" />
+          <KTInput
+            v-model="userData.email"
+            label="Почта"
+            :rules="[validateEmail]"
+            type="email"
+            name="email"
+            autocomplete="new-email"
+          />
           <KTInput
             v-model="userData.password"
             label="Пароль"
             type="password"
             autocomplete="new-password"
+            :rules="[validatePassword]"
+            hint="Пароль должен содержать от 8 до 20 символов"
           />
           <KTInput
             v-model="userData.repeatedPassword"
             label="Подтвердите пароль"
             autocomplete="new-password"
             type="password"
+            :rules="[validatePassword, (val) => val === userData.password || 'Пароли не совпадают']"
+            hint="Пароль должен содержать от 8 до 20 символов"
           />
         </div>
       </div>
@@ -41,10 +52,14 @@
 </template>
 
 <script setup lang="ts">
+import { useMainStore } from "~/store/main";
 definePageMeta({
   layout: "auth",
 });
 
+const store = useMainStore();
+const { setAccessToken } = useFetchTokens();
+const { validateEmail, validatePassword } = useRules();
 const userData = ref<UserRegisterData>({
   password: "",
   repeatedPassword: "",
@@ -64,12 +79,43 @@ const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
   },
 });
 
-function sendRegister() {
-  // запрос к апи
+async function sendRegister() {
   buttonOptions.value.main.loading = true;
-  setTimeout(() => goToMainPage(), 5000);
+  try {
+    const user = await $fetch<User>(`${store.apiAuth}/register/user`, {
+      method: "POST",
+      body: userData.value,
+    });
+    if (user) {
+      store.user = {
+        ...user,
+        password: "",
+      };
+      if (
+        await setAccessToken({
+          email: user.email,
+          password: userData.value.password,
+        })
+      ) {
+        goToMainPage();
+      }
+    } else {
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Не удалось создать аккаунт",
+      };
+    }
+  } catch (error) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Произошла непредвиденная ошибка",
+    };
+  } finally {
+    buttonOptions.value.main.loading = false;
+  }
 }
-
 function goToMainPage() {
   buttonOptions.value.main.loading = false;
   navigateTo({ path: "/" });
