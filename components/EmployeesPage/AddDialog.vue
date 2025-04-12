@@ -12,26 +12,26 @@
             <div class="b-dialog__section-content">
               <div class="b-dialog__fields-row">
                 <KTInput
-                  v-model="form.personalData.lastName"
+                  v-model="employeeData.personalData.lastName"
                   label="Фамилия"
                   required
                   class="b-dialog__field"
                 />
                 <KTInput
-                  v-model="form.personalData.firstName"
+                  v-model="employeeData.personalData.firstName"
                   label="Имя"
                   required
                   class="b-dialog__field"
                 />
                 <KTInput
-                  v-model="form.personalData.secondName"
+                  v-model="employeeData.personalData.secondName"
                   label="Отчество"
                   required
                   class="b-dialog__field"
                 />
               </div>
               <KTInputDate
-                v-model="form.personalData.dateOfBirth"
+                v-model="employeeData.personalData.dateOfBirth"
                 label="Дата рождения"
                 class="b-dialog__field"
               />
@@ -41,13 +41,13 @@
             <h3 class="b-dialog__section-title gg-h3">Контакты</h3>
             <div class="b-dialog__section-content">
               <KTInput
-                v-model="form.contacts.email"
+                v-model="employeeData.contacts.email"
                 label="Email"
                 hint="Электронная почта сотрудника"
                 class="b-dialog__field"
               />
               <KTInput
-                v-model="form.contacts.phoneNumber"
+                v-model="employeeData.contacts.phoneNumber"
                 label="Номер телефона"
                 :required="false"
                 class="b-dialog__field"
@@ -64,18 +64,18 @@
             </div>
             <div class="b-dialog__info-row gg-t-base">
               <span class="b-dialog__info-label">Дата рождения:</span>
-              <span class="b-dialog__info-value">{{ form.personalData.dateOfBirth }}</span>
+              <span class="b-dialog__info-value">{{ employeeData.personalData.dateOfBirth }}</span>
             </div>
           </section>
           <section class="b-dialog__section">
             <h3 class="b-dialog__section-title gg-h3">Контакты</h3>
             <div class="b-dialog__info-row gg-t-base">
               <span class="b-dialog__info-label">Email:</span>
-              <span class="b-dialog__info-value">{{ form.contacts.email }}</span>
+              <span class="b-dialog__info-value">{{ employeeData.contacts.email }}</span>
             </div>
             <div class="b-dialog__info-row gg-t-base">
               <span class="b-dialog__info-label">Номер телефона:</span>
-              <span class="b-dialog__info-value">{{ form.contacts.phoneNumber }}</span>
+              <span class="b-dialog__info-value">{{ employeeData.contacts.phoneNumber }}</span>
             </div>
           </section>
         </template>
@@ -84,7 +84,7 @@
             <div class="b-dialog__password-container">
               <h3 class="b-dialog__password-title gg-h2">Пароль</h3>
               <div class="b-dialog__password-wrapper">
-                <div class="b-dialog__password">{{ password }}</div>
+                <div class="b-dialog__password">{{ employeeData.password }}</div>
                 <div
                   class="b-dialog__copy-wrapper"
                   @mouseenter="onCopyMouseEnter"
@@ -120,6 +120,20 @@ import { mdiContentCopy } from "@quasar/extras/mdi-v6";
 interface Props {
   modelValue: boolean;
 }
+interface EmployeeData {
+  personalData: {
+    firstName: string;
+    secondName: string;
+    lastName: string;
+    dateOfBirth: string;
+  };
+  contacts: {
+    email: string;
+    phoneNumber: string;
+  };
+  password: string;
+}
+
 const props = defineProps<Props>();
 const emit = defineEmits(["update:modelValue", "employeeCreated"]);
 const dialogVisible = ref(props.modelValue);
@@ -135,7 +149,7 @@ watch(dialogVisible, (newVal) => {
   emit("update:modelValue", newVal);
 });
 
-const form = reactive({
+const employeeData = reactive<EmployeeData>({
   personalData: {
     firstName: "",
     secondName: "",
@@ -146,16 +160,16 @@ const form = reactive({
     email: "",
     phoneNumber: "",
   },
+  password: "",
 });
 
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
 const subTitle = ref("");
-const password = ref("");
 const currentStep = ref(1);
 
 const fullName = computed(() =>
-  `${form.personalData.lastName} ${form.personalData.firstName} ${form.personalData.secondName}`.trim(),
+  `${employeeData.personalData.lastName} ${employeeData.personalData.firstName} ${employeeData.personalData.secondName}`.trim(),
 );
 
 function onSubmit() {
@@ -186,9 +200,9 @@ function nextStep() {
     subTitle.value =
       "Сохраните пароль для сотрудника. Утерянные пароли не восстанавливаются в системе!";
     applyLabel.value = "Создать";
-    password.value = generatePassword();
+    employeeData.password = generatePassword();
   } else if (currentStep.value === 3) {
-    emit("employeeCreated", form);
+    emit("employeeCreated", employeeData);
     dialogVisible.value = false;
   }
 }
@@ -210,13 +224,13 @@ function resetForm() {
   subTitle.value = "";
   cancelLabel.value = "Отмена";
   applyLabel.value = "Далее";
-  password.value = "";
-  form.personalData.firstName = "";
-  form.personalData.secondName = "";
-  form.personalData.lastName = "";
-  form.personalData.dateOfBirth = "";
-  form.contacts.email = "";
-  form.contacts.phoneNumber = "";
+  employeeData.personalData.firstName = "";
+  employeeData.personalData.secondName = "";
+  employeeData.personalData.lastName = "";
+  employeeData.personalData.dateOfBirth = "";
+  employeeData.contacts.email = "";
+  employeeData.contacts.phoneNumber = "";
+  employeeData.password = "";
 }
 
 function generatePassword(): string {
@@ -249,7 +263,7 @@ function onCopyMouseLeave() {
 }
 
 function copyPassword() {
-  navigator.clipboard.writeText(password.value).then(() => {
+  navigator.clipboard.writeText(employeeData.password).then(() => {
     tooltipText.value = "Скопировано";
     showTooltip.value = true;
     isAnimating.value = true;

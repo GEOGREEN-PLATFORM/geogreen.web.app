@@ -22,14 +22,22 @@ export function useFetchTokens() {
         },
       );
       useSetToken(response);
-      return true;
-    } catch (error) {
-      useState<Alert>("showAlert").value = {
-        show: true,
-        type: "error",
-        text: "Не удалось получить доступ",
-      };
-      return null;
+      return response;
+    } catch (error: any) {
+      if (error.status === 401) {
+        useState<Alert>("showAlert").value = {
+          show: true,
+          type: "error",
+          text: "Неверный логин или пароль",
+        };
+      } else {
+        useState<Alert>("showAlert").value = {
+          show: true,
+          type: "error",
+          text: "Не удалось получить доступ",
+        };
+      }
+      return false;
     }
   }
   async function refreshToken() {
@@ -48,9 +56,10 @@ export function useFetchTokens() {
         },
       );
       useSetToken(response);
+      return true;
     } catch (error) {
       console.error("Error fetching token:", error);
-      return null;
+      return false;
     }
   }
   return {

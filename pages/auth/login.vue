@@ -47,11 +47,11 @@ definePageMeta({
 const store = useMainStore();
 const { setAccessToken } = useFetchTokens();
 const { validateEmail, validatePassword } = useRules();
+const { saveUserEmail, getUserDataByEmail } = useCheckUser();
 const userData = ref<UserAuthData>({
   email: "",
   password: "",
 });
-const showAuthError = ref(false);
 const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
   main: {
     designType: "primary",
@@ -67,26 +67,15 @@ async function sendLogin() {
   buttonOptions.value.main.loading = true;
   try {
     if (await setAccessToken(userData.value)) {
-      store.user = {
-        id: "48e3a907-7c44-4607-99d9-88bfbf60c830",
-        firstName: "rjn",
-        lastName: "333",
-        patronymic: null,
-        email: "kot2@mail.ru",
-        number: null,
-        birthdate: null,
-        image: null,
-        role: "user",
-        enabled: true,
-        creationDate: "2025-04-10 21:35:29",
-      };
+      saveUserEmail(userData.value.email);
+      await getUserDataByEmail(userData.value.email);
       goToMainPage();
     }
   } catch (error) {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Произошла непредвиденная ошибка",
+      text: "Возникла ошибка во время авторизации",
     };
   } finally {
     buttonOptions.value.main.loading = false;
@@ -94,9 +83,7 @@ async function sendLogin() {
 }
 
 function goToMainPage() {
-  buttonOptions.value.main.loading = false;
-  showAuthError.value = true;
-  // navigateTo({ path: '/' });
+  navigateTo({ path: "/" });
 }
 </script>
 

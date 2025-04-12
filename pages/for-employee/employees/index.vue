@@ -1,6 +1,6 @@
 <template>
   <main class="b-page">
-    <header class="b-header q-my-lg">
+    <header class="b-header q-mb-lg">
       <div class="b-header__title-wrapper">
         <h1 class="b-header__title gg-h1">Сотрудники</h1>
         <div class="b-header__add-btn">
@@ -17,7 +17,8 @@
       </div>
       <div class="b-header__search">
         <KTInput
-          v-model="searchEmployee"
+          v-model="searchEmployeeStr"
+          @update:model-value="searchEmployee"
           label="Поиск сотрудника"
           hideBottomSpace
           height="48px"
@@ -31,15 +32,22 @@
     </header>
     <section class="b-content">
       <div class="b-filter q-mb-lg">
-        <CFilter v-model="filters"></CFilter>
+        <CFilter
+          v-model="filters"
+          @apply-filters="getEmployees"
+          @reset-filters="getEmployees"
+        ></CFilter>
       </div>
       <div class="b-table">
         <CTable
           :columns="tableHeaders"
           :rows="tableRows"
+          v-model:pagination="pagination"
           row-key="name"
           :slots="['status']"
-          @click:row="(row: any) => goToEmployee(row.id)"
+          @click:row="(row: any) => goToEmployee(row.email)"
+          @updateTable="getEmployees"
+          :loading="employeesLoading"
         >
           <template v-slot:body-cell-status="slotProps">
             <div class="b-account-status">
@@ -76,10 +84,29 @@ interface EmployeeRaw {
   patronymic: string;
   role: string;
   enabled: boolean;
-  creationDate: string; // ISO
+  creationDate: string;
+  email: string;
 }
-
+interface EmployeeData {
+  personalData: {
+    firstName: string;
+    secondName: string;
+    lastName: string;
+    dateOfBirth: string;
+  };
+  contacts: {
+    email: string;
+    phoneNumber: string;
+  };
+  password: string;
+}
+const pagination = ref({
+  page: 1,
+  rowsPerPage: 10,
+  rowsNumber: 0,
+});
 const store = useMainStore();
+const debounce = useDebounce();
 const STATUS_OPTIONS = [
   {
     name: "Активен",
@@ -97,12 +124,9 @@ const ROLE_OPTIONS = [
   },
   {
     name: "Администратор",
-    value: "administrator",
+    value: "admin",
   },
 ];
-const page = ref(0);
-const size = ref(10);
-const totalPages = ref(0);
 const tableHeaders = [
   {
     name: "initials",
@@ -137,13 +161,14 @@ const employees = ref<EmployeeRaw[]>([]);
 const tableRows = computed(() =>
   employees.value.map((e) => ({
     id: e.id,
+    email: e.email,
     initials: `${e.lastName} ${e.firstName} ${e.patronymic}`,
     role: ROLE_OPTIONS.find((o) => o.value === e.role)?.name ?? e.role,
     status: e.enabled ? "Активен" : "Заблокирован",
     dateCreated: date.formatDate(new Date(e.creationDate), "DD.MM.YYYY"),
   })),
 );
-const filters = reactive<FilterItem[]>([
+const filters = ref<FilterItem[]>([
   {
     type: "select",
     key: "role",
@@ -165,74 +190,100 @@ const filters = reactive<FilterItem[]>([
     label: "Период создания",
   },
 ]);
-const searchEmployee = ref("");
+const searchEmployeeStr = ref("");
+const employeesLoading = ref(true);
 const isEmployeeDialogOpen = ref(false);
-
+function searchEmployee() {
+  debounce(getEmployees, 500, "searchEmployee");
+}
 function openEmployeeDialog() {
   isEmployeeDialogOpen.value = true;
 }
 async function getEmployees() {
+  employeesLoading.value = true;
   const params = new URLSearchParams();
-  if (searchEmployee.value) {
-    params.append("search", searchEmployee.value);
+  if (searchEmployeeStr.value) {
+    params.append("search", searchEmployeeStr.value);
   }
-  if (filters[0].selected) {
-    params.append("role", filters[0].selected);
+  if (filters.value[0].selected) {
+    params.append("role", filters.value[0].selected as string);
   }
-  if (filters[1].selected) {
-    params.append("status", filters[1].selected);
+  if (filters.value[1].selected) {
+    params.append("status", filters.value[1].selected as string);
   }
-  const { from, to } = filters[2].selected as {
-    from: string | null;
-    to: string | null;
-  };
-  if (from) {
-    params.append("fromDate", format(new Date(from), "yyyy-MM-dd"));
+  if (
+    filters.value[2].selected &&
+    typeof filters.value[2].selected === "string"
+  ) {
+    params.append(
+      "fromDate",
+      tempDateConverterWillBeRemoved(filters.value[2].selected),
+    );
+    params.append(
+      "toDate",
+      tempDateConverterWillBeRemoved(filters.value[2].selected),
+    );
+  } else {
+    const { from, to } = filters.value[2].selected as {
+      from: string | null;
+      to: string | null;
+    };
+    if (from) {
+      params.append("fromDate", tempDateConverterWillBeRemoved(from));
+    }
+    if (to) {
+      params.append("toDate", tempDateConverterWillBeRemoved(to));
+    }
   }
-  if (to) {
-    params.append("toDate", format(new Date(to), "yyyy-MM-dd"));
-  }
-  params.append("page", String(page.value));
-  params.append("size", String(size.value));
+
+  params.append("page", String(pagination.value.page - 1));
+  params.append("size", String(pagination.value.rowsPerPage));
   const url = `${store.apiAuth}/user?${params.toString()}`;
-  // const response = await $fetch<{
-  //   users: EmployeeRaw[];
-  //   currentPage: number;
-  //   totalItems: number;
-  //   totalPages: number;
-  // }>(url, {
-  //   method: "GET",
-  //   headers: { Authorization: useGetToken() },
-  // });
-  const response = {
-    users: [
-      {
-        id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        firstName: "string",
-        lastName: "string",
-        patronymic: "string",
-        email: "string",
-        number: "string",
-        birthdate: "2025-04-10",
-        image: {
-          previewImageId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-          fullImageId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-        },
-        role: "string",
-        enabled: true,
-        creationDate: "2025-04-10T21:48:51.609Z",
-      },
-    ],
-    currentPage: 0,
-    totalItems: 0,
-    totalPages: 0,
-  };
+  const response = await $fetch<{
+    users: EmployeeRaw[];
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
+  }>(url, {
+    method: "GET",
+    headers: { Authorization: useGetToken() },
+  });
   employees.value = response.users;
-  totalPages.value = response.totalPages;
+  pagination.value.rowsNumber = response.totalItems;
+  employeesLoading.value = false;
 }
 
-function handleEmployeeCreated(newEmployeeData: unknown) {
-  getEmployees();
+async function handleEmployeeCreated(newEmployee: EmployeeData) {
+  try {
+    await $fetch(`${store.apiAuth}/register/operator`, {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: {
+        firstName: newEmployee.personalData.firstName,
+        lastName: newEmployee.personalData.lastName,
+        patronymic: newEmployee.personalData.secondName,
+        email: newEmployee.contacts.email,
+        password: newEmployee.password,
+        number: newEmployee.contacts.phoneNumber,
+        birthdate: tempDateConverterWillBeRemoved(
+          newEmployee.personalData.dateOfBirth,
+        ),
+      },
+    });
+    getEmployees();
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Ну удалось создать оператора",
+    };
+  }
+}
+function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
+  const [day, month, year] = ddmmyyyy.split(".");
+  return `${year}-${month}-${day}`;
 }
 
 function goToEmployee(id: string) {
@@ -249,7 +300,7 @@ onMounted(() => {
   $app-laptop: 960px;
   $app-mobile: 600px;
   $app-narrow-mobile: 364px;
-  padding: 0px 32px;
+  padding: 24px 32px;
   .b-header {
     display: flex;
     justify-content: space-between;

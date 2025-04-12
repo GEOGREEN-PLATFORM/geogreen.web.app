@@ -13,6 +13,7 @@
       </header>
       <slot />
     </div>
+    <CAlert></CAlert>
   </div>
 </template>
 <script setup lang="ts">

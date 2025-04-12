@@ -18,6 +18,7 @@ declare global {
     role: string;
     enabled: boolean;
     creationDate: string;
+    password?: string;
   }
   interface OauthToken {
     access_token: string;

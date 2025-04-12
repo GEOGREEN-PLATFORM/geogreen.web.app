@@ -60,6 +60,7 @@ definePageMeta({
 const store = useMainStore();
 const { setAccessToken } = useFetchTokens();
 const { validateEmail, validatePassword } = useRules();
+const { saveUserEmail } = useCheckUser();
 const userData = ref<UserRegisterData>({
   password: "",
   repeatedPassword: "",
@@ -97,6 +98,7 @@ async function sendRegister() {
           password: userData.value.password,
         })
       ) {
+        saveUserEmail(user.email);
         goToMainPage();
       }
     } else {
