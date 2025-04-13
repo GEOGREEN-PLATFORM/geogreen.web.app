@@ -10,6 +10,9 @@
       table-class="c-table-container__table"
       :rows-per-page-options="[10, 20, 50, 0]"
       @row-click="onRowClick"
+      v-model:pagination="paginationCopy"
+      @request="updateTable"
+      :loading="loading"
     >
       <template v-for="slot in props.slots" v-slot:[`body-cell-${slot}`]="slotProps">
         <q-td :props="slotProps">
@@ -36,14 +39,32 @@ interface Props {
   title: string;
   rowKey?: string;
   slots?: string[];
+  pagination: any;
+  loading?: boolean;
 }
 const props = defineProps<Props>();
+const paginationCopy = ref();
 const emits = defineEmits<{
   "click:row": [row: unknown];
+  "update:pagination": [any];
+  updateTable: [];
 }>();
 function onRowClick(evt: Event, row: unknown) {
   emits("click:row", row);
 }
+function updateTable(request: any) {
+  if (request.pagination.rowsPerPage === 0) {
+    paginationCopy.value.rowsPerPage = paginationCopy.value.rowsNumber;
+  } else {
+    paginationCopy.value.rowsPerPage = request.pagination.rowsPerPage;
+  }
+  paginationCopy.value.page = request.pagination.page;
+  emits("update:pagination", paginationCopy.value);
+  emits("updateTable");
+}
+onMounted(() => {
+  paginationCopy.value = props.pagination;
+});
 </script>
 
 <style lang="scss">
@@ -66,6 +87,25 @@ function onRowClick(evt: Event, row: unknown) {
         left: 12px;
       }
     }
+  }
+}
+</style>
+<style lang="scss">
+.c-table-container__table {
+  height: 100%;
+  max-height: 600px;
+  .q-table__top,
+  .q-table__bottom,
+  thead tr:first-child th {
+    background-color: var(--app-white);
+  }
+  thead tr th {
+    position: sticky;
+    z-index: 1;
+  }
+
+  thead tr:first-child th {
+    top: 0;
   }
 }
 </style>

@@ -4,8 +4,20 @@
       <h1 class="form-content__head gg-h1">Войти в аккаунт</h1>
       <div class="form-content">
         <div class="form-content__input-fields">
-          <KTInput v-model="userData.email" label="Почта" name="email" type="email" />
-          <KTInput v-model="userData.password" label="Пароль" type="password" name="password" />
+          <KTInput
+            v-model="userData.email"
+            label="Почта"
+            :rules="[validateEmail]"
+            name="email"
+            type="email"
+          />
+          <KTInput
+            v-model="userData.password"
+            label="Пароль"
+            :rules="[validatePassword]"
+            type="password"
+            name="password"
+          />
         </div>
         <div class="form-content__forgot-password-block text-right">
           <span class="action-label">
@@ -26,15 +38,20 @@
 </template>
 
 <script setup lang="ts">
+import { useMainStore } from "~/store/main";
+
 definePageMeta({
   layout: "auth",
 });
 
+const store = useMainStore();
+const { setAccessToken } = useFetchTokens();
+const { validateEmail, validatePassword } = useRules();
+const { saveUserEmail, getUserDataByEmail } = useCheckUser();
 const userData = ref<UserAuthData>({
   email: "",
   password: "",
 });
-const showAuthError = ref(false);
 const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
   main: {
     designType: "primary",
@@ -46,16 +63,27 @@ const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
   },
 });
 
-function sendLogin() {
-  // запрос к апи
+async function sendLogin() {
   buttonOptions.value.main.loading = true;
-  setTimeout(() => goToMainPage(), 5000);
+  try {
+    if (await setAccessToken(userData.value)) {
+      saveUserEmail(userData.value.email);
+      await getUserDataByEmail(userData.value.email);
+      goToMainPage();
+    }
+  } catch (error) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Возникла ошибка во время авторизации",
+    };
+  } finally {
+    buttonOptions.value.main.loading = false;
+  }
 }
 
 function goToMainPage() {
-  buttonOptions.value.main.loading = false;
-  showAuthError.value = true;
-  // navigateTo({ path: '/' });
+  navigateTo({ path: "/" });
 }
 </script>
 

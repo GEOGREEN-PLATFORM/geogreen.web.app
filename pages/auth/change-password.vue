@@ -11,7 +11,13 @@
           <span>{{ pageState.hintText }}</span>
         </div>
         <div class="form-content__input-fields">
-          <KTInput v-if="pageState.step === 0" v-model="userData.email" label="Почта" />
+          <KTInput
+            v-if="pageState.step === 0"
+            v-model="userData.email"
+            label="Почта"
+            type="email"
+            name="email"
+          />
           <KTInputOTP
             v-if="pageState.step === 1"
             v-model:is-error="isWrongCode"
@@ -52,6 +58,8 @@
 </template>
 
 <script setup lang="ts">
+import { useMainStore } from "~/store/main";
+
 definePageMeta({
   layout: "auth",
 });
@@ -59,6 +67,7 @@ definePageMeta({
 const INITIAL_STEP = 0;
 const CODE_SENDING_TIMEOUT = 59;
 
+const store = useMainStore();
 const defaultSubButton: ButtonOptions = {
   designType: "tertiary",
   label: "Назад",
@@ -100,7 +109,12 @@ const pageState = reactive({
   } as { main: ButtonOptions; sub: ButtonOptions },
 });
 
-function updatePageState(newStep: number) {
+async function updatePageState(newStep: number) {
+  if (newStep === 1) {
+    pageState.buttonOpts.main.loading = true;
+    await sendCodeToEmail();
+    pageState.buttonOpts.main.loading = false;
+  }
   pageState.step = newStep;
   if (newStep === 1) {
     codeSendingInterval.value = setInterval(() => {
@@ -140,7 +154,17 @@ function handleSubAction(pageStep: number) {
 function sendChangePassword() {
   // Логика отправки запроса на смену пароля
 }
-
+async function sendCodeToEmail() {
+  await $fetch(
+    `${store.apiAuth}/register/forgot-password/${userData.value.email}`,
+    {
+      headers: {
+        Authorization: useGetToken(),
+      },
+      method: "POST",
+    },
+  );
+}
 function goBack() {
   router.back();
 }
