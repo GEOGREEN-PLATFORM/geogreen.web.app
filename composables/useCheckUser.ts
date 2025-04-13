@@ -18,11 +18,10 @@ export default function useCheckUser() {
         });
         if (user) {
           store.user = user;
-        } else {
-          return false;
+          return true;
         }
       }
-      return true;
+      return false;
     } catch (error) {
       return false;
     }
