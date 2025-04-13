@@ -4,11 +4,11 @@
       <div class="b-header__title-wrapper">
         <h1 class="b-header__title gg-h1">Очаги</h1>
         <div class="b-header__add-btn">
-          <GGButton @click="openEmployeeDialog" label="Добавить очаг" size="medium"></GGButton>
+          <GGButton @click="openHotbedDialog" label="Добавить очаг" size="medium"></GGButton>
         </div>
         <div class="b-header__add-btn--mobile">
           <GGButton
-            @click="openEmployeeDialog"
+            @click="openHotbedDialog"
             :icon="mdiPlus"
             iconColor="var(--app-white)"
             stretch="hug"
@@ -17,8 +17,8 @@
       </div>
       <div class="b-header__search">
         <KTInput
-          v-model="searchEmployeeStr"
-          @update:model-value="searchEmployee"
+          v-model="searchHotbedStr"
+          @update:model-value="searchHotbed"
           label="Поиск очага"
           hideBottomSpace
           height="48px"
@@ -34,8 +34,8 @@
       <div class="b-filter q-mb-lg">
         <CFilter
           v-model="filters"
-          @apply-filters="getEmployees"
-          @reset-filters="getEmployees"
+          @apply-filters="getHotbeds"
+          @reset-filters="getHotbeds"
         ></CFilter>
       </div>
       <div class="b-table">
@@ -45,9 +45,9 @@
           v-model:pagination="pagination"
           row-key="name"
           :slots="['status']"
-          @click:row="(row: any) => goToEmployee(row.email)"
-          @updateTable="getEmployees"
-          :loading="employeesLoading"
+          @click:row="(row: any) => goToHotbed(row.email)"
+          @updateTable="getHotbeds"
+          :loading="hotbedsLoading"
         >
           <template v-slot:body-cell-status="slotProps">
             <div class="b-account-status">
@@ -65,9 +65,10 @@
         </CTable>
       </div>
     </section>
-    <EmployeesPageAddDialog
-      v-model="isEmployeeDialogOpen"
-      @employeeCreated="handleEmployeeCreated"
+    <PagesHotbedsAdd
+      v-model="isHotbedDialogOpen"
+      :hotbeds="hotbeds"
+      @hotbedCreated="handleHotbedCreated"
     />
   </main>
 </template>
@@ -76,18 +77,7 @@
 import { mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
-
-interface EmployeeRaw {
-  id: string;
-  firstName: string;
-  lastName: string;
-  patronymic: string;
-  role: string;
-  enabled: boolean;
-  creationDate: string;
-  email: string;
-}
-interface EmployeeData {
+interface HotbedData {
   personalData: {
     firstName: string;
     secondName: string;
@@ -107,24 +97,39 @@ const pagination = ref({
 });
 const store = useMainStore();
 const debounce = useDebounce();
-const STATUS_OPTIONS = [
+
+const WORK_STAGES = [
   {
-    name: "Активен",
-    value: "active",
+    name: "Создано",
+    value: "Создано",
   },
   {
-    name: "Заблокирован",
-    value: "blocked",
+    name: "В работе",
+    value: "В работе",
+  },
+  {
+    name: "Завершено",
+    value: "Завершено",
   },
 ];
-const ROLE_OPTIONS = [
+const LAND_TYPES = [
   {
-    name: "Оператор",
-    value: "operator",
+    name: "Сельскохозяйственные",
+    value: "Сельскохозяйственные",
+  },
+];
+const PROBLEM_AREA_TYPES = [
+  {
+    name: "Борщевик",
+    value: "Борщевик",
   },
   {
-    name: "Администратор",
-    value: "admin",
+    name: "Свалка",
+    value: "Свалка",
+  },
+  {
+    name: "Пожар",
+    value: "Пожар",
   },
 ];
 const tableHeaders = [
@@ -178,9 +183,9 @@ const tableHeaders = [
     sortable: true,
   },
 ];
-const employees = ref<EmployeeRaw[]>([]);
+const hotbeds = ref<Marker[]>([]);
 const tableRows = computed(() =>
-  employees.value.map((e) => ({
+  hotbeds.value.map((e) => ({
     id: e.id,
     email: e.email,
     initials: `${e.lastName} ${e.firstName} ${e.patronymic}`,
@@ -192,39 +197,52 @@ const tableRows = computed(() =>
 const filters = ref<FilterItem[]>([
   {
     type: "select",
-    key: "role",
-    label: "Роль",
+    key: "problemAreaType",
+    label: "Тип проблемы",
     selected: "",
-    data: ROLE_OPTIONS,
+    data: PROBLEM_AREA_TYPES,
   },
   {
     type: "select",
-    key: "status",
+    key: "wordStage",
     selected: "",
-    label: "Статус аккаунта",
-    data: STATUS_OPTIONS,
+    label: "Статус работы",
+    data: WORK_STAGES,
+  },
+  {
+    type: "select",
+    key: "landType",
+    selected: "",
+    label: "Тип земель",
+    data: LAND_TYPES,
   },
   {
     type: "date-range",
-    key: "status",
+    key: "dateCreated",
     selected: "",
     label: "Период создания",
   },
+  {
+    type: "date-range",
+    key: "dateUpdated",
+    selected: "",
+    label: "Период изменения",
+  },
 ]);
-const searchEmployeeStr = ref("");
-const employeesLoading = ref(true);
-const isEmployeeDialogOpen = ref(false);
-function searchEmployee() {
-  debounce(getEmployees, 500, "searchEmployee");
+const searchHotbedStr = ref("");
+const hotbedsLoading = ref(true);
+const isHotbedDialogOpen = ref(false);
+function searchHotbed() {
+  debounce(getHotbeds, 500, "searchHotbed");
 }
-function openEmployeeDialog() {
-  isEmployeeDialogOpen.value = true;
+function openHotbedDialog() {
+  isHotbedDialogOpen.value = true;
 }
-async function getEmployees() {
-  employeesLoading.value = true;
+async function getHotbeds() {
+  hotbedsLoading.value = true;
   const params = new URLSearchParams();
-  if (searchEmployeeStr.value) {
-    params.append("search", searchEmployeeStr.value);
+  if (searchHotbedStr.value) {
+    params.append("search", searchHotbedStr.value);
   }
   if (filters.value[0].selected) {
     params.append("role", filters.value[0].selected as string);
@@ -259,22 +277,17 @@ async function getEmployees() {
 
   params.append("page", String(pagination.value.page - 1));
   params.append("size", String(pagination.value.rowsPerPage));
-  const url = `${store.apiAuth}/user?${params.toString()}`;
-  const response = await $fetch<{
-    users: EmployeeRaw[];
-    currentPage: number;
-    totalItems: number;
-    totalPages: number;
-  }>(url, {
+  const url = `${store.apiGeospatial}/geo/info/getAll?${params.toString()}`;
+  const response = await $fetch<Marker[]>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },
   });
-  employees.value = response.users;
-  pagination.value.rowsNumber = response.totalItems;
-  employeesLoading.value = false;
+  hotbeds.value = response;
+  // pagination.value.rowsNumber = response.totalItems;
+  hotbedsLoading.value = false;
 }
 
-async function handleEmployeeCreated(newEmployee: EmployeeData) {
+async function handleHotbedCreated(newHotbed: HotbedData) {
   try {
     await $fetch(`${store.apiAuth}/register/operator`, {
       method: "POST",
@@ -282,18 +295,18 @@ async function handleEmployeeCreated(newEmployee: EmployeeData) {
         authorization: useGetToken(),
       },
       body: {
-        firstName: newEmployee.personalData.firstName,
-        lastName: newEmployee.personalData.lastName,
-        patronymic: newEmployee.personalData.secondName,
-        email: newEmployee.contacts.email,
-        password: newEmployee.password,
-        number: newEmployee.contacts.phoneNumber,
+        firstName: newHotbed.personalData.firstName,
+        lastName: newHotbed.personalData.lastName,
+        patronymic: newHotbed.personalData.secondName,
+        email: newHotbed.contacts.email,
+        password: newHotbed.password,
+        number: newHotbed.contacts.phoneNumber,
         birthdate: tempDateConverterWillBeRemoved(
-          newEmployee.personalData.dateOfBirth,
+          newHotbed.personalData.dateOfBirth,
         ),
       },
     });
-    getEmployees();
+    getHotbeds();
   } catch (error: any) {
     useState<Alert>("showAlert").value = {
       show: true,
@@ -307,11 +320,11 @@ function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
   return `${year}-${month}-${day}`;
 }
 
-function goToEmployee(id: string) {
-  navigateTo(`/for-employee/employees/${id}`);
+function goToHotbed(id: string) {
+  navigateTo(`/for-hotbed/hotbeds/${id}`);
 }
 onMounted(() => {
-  getEmployees();
+  getHotbeds();
 });
 </script>
 
