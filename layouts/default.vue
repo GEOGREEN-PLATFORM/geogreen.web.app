@@ -34,7 +34,7 @@ const pages: Page[] = [
   {
     key: "hotbeds",
     name: "Очаги",
-    disabled: true,
+    path: "/hotbeds",
   },
   {
     key: "report",
