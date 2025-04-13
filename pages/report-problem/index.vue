@@ -81,7 +81,7 @@ import { useMainStore } from "~/store/main";
 interface UserReport {
   coordinate: Coordinate;
   details: {
-    images: string[];
+    images: ImageIds[];
     problemAreaType: ProblemAreaTypes | "";
     comment: string;
   };
@@ -144,6 +144,12 @@ async function getExistingHotbedsOfProblemsByType(
 ) {
   const data = await $fetch<Marker[]>(
     `${store.apiGeospatial}/geo/info/getAll/${problemAreaType}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+    },
   );
   existingHotbeds.value = data;
 }
@@ -213,16 +219,19 @@ async function sendReport() {
   isFormSending.value = true;
   try {
     for (const file of attachedFiles.value) {
-      const fullImageId = await uploadPhoto(file);
-      userReport.details.images.push(fullImageId);
+      const image = await uploadPhoto(file);
+      userReport.details.images.push(image);
     }
-    for (const fullImageId of userReport.details.images) {
-      const result = await analysePhotoOnHogweedPresence(fullImageId);
-      console.log("Анализ для", fullImageId, result);
-      //дописать логику на проверку борщевика
-    }
+    // for (const image of userReport.details.images) {
+    //   // const result = await analysePhotoOnHogweedPresence(image);
+    //   // console.log("Анализ для", image, result);
+    //   //дописать логику на проверку борщевика
+    // }
     await $fetch(`${store.apiUserReport}/report`, {
       method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
       body: userReport,
     });
     attachedFiles.value = [];
@@ -260,14 +269,14 @@ async function uploadPhoto(file: File) {
   try {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await $fetch<{ fullImageId: string }>(
+    const response = await $fetch<ImageIds>(
       `${store.apiFileServer}/file/image/upload`,
       {
         method: "POST",
         body: formData,
       },
     );
-    return response.fullImageId;
+    return response;
   } catch (err) {
     throw new Error("Ошибка при загрузке фото");
   }

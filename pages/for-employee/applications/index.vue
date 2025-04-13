@@ -163,6 +163,9 @@ const requests = ref<RequestData[]>([]);
 async function getUserRequests() {
   requests.value = await $fetch(`${store.apiUserReport}/report/getAll`, {
     method: "GET",
+    headers: {
+      authorization: useGetToken(),
+    },
   });
 }
 async function getExistingHotbedsOfProblemsByType(

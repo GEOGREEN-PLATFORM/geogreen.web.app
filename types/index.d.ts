@@ -27,6 +27,10 @@ declare global {
     refresh_token_expires_in: number;
     token_type: string;
   }
+  interface ImageIds {
+    previewImageId: string;
+    fullImageId: string;
+  }
   interface Alert {
     show: boolean;
     text: string;
