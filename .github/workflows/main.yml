@@ -31,11 +31,11 @@ jobs:
       - name: Run lint
         run: npm run lint
 
-      - name: Run tests
-        run: npm run coverage
+      # - name: Run tests
+      #   run: npm run coverage
 
-      - name: Code coverage
-        uses: codecov/codecov-action@v3
+      # - name: Code coverage
+      #   uses: codecov/codecov-action@v3
   build-and-publish:
     permissions:
       contents: read

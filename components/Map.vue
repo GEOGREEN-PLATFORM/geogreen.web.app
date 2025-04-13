@@ -641,11 +641,13 @@ function createZone(event: DrawEvent) {
 watch(
   () => props.markers,
   (newMarkers) => {
-    gGreenCluster.markersDict = convertMarkersToDictionary(newMarkers);
-    gGreenCluster.markerFeatures = convertMarkersToFeatures(newMarkers);
-    gGreenCluster.zonesFeatures = convertZonesToFeatures(
-      Array.from(gGreenCluster.markersDict.values()),
-    );
+    if (newMarkers?.length && Array.isArray(newMarkers)) {
+      gGreenCluster.markersDict = convertMarkersToDictionary(newMarkers);
+      gGreenCluster.markerFeatures = convertMarkersToFeatures(newMarkers);
+      gGreenCluster.zonesFeatures = convertZonesToFeatures(
+        Array.from(gGreenCluster.markersDict.values()),
+      );
+    }
   },
   { deep: true },
 );

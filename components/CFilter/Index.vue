@@ -63,6 +63,8 @@ const filterItems = ref<FilterItem[]>([]);
 const showContent = ref(false);
 const emits = defineEmits<{
   "update:modelValue": [FilterItem[]];
+  applyFilters: [];
+  resetFilters: [];
 }>();
 function toggleContentShow() {
   showContent.value = !showContent.value;
@@ -79,6 +81,7 @@ function resetFilters() {
   });
   calculateActiveFiltersCount();
   emits("update:modelValue", filterItems.value);
+  emits("resetFilters");
 }
 function calculateActiveFiltersCount() {
   let count = 0;
@@ -98,6 +101,7 @@ function calculateActiveFiltersCount() {
 function updateValue() {
   calculateActiveFiltersCount();
   emits("update:modelValue", filterItems.value);
+  emits("applyFilters");
 }
 onMounted(() => {
   filterItems.value = props.modelValue;

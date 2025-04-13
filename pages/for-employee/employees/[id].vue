@@ -102,7 +102,14 @@
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
-              <div class="b-labeled-field__value gg-t-base">{{ userData.birthDate }}</div>
+              <div
+                class="b-labeled-field__value gg-t-base"
+                :class="{
+                  'b-labeled-field__value--empty': !userData.birthDate,
+                }"
+              >
+                {{ userData.birthDate || "Не указано" }}
+              </div>
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Email:</div>
@@ -110,7 +117,14 @@
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
-              <div class="b-labeled-field__value gg-t-base">{{ userData.phone }}</div>
+              <div
+                class="b-labeled-field__value gg-t-base"
+                :class="{
+                  'b-labeled-field__value--empty': !userData.birthDate,
+                }"
+              >
+                {{ userData.phone || "Не указано" }}
+              </div>
             </div>
             <GGButton
               @click="toggleEditMode"
@@ -152,40 +166,63 @@
 <script setup lang="ts">
 import { mdiAccountOutline, mdiCancel, mdiUpload } from "@quasar/extras/mdi-v6";
 import { ref } from "vue";
+import { useMainStore } from "~/store/main";
 
 const editMode = ref(false);
 const isDefaultAvatar = ref(true);
 const avatarSrc = ref("");
 const showBlockDialog = ref(false);
+const store = useMainStore();
+const route = useRoute();
 const fileInput = ref<HTMLInputElement>();
 const { openPhoto } = usePhotoViewer();
-const initialUserData = {
-  fullName: "Иванов Иван Иванович",
-  role: "Оператор",
-  birthDate: "19.01.1990",
-  email: "ivanovivan@mail.ru",
-  phone: "+7-800-555-35-35",
-};
+const initialUserData = ref({
+  fullName: "",
+  role: "",
+  birthDate: "",
+  email: "",
+  phone: "",
+  image: {
+    previewImageId: "",
+    fullImageId: "",
+  },
+});
 
-const userData = ref({ ...initialUserData });
+const userData = ref({ ...initialUserData.value });
 
 function toggleEditMode() {
   editMode.value = !editMode.value;
 }
 
 function cancelEdit() {
-  userData.value = { ...initialUserData };
+  userData.value = { ...initialUserData.value };
   editMode.value = false;
 }
 
-function saveChanges() {
-  // Here you would typically send the updated data to an API
-  console.log("Saving user data:", userData.value);
-
-  // Update the initial data with the new values
-  Object.assign(initialUserData, userData.value);
-
-  // Exit edit mode
+async function saveChanges() {
+  try {
+    await $fetch(`${store.apiAuth}/register/operator`, {
+      method: "PUT",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: {
+        firstName: userData.value.fullName.split(" ")[1],
+        lastName: userData.value.fullName.split(" ")[0],
+        patronymic: userData.value.fullName.split(" ")[2],
+        email: userData.value.email,
+        number: userData.value.phone,
+        birthdate: tempDateConverterWillBeRemoved(userData.value.birthDate),
+      },
+    });
+    getUser();
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Ну удалось создать оператора",
+    };
+  }
   editMode.value = false;
 }
 
@@ -197,27 +234,81 @@ function cancelBlockAction() {
   showBlockDialog.value = false;
 }
 
-function confirmBlockAction() {
-  console.log("User blocked:", userData.value.fullName);
+async function confirmBlockAction() {
+  await blockUser();
   showBlockDialog.value = false;
-  // Here you would add the logic to block the user
 }
-
+async function blockUser() {
+  await $fetch(
+    `${store.apiAuth}/register/${route.params.id}/enabled/${false}`,
+    {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+    },
+  );
+  useState<Alert>("showAlert").value = {
+    show: true,
+    type: "success",
+    text: "Учетная запись сотрудника заблокирована",
+  };
+}
 function triggerFileUpload() {
   fileInput.value?.click();
 }
-
+async function getUser() {
+  const response = await $fetch<User>(
+    `${store.apiAuth}/user/${route.params.id}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+    },
+  );
+  userData.value = {
+    role: response.role === "operator" ? "Оператор" : "Администратор",
+    email: response.email,
+    phone: response.number || "",
+    birthDate: convertFromServerTempWillBeRemoved(response.birthdate),
+    fullName: `${response.lastName} ${response.firstName} ${response.patronymic}`,
+  };
+  initialUserData.value = { ...userData.value };
+}
+function convertFromServerTempWillBeRemoved(date: string | null) {
+  if (!date) return "";
+  return `${date.split(" ")?.[0].split("-")[0]}.${date.split(" ")?.[0].split("-")[1]}.${date.split(" ")?.[0].split("-")[2]}`;
+}
+function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
+  const [day, month, year] = ddmmyyyy.split(".");
+  return `${day}-${month}-${year}`;
+}
 function onFileSelected(event: Event) {
   const file = event.target?.files[0];
   if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      avatarSrc.value = e.target?.result;
-      isDefaultAvatar.value = false;
-    };
-    reader.readAsDataURL(file);
+    uploadPhoto(file);
   }
 }
+async function uploadPhoto(file: File) {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await $fetch<{ fullImageId: string }>(
+      `${store.apiFileServer}/file/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+    return response.fullImageId;
+  } catch (err) {
+    throw new Error("Ошибка при загрузке фото");
+  }
+}
+onMounted(() => {
+  getUser();
+});
 </script>
 
 <style scoped lang="scss">
@@ -298,6 +389,9 @@ function onFileSelected(event: Event) {
       }
       &__value {
         overflow-wrap: anywhere;
+        &--empty {
+          color: var(--app-grey-200);
+        }
       }
       &__input {
         margin-left: -12px;

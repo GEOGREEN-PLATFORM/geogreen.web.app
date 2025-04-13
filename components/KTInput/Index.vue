@@ -115,7 +115,8 @@ onMounted(() => {
     validationRules.value = [
       (val) => (val && val.length > 0) || "Поле не может быть пустым",
     ];
-  } else {
+  }
+  if (props.rules?.length > 0) {
     validationRules.value = props.rules;
   }
 });

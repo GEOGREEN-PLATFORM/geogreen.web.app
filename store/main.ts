@@ -6,12 +6,12 @@ interface MainState {
   portFileServer: string;
   portPhotoAnalyse: string;
   portUserReport: string;
+  portAuth: string;
+  portKeycloak: string;
   protocol: string;
   protocolWS: string;
   serverHost: string;
-  user: {
-    role: "user" | "admin" | "operator";
-  } | null;
+  user: User | null;
 }
 
 export const useMainStore = defineStore("main", {
@@ -31,6 +31,12 @@ export const useMainStore = defineStore("main", {
     portUserReport:
       process.env?.PORTAL_PORT_USER_REPORT ||
       (useRuntimeConfig().public.PORTAL_PORT_USER_REPORT as string),
+    portAuth:
+      process.env?.PORTAL_PORT_AUTH ||
+      (useRuntimeConfig().public.PORTAL_PORT_AUTH as string),
+    portKeycloak:
+      process.env?.PORTAL_PORT_KEYCLOAK ||
+      (useRuntimeConfig().public.PORTAL_PORT_KEYCLOAK as string),
     protocol:
       process.env?.PORTAL_HTTP_PROTOCOL ||
       (useRuntimeConfig().public.PORTAL_HTTP_PROTOCOL as string),
@@ -40,9 +46,7 @@ export const useMainStore = defineStore("main", {
     serverHost:
       process.env?.PORTAL_INTERNAL_SERVER_HOST ||
       (useRuntimeConfig().public.PORTAL_INTERNAL_SERVER_HOST as string),
-    user: {
-      role: "admin",
-    },
+    user: null,
   }),
   getters: {
     apiGeospatial: (state) => {
@@ -56,6 +60,12 @@ export const useMainStore = defineStore("main", {
     },
     apiUserReport: (state) => {
       return `${state.protocol}://${state.host}:${state.portUserReport}`;
+    },
+    apiAuth: (state) => {
+      return `${state.protocol}://${state.host}:${state.portAuth}`;
+    },
+    apiKeycloak: (state) => {
+      return `${state.protocol}://${state.host}:${state.portKeycloak}`;
     },
     wsURL: (state) => {
       return `${state.protocolWS}://${state.host}/`;

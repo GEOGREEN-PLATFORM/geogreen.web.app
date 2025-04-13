@@ -23,7 +23,7 @@
         :tabs="pages"
         shrink
       ></CTabs>
-      <div class="login-buttons">
+      <div v-if="!store.user" class="login-buttons">
         <GGButton
           label="Войти"
           strech="hug"
@@ -73,7 +73,7 @@
             shrink
             vertical
           ></CTabs>
-          <div class="login-buttons">
+          <div v-if="!store.user" class="login-buttons">
             <GGButton
               label="Войти"
               strech="fill"
@@ -96,6 +96,7 @@
 
 <script setup lang="ts">
 import { mdiAccountOutline, mdiCog } from "@quasar/extras/mdi-v6";
+import { useMainStore } from "~/store/main";
 interface Page extends Tab {
   path?: string;
   nestedItems?: {
@@ -108,6 +109,7 @@ interface Page extends Tab {
 interface Props {
   pages: Page[];
 }
+const store = useMainStore();
 const route = useRoute();
 const props = defineProps<Props>();
 const currentPage = shallowRef<Page>();
