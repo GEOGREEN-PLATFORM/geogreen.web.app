@@ -10,13 +10,13 @@
           <section class="b-dialog__section b-dialog__map">
             <Map
               @add-marker="addTempHotbed"
+              @edit-marker="editTempHotbed"
               @delete-marker="deleteTempHotbed"
-              @forbiddenAddTry="handleForbiddenAddTry"
+              @forbiddenAddMarker="handleForbiddenAddTry"
               :dataStatusStyles="workStageStyles"
+              :addMarker="isAddMarker ? 'forbid' : 'enable'"
               :markers="existingHotbeds"
               :shortInfoKeys="shortMarkerInfoNameKeys"
-              :add-zone-enabled="false"
-              :forbidAddMarker="isAddMarker"
             ></Map>
           </section>
         </template>
@@ -24,22 +24,19 @@
           <section class="b-dialog__section">
             <div class="b-dialog__section-content">
               <KTInputSelect
-                v-model="item.selected"
-                :options="item.data"
-                :label="item.label"
-                :required="false"
+                v-model="hotbedData.problemAreaType"
+                :options="store.formattedProblemAreaTypes"
+                label="Тип проблемы"
               ></KTInputSelect>
               <KTInputSelect
-                v-model="item.selected"
-                :options="item.data"
-                :label="item.label"
-                :required="false"
+                v-model="hotbedData.landType"
+                :options="store.formattedLandTypes"
+                label="Тип земель"
               ></KTInputSelect>
               <KTInputSelect
-                v-model="item.selected"
-                :options="item.data"
-                :label="item.label"
-                :required="false"
+                v-model="hotbedData.eliminationMethod"
+                options="item.data"
+                label="Метод по устранению"
               ></KTInputSelect>
               <KTInput
                 v-model="employeeData.personalData.secondName"
@@ -112,6 +109,8 @@
 
 <script setup lang="ts">
 import { mdiContentCopy } from "@quasar/extras/mdi-v6";
+import type { Coordinate } from "ol/coordinate";
+import { useMainStore } from "~/store/main";
 interface Props {
   modelValue: boolean;
   hotbeds: Marker[];
@@ -132,6 +131,7 @@ interface EmployeeData {
 
 const props = defineProps<Props>();
 const emit = defineEmits(["update:modelValue", "employeeCreated"]);
+const store = useMainStore();
 const dialogVisible = ref(props.modelValue);
 const { formRef, formBindValidation, formHasError } = useFormValidation();
 
@@ -161,8 +161,28 @@ const employeeData = reactive<EmployeeData>({
 
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
-const subTitle = ref("Добавьте очаг на карту");
+const subTitle = ref("Отметьте на карте новый очаг проблемы");
 const currentStep = ref(1);
+const hotbedData = ref({
+  problemAreaType: "",
+  landType: "",
+  eliminationMethod: "",
+  owner: "",
+  density: "",
+});
+const eliminationMethods = ref();
+watch(
+  () => hotbedData.value.eliminationMethod,
+  async (newVal) => {
+    eliminationMethods.value = await $fetch(
+      `${store.apiGeospatial}/geo/dict/problem-area-types`,
+      {
+        method: "GET",
+        headers: { Authorization: useGetToken() },
+      },
+    );
+  },
+);
 const shortMarkerInfoNameKeys = ref({
   owner: {
     name: "Владелец",
@@ -205,11 +225,12 @@ function onSubmit() {
     }
   });
 }
-function addTempHotbed(coordinate: Coordinate) {
+function addTempHotbed(coordinate: Coordinate, zone?: unknown) {
+  console.log(coordinate);
   existingHotbeds.value.push({
     id: "user-temp-created",
     coordinate: coordinate,
-    userTempCreated: true,
+    isTempCreatedBy: "employee",
     details: {
       square: 21879072,
       owner: "",
@@ -220,12 +241,16 @@ function addTempHotbed(coordinate: Coordinate) {
       images: [],
       problemAreaType: "",
       comment: "",
-      density: null,
+      density: zone?.density,
     },
     relatedTaskId: null,
-    coordinates: [],
+    coordinates: zone?.coordinates || [],
   });
   isAddMarker.value = true;
+}
+function editTempHotbed(hotbedId: string, marker: Marker) {
+  const hotbedIndex = existingHotbeds.value.findIndex((m) => m.id === hotbedId);
+  existingHotbeds.value[hotbedIndex] = marker;
 }
 const isAddMarker = shallowRef(false);
 function onBack() {
@@ -239,10 +264,9 @@ function onBack() {
 }
 function deleteTempHotbed(marker: Marker) {
   existingHotbeds.value = existingHotbeds.value.filter(
-    (m) => !m.userTempCreated,
+    (hotbed) => !hotbed.isTempCreatedBy,
   );
   isAddMarker.value = false;
-  userReport.coordinate = [];
 }
 function handleForbiddenAddTry() {
   useState<Alert>("showAlert").value = {
@@ -349,7 +373,7 @@ $app-narrow-mobile: 364px;
     display: flex;
     flex-direction: column;
     width: 80%;
-    max-width: 784px;
+    max-width: 80%;
     background-color: var(--app-white);
     border-radius: 12px;
     padding: 24px 32px;
@@ -385,6 +409,7 @@ $app-narrow-mobile: 364px;
   &__section-content {
     display: flex;
     flex-direction: column;
+    gap: 12px;
   }
   &__fields-row {
     display: flex;

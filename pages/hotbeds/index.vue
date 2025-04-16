@@ -97,41 +97,6 @@ const pagination = ref({
 });
 const store = useMainStore();
 const debounce = useDebounce();
-
-const WORK_STAGES = [
-  {
-    name: "Создано",
-    value: "Создано",
-  },
-  {
-    name: "В работе",
-    value: "В работе",
-  },
-  {
-    name: "Завершено",
-    value: "Завершено",
-  },
-];
-const LAND_TYPES = [
-  {
-    name: "Сельскохозяйственные",
-    value: "Сельскохозяйственные",
-  },
-];
-const PROBLEM_AREA_TYPES = [
-  {
-    name: "Борщевик",
-    value: "Борщевик",
-  },
-  {
-    name: "Свалка",
-    value: "Свалка",
-  },
-  {
-    name: "Пожар",
-    value: "Пожар",
-  },
-];
 const tableHeaders = [
   {
     name: "problemAreaType",
@@ -200,21 +165,21 @@ const filters = ref<FilterItem[]>([
     key: "problemAreaType",
     label: "Тип проблемы",
     selected: "",
-    data: PROBLEM_AREA_TYPES,
+    data: store.formattedProblemAreaTypes,
   },
   {
     type: "select",
     key: "wordStage",
     selected: "",
     label: "Статус работы",
-    data: WORK_STAGES,
+    data: store.formattedWorkStages,
   },
   {
     type: "select",
     key: "landType",
     selected: "",
     label: "Тип земель",
-    data: LAND_TYPES,
+    data: store.formattedLandTypes,
   },
   {
     type: "date-range",

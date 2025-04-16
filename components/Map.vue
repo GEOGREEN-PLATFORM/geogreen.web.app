@@ -22,17 +22,19 @@
       </ol-tile-layer>
       <ol-control-bar ref="controlBar">
         <ol-toggle-control
+          v-if="props.addMarker !== 'hide'"
           html="Добавить маркер"
           class-name="g-green-control-bar__item g-green-control-bar__marker"
           :on-toggle="toggleMarkerAdd"
         />
         <ol-toggle-control
-          v-if="props.addZoneEnabled"
+          v-if="props.addZone !== 'hide'"
           html="Добавить зону"
           class-name="g-green-control-bar__item g-green-control-bar__zone"
           :on-toggle="toggleZoneAdd"
         />
         <ol-toggle-control
+          v-if="props.toggleVisibility !== 'hide'"
           :key="isAllZonesVisible"
           :html="isAllZonesVisible ? 'Скрыть все зоны' : 'Показать все зоны'"
           :class-name="`g-green-control-bar__item g-green-control-bar__zones-visible ${isAllZonesVisible ? 'g-green-control-bar__zones-visible--off' : ''}`"
@@ -107,16 +109,20 @@
             @click="handleCloseMarkerPopup(id)"
           />
           <div
-            v-if="marker.userTempCreated"
+            v-if="marker.isTempCreatedBy"
             class="popup-marker__user-created text-center gg-t-base q-py-sm"
           >
-            Вы сообщаете об этом очаге
+            {{
+              marker.isTempCreatedBy === "user"
+                ? "Вы сообщаете об этом очаге"
+                : "Вы добавляете этот очаг"
+            }}
           </div>
           <ul v-if="marker.details" class="data-list">
             <li
               v-for="[name, value] in Object.entries(marker.details || {}).filter(
                 ([name, value]) =>
-                  marker.userTempCreated
+                  marker.isTempCreatedBy === 'user'
                     ? name === 'problemAreaType'
                       ? true
                       : false
@@ -149,15 +155,15 @@
               >
                 <GGHint>
                   Выбранный маркер будет автоматически перемещён внутрь
-                  {{ marker.coordinates.length > 0 ? "измененной" : "добавленной" }} зоны
+                  {{ marker.coordinates?.length ? "измененной" : "добавленной" }} зоны
                 </GGHint>
               </q-icon>
               <span class="actions-label__text" @click="addZone(id)"
-                >{{ marker.coordinates.length > 0 ? "Изменить" : "Добавить" }} зону</span
+                >{{ marker.coordinates?.length ? "Изменить" : "Добавить" }} зону</span
               >
               <q-icon
                 class="actions-label__icon"
-                :name="marker.coordinates.length > 0 ? mdiPencil : mdiPlus"
+                :name="marker.coordinates?.length ? mdiPencil : mdiPlus"
               />
             </li>
             <li class="actions-label__action" v-if="store.user?.role !== 'user'">
@@ -169,7 +175,7 @@
                 @update:model-value="updateFeatures(id, marker)"
               />
             </li>
-            <li class="actions-label__action" v-if="!marker.userTempCreated">
+            <li class="actions-label__action" v-if="!marker.isTempCreatedBy">
               <GGButton
                 label="Подробнее"
                 size="small"
@@ -240,21 +246,23 @@ interface Props {
   dataStatusStyles: {
     [key: string]: string;
   };
-  addZoneEnabled?: boolean;
-  forbidAddMarker?: boolean;
+  addZone: "hide" | "enable" | "forbid";
+  addMarker: "hide" | "enable" | "forbid";
+  toggleVisibility: "hide" | "enable" | "forbid";
 }
 const store = useMainStore();
 const mapRef = ref();
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
-  addZoneEnabled: true,
-  forbidAddMarker: false,
+  addZone: "enable",
+  addMarker: "enable",
+  toggleVisibility: "enable",
 });
 const emit = defineEmits<{
   addMarker: [coordinate: Coordinate, zone?: unknown];
   deleteMarker: [id: string];
   editMarker: [id: string, marker: Marker];
-  forbiddenAddTry: [];
+  forbiddenAddMarker: [];
 }>();
 
 const confirmationDialog = reactive({
@@ -345,7 +353,7 @@ function convertZonesToFeatures(markers: Marker[]) {
     .map((marker) => ({
       type: "Feature",
       properties: { density: marker.details?.density || "default" },
-      geometry: { type: "Polygon", coordinates: [marker.coordinates] },
+      geometry: { type: "Polygon", coordinates: marker.coordinates },
       id: marker.id,
     }));
   const providerFeatureCollection = {
@@ -393,10 +401,10 @@ function deleteMarker() {
 }
 
 function addMakrer(coordinate: Coordinate, zone?: unknown) {
-  if (!props.forbidAddMarker) {
+  if (props.addMarker === "enable") {
     emit("addMarker", coordinate, zone);
   } else {
-    emit("forbiddenAddTry");
+    emit("forbiddenAddMarker");
   }
 }
 
@@ -617,7 +625,7 @@ function createZone(event: DrawEvent) {
 watch(
   () => props.markers,
   (newMarkers) => {
-    if (newMarkers?.length && Array.isArray(newMarkers)) {
+    if (Array.isArray(newMarkers)) {
       gGreenCluster.markersDict = convertMarkersToDictionary(newMarkers);
       gGreenCluster.markerFeatures = convertMarkersToFeatures(newMarkers);
       gGreenCluster.zonesFeatures = convertZonesToFeatures(

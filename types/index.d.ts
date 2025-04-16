@@ -1,3 +1,4 @@
+import type { Coordinate } from "ol/coordinate";
 declare global {
   interface ButtonOptions {
     designType?: "primary" | "secondary" | "tertiary";
@@ -81,7 +82,7 @@ declare global {
     };
     relatedTaskId?: string | null;
     coordinates?: Coordinate[];
-    userTempCreated?: true;
+    isTempCreatedBy?: string;
   }
   type Density = "default" | "low" | "medium" | "high";
   interface Tab {
@@ -96,5 +97,3 @@ declare global {
     }[];
   }
 }
-
-export {};
