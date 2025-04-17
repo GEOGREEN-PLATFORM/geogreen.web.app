@@ -45,7 +45,7 @@
           v-model:pagination="pagination"
           row-key="name"
           :slots="['status']"
-          @click:row="(row: any) => goToHotbed(row.email)"
+          @click:row="(row: any) => goToHotbed(row.id)"
           @updateTable="getHotbeds"
           :loading="hotbedsLoading"
         >
@@ -78,17 +78,7 @@ import { mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
 interface HotbedData {
-  personalData: {
-    firstName: string;
-    secondName: string;
-    lastName: string;
-    dateOfBirth: string;
-  };
-  contacts: {
-    email: string;
-    phoneNumber: string;
-  };
-  password: string;
+  [key: string]: any;
 }
 const pagination = ref({
   page: 1,
@@ -152,11 +142,13 @@ const hotbeds = ref<Marker[]>([]);
 const tableRows = computed(() =>
   hotbeds.value.map((e) => ({
     id: e.id,
-    email: e.email,
-    initials: `${e.lastName} ${e.firstName} ${e.patronymic}`,
-    role: ROLE_OPTIONS.find((o) => o.value === e.role)?.name ?? e.role,
-    status: e.enabled ? "Активен" : "Заблокирован",
-    dateCreated: date.formatDate(new Date(e.creationDate), "DD.MM.YYYY"),
+    problemAreaType: e.details?.problemAreaType,
+    workStage: e.details?.workStage,
+    landType: e.details?.landType,
+    owner: e.details?.owner,
+    eliminationMethod: e.details?.eliminationMethod,
+    dateCreated: date.formatDate(e.details?.dateCreated, "DD.MM.YYYY"),
+    dateUpdated: date.formatDate(e.details?.dateUpdated, "DD.MM.YYYY"),
   })),
 );
 const filters = ref<FilterItem[]>([
@@ -254,21 +246,25 @@ async function getHotbeds() {
 
 async function handleHotbedCreated(newHotbed: HotbedData) {
   try {
-    await $fetch(`${store.apiAuth}/register/operator`, {
+    await $fetch(`${store.apiGeospatial}/geo/info`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
       },
       body: {
-        firstName: newHotbed.personalData.firstName,
-        lastName: newHotbed.personalData.lastName,
-        patronymic: newHotbed.personalData.secondName,
-        email: newHotbed.contacts.email,
-        password: newHotbed.password,
-        number: newHotbed.contacts.phoneNumber,
-        birthdate: tempDateConverterWillBeRemoved(
-          newHotbed.personalData.dateOfBirth,
-        ),
+        coordinate: newHotbed.coordinate,
+        details: {
+          owner: newHotbed.owner,
+          landType: newHotbed.landType,
+          contractingOrganization: newHotbed.contractingOrganization,
+          eliminationMethod: newHotbed.eliminationMethod,
+          images: newHotbed.images,
+          workStage: "Создано",
+          problemAreaType: newHotbed.problemAreaType,
+          comment: newHotbed.comment,
+          density: newHotbed.density,
+        },
+        coordinates: newHotbed.coordinates[0] || [],
       },
     });
     getHotbeds();
@@ -276,7 +272,7 @@ async function handleHotbedCreated(newHotbed: HotbedData) {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Ну удалось создать оператора",
+      text: "Ну удалось создать очаг",
     };
   }
 }
@@ -286,7 +282,7 @@ function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
 }
 
 function goToHotbed(id: string) {
-  navigateTo(`/for-hotbed/hotbeds/${id}`);
+  navigateTo(`/hotbeds/${id}`);
 }
 onMounted(() => {
   getHotbeds();

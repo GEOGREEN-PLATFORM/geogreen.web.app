@@ -7,53 +7,39 @@
       </header>
       <q-form ref="formRef" novalidate greedy class="b-dialog__form" @submit="onSubmit">
         <template v-if="currentStep === 1">
-          <section class="b-dialog__section b-dialog__map">
-            <Map
-              @add-marker="addTempHotbed"
-              @edit-marker="editTempHotbed"
-              @delete-marker="deleteTempHotbed"
-              @forbiddenAddMarker="handleForbiddenAddTry"
-              :dataStatusStyles="workStageStyles"
-              :addMarker="isAddMarker ? 'forbid' : 'enable'"
-              :markers="existingHotbeds"
-              :shortInfoKeys="shortMarkerInfoNameKeys"
-            ></Map>
-          </section>
-        </template>
-        <template v-if="currentStep === 2">
           <section class="b-dialog__section">
             <div class="b-dialog__section-content">
               <KTInputSelect
-                v-model="hotbedData.problemAreaType"
+                v-model="hotbed.details.problemAreaType"
                 @update:model-value="getEliminationMethodsByArea"
                 :options="store.formattedProblemAreaTypes"
                 label="Тип проблемы"
               ></KTInputSelect>
               <KTInputSelect
-                v-model="hotbedData.landType"
+                v-model="hotbed.details.landType"
                 :options="store.formattedLandTypes"
                 label="Тип земель"
               ></KTInputSelect>
               <KTInputSelect
-                v-model="hotbedData.eliminationMethod"
+                v-model="hotbed.details.eliminationMethod"
                 :options="hotbedEliminationMethods"
-                :disabled="!hotbedData.problemAreaType"
-                :hint="!hotbedData.problemAreaType ? 'Выберите тип проблемы' : ''"
+                :disabled="!hotbed.details.problemAreaType"
+                :hint="!hotbed.details.problemAreaType ? 'Выберите тип проблемы' : ''"
                 label="Метод по устранению"
               ></KTInputSelect>
               <KTInputSelect
-                v-model="hotbedData.density"
+                v-model="hotbed.details.density"
                 :options="HOTBED_DENSITIES"
                 label="Плотность распространения"
               ></KTInputSelect>
               <KTInput
-                v-model="hotbedData.owner"
+                v-model="hotbed.details.owner"
                 label="Владелец"
                 required
                 class="b-dialog__field"
               />
               <KTInput
-                v-model="hotbedData.contractingOrganization"
+                v-model="hotbed.details.contractingOrganization"
                 label="Подрядная организация"
                 required
                 class="b-dialog__field"
@@ -61,44 +47,8 @@
             </div>
           </section>
         </template>
-        <template v-else-if="currentStep === 3">
+        <template v-else-if="currentStep === 2">
           <section class="b-dialog__section">
-            <div class="b-dialog__info-row gg-t-base">
-              <span class="b-dialog__info-label">Тип проблемы:</span>
-              <span class="b-dialog__info-value">{{ hotbedData.problemAreaType }}</span>
-            </div>
-            <div class="b-dialog__info-row gg-t-base">
-              <span class="b-dialog__info-label">Тип земель:</span>
-              <span class="b-dialog__info-value">{{ hotbedData.landType }}</span>
-            </div>
-            <div class="b-dialog__info-row gg-t-base">
-              <span class="b-dialog__info-label">Метод по устранению:</span>
-              <span class="b-dialog__info-value">{{ hotbedData.eliminationMethod }}</span>
-            </div>
-            <div class="b-dialog__info-row gg-t-base">
-              <span class="b-dialog__info-label">Плотность распространения:</span>
-              <span class="b-dialog__info-value">{{ hotbedData.density }}</span>
-            </div>
-            <div class="b-dialog__info-row gg-t-base">
-              <span class="b-dialog__info-label">Владелец:</span>
-              <span class="b-dialog__info-value">{{ hotbedData.owner }}</span>
-            </div>
-            <div class="b-dialog__info-row gg-t-base">
-              <span class="b-dialog__info-label">Подрядная организация:</span>
-              <span class="b-dialog__info-value">{{ hotbedData.contractingOrganization }}</span>
-            </div>
-          </section>
-        </template>
-        <template v-else-if="currentStep === 4">
-          <section class="b-dialog__section">
-            <fieldset class="b-dialog__fieldset q-mb-md">
-              <legend class="b-dialog__legend gg-h3 q-mb-sm">Комментарий</legend>
-              <KTInputTextarea
-                class="b-dialog__comment"
-                placeholder="Кратко опишите проблему"
-                v-model="hotbedData.comment"
-              ></KTInputTextarea>
-            </fieldset>
             <fieldset class="b-dialog__fieldset">
               <legend class="b-dialog__legend gg-h3 q-mb-sm">Фотографии</legend>
               <DragDrop
@@ -116,7 +66,7 @@
 
         <footer class="b-dialog__footer">
           <GGButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
-          <GGButton :label="applyLabel" :disabled="formHasError || !isAddMarker" type="submit" />
+          <GGButton :label="applyLabel" :disabled="formHasError" type="submit" />
         </footer>
       </q-form>
     </q-card>
@@ -129,7 +79,7 @@ import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
 interface Props {
   modelValue: boolean;
-  hotbeds: Marker[];
+  hotbed: any;
 }
 
 const HOTBED_DENSITIES = [
@@ -152,57 +102,13 @@ watch(
 watch(dialogVisible, (newVal) => {
   emit("update:modelValue", newVal);
 });
-const existingHotbeds = ref<Marker[]>([]);
 const hotbedEliminationMethods = ref();
 const FILES_MAX_SIZE = 10_000_000;
 const attachedFiles = ref<File[]>([]);
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
-const subTitle = ref("Отметьте на карте новый очаг проблемы");
+const subTitle = ref("Измените данные по очагу");
 const currentStep = ref(1);
-const hotbedData = ref({
-  problemAreaType: "",
-  landType: "",
-  eliminationMethod: "",
-  owner: "",
-  contractingOrganization: "",
-  comment: "",
-  images: [],
-  density: "",
-  coordinate: null as Coordinate | null,
-  coordinates: [] as Coordinate[],
-});
-const shortMarkerInfoNameKeys = ref({
-  owner: {
-    name: "Владелец",
-    type: "text",
-  },
-  landType: {
-    name: "Тип земель",
-    type: "text",
-  },
-  workStage: {
-    name: "Статус работы",
-    type: "status",
-  },
-  problemAreaType: {
-    name: "Тип проблемы",
-    type: "text",
-  },
-  eliminationMethod: {
-    name: "Метод по устранению",
-    type: "text",
-  },
-  contractingOrganisation: {
-    name: "Подрядная организация",
-    type: "text",
-  },
-});
-const workStageStyles = {
-  Создано: "background-color: var(--app-blue-400)",
-  "В работе": "background-color: var(--app-green-400)",
-  Завершено: "background-color: var(--app-grey-400)",
-};
 async function uploadFiles(files: File[]) {
   const currentTotal = attachedFiles.value.reduce((sum, f) => sum + f.size, 0);
   const newFilesTotal = files.reduce((sum, f) => sum + f.size, 0);
@@ -225,36 +131,6 @@ function onSubmit() {
     }
   });
 }
-function addTempHotbed(coordinate: Coordinate, zone?: unknown) {
-  console.log(coordinate);
-  hotbedData.value.coordinate = coordinate;
-  hotbedData.value.coordinates = zone?.coordinates || [];
-  existingHotbeds.value.push({
-    id: "user-temp-created",
-    coordinate: coordinate,
-    isTempCreatedBy: "employee",
-    details: {
-      square: 21879072,
-      owner: "",
-      landType: "",
-      contractingOrganization: "",
-      workStage: "",
-      eliminationMethod: "",
-      images: [],
-      problemAreaType: "",
-      comment: "",
-      density: zone?.density,
-    },
-    relatedTaskId: null,
-    coordinates: zone?.coordinates || [],
-  });
-  isAddMarker.value = true;
-}
-function editTempHotbed(hotbedId: string, marker: Marker) {
-  const hotbedIndex = existingHotbeds.value.findIndex((m) => m.id === hotbedId);
-  existingHotbeds.value[hotbedIndex] = marker;
-}
-const isAddMarker = shallowRef(false);
 function onBack() {
   if (currentStep.value === 1) {
     resetForm();
@@ -279,20 +155,7 @@ async function getEliminationMethodsByArea(area: string) {
     value: elem,
   }));
 }
-function deleteTempHotbed(marker: Marker) {
-  existingHotbeds.value = existingHotbeds.value.filter(
-    (hotbed) => !hotbed.isTempCreatedBy,
-  );
-  isAddMarker.value = false;
-}
-function handleForbiddenAddTry() {
-  useState<Alert>("showAlert").value = {
-    show: true,
-    text: "Вы уже добавили очаг на карту. Удалите его, чтобы добавить новый.",
-  };
-}
-
-async function createHotbed() {
+async function updateHotbed() {
   for (const file of attachedFiles.value) {
     const image = await uploadPhoto(file);
     hotbedData.value.images.push(image);
@@ -320,13 +183,7 @@ function nextStep() {
     currentStep.value++;
     updateLabels();
   } else if (currentStep.value === 2) {
-    currentStep.value++;
-    updateLabels();
-  } else if (currentStep.value === 3) {
-    currentStep.value++;
-    updateLabels();
-  } else if (currentStep.value === 4) {
-    createHotbed();
+    updateHotbed();
   }
 }
 
@@ -334,19 +191,11 @@ function updateLabels() {
   if (currentStep.value === 1) {
     cancelLabel.value = "Отмена";
     applyLabel.value = "Далее";
-    subTitle.value = "Отметьте на карте новый очаг проблемы";
+    subTitle.value = "Измените данные по очагу";
   } else if (currentStep.value === 2) {
     cancelLabel.value = "Назад";
-    applyLabel.value = "Далее";
-    subTitle.value = "Заполните данные по добавляемому очагу";
-  } else if (currentStep.value === 3) {
-    cancelLabel.value = "Назад";
-    applyLabel.value = "Далее";
-    subTitle.value = "Проверьте корректность введённых данных";
-  } else if (currentStep.value === 4) {
-    cancelLabel.value = "Назад";
-    applyLabel.value = "Создать";
-    subTitle.value = "Добавьте комментарий и изображения создаваемого очага";
+    applyLabel.value = "Изменить";
+    subTitle.value = "Измените изображения очага";
   }
 }
 

@@ -621,7 +621,15 @@ function createZone(event: DrawEvent) {
   }
   upKey.value++;
 }
-
+onMounted(() => {
+  if (Array.isArray(props.markers)) {
+    gGreenCluster.markersDict = convertMarkersToDictionary(props.markers);
+    gGreenCluster.markerFeatures = convertMarkersToFeatures(props.markers);
+    gGreenCluster.zonesFeatures = convertZonesToFeatures(
+      Array.from(gGreenCluster.markersDict.values()),
+    );
+  }
+});
 watch(
   () => props.markers,
   (newMarkers) => {

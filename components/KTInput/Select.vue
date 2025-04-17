@@ -20,6 +20,8 @@
       :name="name"
       :option-value="optionValue"
       :option-label="optionLabel"
+      :disable="disabled"
+      :hint="hint"
       emit-value
       map-options
     />
@@ -47,12 +49,15 @@ interface Props {
   height?: string;
   optionValue?: string;
   optionLabel?: string;
+  hint?: string;
+  disabled?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
   rounded: true,
   outlined: true,
   required: true,
+  disabled: false,
   rules: () => [],
   placeholder: "Введите текст",
   hideErrorIcon: true,
