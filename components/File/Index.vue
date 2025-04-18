@@ -3,28 +3,36 @@
     <div class="file__preview">
       <NuxtImg
         @click="openPhoto(localFileUrl)"
-        v-if="localFileUrl"
-        :src="localFileUrl"
+        v-if="isImage"
+        :src="localUrl"
         alt="Файл"
         class="file__image"
       />
       <video v-else-if="isVideo" controls class="file__video">
-        <source :src="localFileUrl" type="video/mp4" />
+        <source :src="localUrl" :type="videoType" />
       </video>
       <div v-else class="file__placeholder">Файл</div>
     </div>
-    <button v-if="clearable" class="file__delete" @click="emits('remove')">
-      <q-icon color="red-400" :name="mdiDeleteOutline" size="24px"></q-icon>
+    <button v-if="clearable" class="file__delete" @click="onDelete">
+      <q-icon color="red-400" :name="mdiDeleteOutline" size="24px" />
     </button>
-    <p v-if="!hideCaption" class="file__name gg-cap">{{ fileName }}</p>
+    <p v-if="!hideCaption && isLocalFile" class="file__name gg-cap">{{ fileName }}</p>
   </article>
 </template>
 
 <script setup lang="ts">
 import { mdiDeleteOutline } from "@quasar/extras/mdi-v6";
+import { useMainStore } from "~/store/main";
+
+interface ImageObj {
+  previewImageId: string;
+  fullImageId: string;
+}
+type FileOrObj = File | ImageObj;
+const store = useMainStore();
+
 interface Props {
-  file: string | File;
-  raw?: boolean;
+  file: FileOrObj;
   clearable?: boolean;
   hideCaption?: boolean;
 }
@@ -34,32 +42,57 @@ const props = withDefaults(defineProps<Props>(), {
   hideCaption: false,
 });
 const emits = defineEmits<{
-  remove: [];
+  (e: "remove"): void;
+  (e: "localDelete"): void;
+  (e: "sendDelete", imageId: string): void;
 }>();
 const { openPhoto } = usePhotoViewer();
-const localFileUrl = shallowRef("");
+
+const localUrl = ref<string>("");
+
+const isLocalFile = computed(() => props.file instanceof File);
+
+const fileName = computed(() =>
+  isLocalFile.value ? (props.file as File).name : "",
+);
+
 const fileExtension = computed(() => {
-  const parts = localFileUrl.value.split(".");
-  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
+  const name = isLocalFile.value ? (props.file as File).name : "";
+  const parts = name.split(".");
+  return parts.length > 1 ? parts.pop()!.toLowerCase() : "";
 });
 
-const isImage = computed(() =>
-  ["jpg", "jpeg", "png", "gif", "webp"].some((ext) =>
-    fileExtension.value.includes(ext),
-  ),
+const isImage = computed(
+  () =>
+    !isLocalFile.value ||
+    ["jpg", "jpeg", "png", "gif", "webp"].includes(fileExtension.value),
 );
-const isVideo = computed(() =>
-  ["mp4", "webm", "mov"].some((ext) => fileExtension.value.includes(ext)),
+const isVideo = computed(
+  () =>
+    isLocalFile.value && ["mp4", "webm", "mov"].includes(fileExtension.value),
 );
+const videoType = computed(() => `video/${fileExtension.value}`);
 
-const fileName = computed(() => localFileUrl.value.split("/").pop());
-onMounted(() => {
-  if (typeof props.file === "string" && !props.raw) {
-    localFileUrl.value = props.file;
-  } else if (props.raw && typeof props.file !== "string") {
-    localFileUrl.value = URL.createObjectURL(props.file);
+onMounted(async () => {
+  if (isLocalFile.value) {
+    localUrl.value = URL.createObjectURL(props.file as File);
+  } else {
+    const res = await fetch(
+      `${store.apiFileServer}/file/image/download/${(props.file as ImageObj).fullImageId}`,
+    );
+    const blob = await res.blob();
+    localUrl.value = URL.createObjectURL(blob);
   }
 });
+
+function onDelete() {
+  if (isLocalFile.value) {
+    emits("localDelete");
+  } else {
+    emits("sendDelete", (props.file as ImageObj).fullImageId);
+  }
+  emits("remove");
+}
 </script>
 
 <style scoped lang="scss">

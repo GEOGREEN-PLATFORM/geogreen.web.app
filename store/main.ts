@@ -12,6 +12,9 @@ interface MainState {
   protocolWS: string;
   serverHost: string;
   user: User | null;
+  problemAreaTypes: string[];
+  landTypes: string[];
+  workStages: string[];
 }
 
 export const useMainStore = defineStore("main", {
@@ -47,6 +50,9 @@ export const useMainStore = defineStore("main", {
       process.env?.PORTAL_INTERNAL_SERVER_HOST ||
       (useRuntimeConfig().public.PORTAL_INTERNAL_SERVER_HOST as string),
     user: null,
+    problemAreaTypes: [],
+    landTypes: [],
+    workStages: [],
   }),
   getters: {
     apiGeospatial: (state) => {
@@ -63,6 +69,24 @@ export const useMainStore = defineStore("main", {
     },
     apiAuth: (state) => {
       return `${state.protocol}://${state.host}:${state.portAuth}`;
+    },
+    formattedProblemAreaTypes: (state) => {
+      return state.problemAreaTypes.map((el) => ({
+        name: el,
+        value: el,
+      }));
+    },
+    formattedLandTypes: (state) => {
+      return state.landTypes.map((el) => ({
+        name: el,
+        value: el,
+      }));
+    },
+    formattedWorkStages: (state) => {
+      return state.workStages.map((el) => ({
+        name: el,
+        value: el,
+      }));
     },
     apiKeycloak: (state) => {
       return `${state.protocol}://${state.host}:${state.portKeycloak}`;

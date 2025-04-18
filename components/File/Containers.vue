@@ -2,12 +2,11 @@
   <section class="file-container">
     <p class="file-container__block-caption gg-cap">Загруженные изображения</p>
     <ul class="file-container__list">
-      <li v-for="(file, index) in files">
+      <li v-for="(file, index) in filesCopy" :key="getKey(file)">
         <File
-          :key="checkFilesRaw() ? (file as File).lastModified.toString() : (file as string)"
           :file="file"
-          @remove="removeFile(index)"
-          :raw="raw"
+          @localDelete="removeLocal(index)"
+          @sendDelete="removeRemote(index, $event)"
           :clearable="clearable"
           :hideCaption="hideCaption"
         />
@@ -17,9 +16,19 @@
 </template>
 
 <script setup lang="ts">
+interface ImageObj {
+  previewImageId: string;
+  fullImageId: string;
+}
+type FileOrObj = File | ImageObj;
+
+const emit = defineEmits<{
+  (e: "update:files", files: FileOrObj[]): void;
+  (e: "localDelete", index: number): void;
+  (e: "sendDelete", imageId: string): void;
+}>();
 interface Props {
-  files: string[] | File[];
-  raw?: boolean;
+  files: FileOrObj[];
   clearable?: boolean;
   hideCaption?: boolean;
 }
@@ -29,36 +38,34 @@ const props = withDefaults(defineProps<Props>(), {
   hideCaption: false,
 });
 
-const filesCopy = ref<string[] | File[]>([]);
-const emit =
-  defineEmits<(e: "update:files", value: string[] | File[]) => void>();
-const removeFile = (index: number) => {
-  filesCopy.value.splice(index, 1);
-  emit("update:files", filesCopy.value);
-};
-function checkFilesRaw() {
-  console.log(filesCopy.value);
-  if (props.raw && filesCopy.value[0] instanceof File) {
-    return true;
-  }
-  return false;
-}
-onMounted(() => {
-  filesCopy.value = checkFilesRaw()
-    ? ([...props.files] as File[])
-    : ([...props.files] as string[]);
-});
+const filesCopy = ref<FileOrObj[]>([...props.files]);
+
 watch(
   () => props.files,
-  (newValue) => {
-    filesCopy.value = checkFilesRaw()
-      ? ([...newValue] as File[])
-      : ([...newValue] as string[]);
+  (newVal) => {
+    filesCopy.value = [...newVal];
   },
-  {
-    deep: true,
-  },
+  { deep: true },
 );
+
+const getKey = (file: FileOrObj) => {
+  if (file instanceof File) {
+    return `${file.lastModified}_${file.name}`;
+  }
+  return file.fullImageId;
+};
+
+function removeLocal(index: number) {
+  filesCopy.value.splice(index, 1);
+  emit("update:files", filesCopy.value);
+  emit("localDelete", index);
+}
+
+function removeRemote(index: number, imageId: string) {
+  filesCopy.value.splice(index, 1);
+  emit("update:files", filesCopy.value);
+  emit("sendDelete", imageId);
+}
 </script>
 
 <style scoped lang="scss">
