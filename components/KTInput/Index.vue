@@ -19,6 +19,7 @@
       :placeholder="placeholder"
       :name="name"
       @update:model-value="updateValue"
+      @blur="emits('blur')"
       :autogrow="autogrow"
       :autocomplete="autocomplete"
       :mask="maska"
@@ -91,6 +92,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emits = defineEmits<{
   "update:modelValue": [string | number];
+  blur: [];
 }>();
 
 const showPassword = ref(false);

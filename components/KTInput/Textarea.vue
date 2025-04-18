@@ -15,6 +15,7 @@
       :placeholder="placeholder"
       :name="name"
       @update:model-value="updateValue"
+      @blur="emits('blur')"
       height="96px"
       :required="false"
     >
@@ -54,6 +55,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emits = defineEmits<{
   "update:modelValue": [string | number | null];
+  blur: [];
 }>();
 
 const inputValue = ref(props.modelValue);
