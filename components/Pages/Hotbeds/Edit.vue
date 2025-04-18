@@ -10,36 +10,36 @@
           <section class="b-dialog__section">
             <div class="b-dialog__section-content">
               <KTInputSelect
-                v-model="hotbed.details.problemAreaType"
+                v-model="localHotbedData.details.problemAreaType"
                 @update:model-value="getEliminationMethodsByArea"
                 :options="store.formattedProblemAreaTypes"
                 label="Тип проблемы"
               ></KTInputSelect>
               <KTInputSelect
-                v-model="hotbed.details.landType"
+                v-model="localHotbedData.details.landType"
                 :options="store.formattedLandTypes"
                 label="Тип земель"
               ></KTInputSelect>
               <KTInputSelect
-                v-model="hotbed.details.eliminationMethod"
+                v-model="localHotbedData.details.eliminationMethod"
                 :options="hotbedEliminationMethods"
-                :disabled="!hotbed.details.problemAreaType"
-                :hint="!hotbed.details.problemAreaType ? 'Выберите тип проблемы' : ''"
+                :disabled="!localHotbedData.details.problemAreaType"
+                :hint="!localHotbedData.details.problemAreaType ? 'Выберите тип проблемы' : ''"
                 label="Метод по устранению"
               ></KTInputSelect>
               <KTInputSelect
-                v-model="hotbed.details.density"
+                v-model="localHotbedData.details.density"
                 :options="HOTBED_DENSITIES"
                 label="Плотность распространения"
               ></KTInputSelect>
               <KTInput
-                v-model="hotbed.details.owner"
+                v-model="localHotbedData.details.owner"
                 label="Владелец"
                 required
                 class="b-dialog__field"
               />
               <KTInput
-                v-model="hotbed.details.contractingOrganization"
+                v-model="localHotbedData.details.contractingOrganization"
                 label="Подрядная организация"
                 required
                 class="b-dialog__field"
@@ -58,7 +58,7 @@
               ></DragDrop>
               <section v-if="attachedFiles.length > 0" class="b-dialog__added-images">
                 <p class="b-dialog__block-caption gg-cap">Загруженные изображения</p>
-                <FileContainers v-model:files="attachedFiles" raw></FileContainers>
+                <FileContainers v-model:files="attachedFiles"></FileContainers>
               </section>
             </fieldset>
           </section>
@@ -87,8 +87,10 @@ const HOTBED_DENSITIES = [
   { name: "Средняя", value: "Средняя" },
   { name: "Высокая", value: "Высокая" },
 ];
+
+const localHotbedData = ref({} as any);
 const props = defineProps<Props>();
-const emit = defineEmits(["update:modelValue", "hotbedCreated"]);
+const emit = defineEmits(["update:modelValue", "hotbedUpdated"]);
 const store = useMainStore();
 const dialogVisible = ref(props.modelValue);
 const { formRef, formBindValidation, formHasError } = useFormValidation();
@@ -141,7 +143,7 @@ function onBack() {
   }
 }
 async function getEliminationMethodsByArea(area: string) {
-  hotbedData.value.eliminationMethod = "";
+  localHotbedData.value.eliminationMethod = "";
   hotbedEliminationMethods.value = (
     await $fetch<string[]>(
       `${store.apiGeospatial}/geo/dict/elimination-methods/${area}`,
@@ -156,11 +158,17 @@ async function getEliminationMethodsByArea(area: string) {
   }));
 }
 async function updateHotbed() {
+  localHotbedData.value.details.images = [];
   for (const file of attachedFiles.value) {
-    const image = await uploadPhoto(file);
-    hotbedData.value.images.push(image);
+    let image = null;
+    if (file instanceof File) {
+      image = await uploadPhoto(file);
+    } else {
+      image = file;
+    }
+    localHotbedData.value.details.images.push(image);
   }
-  emit("hotbedCreated", hotbedData.value);
+  emit("hotbedUpdated", localHotbedData.value);
 }
 async function uploadPhoto(file: File) {
   try {
@@ -194,7 +202,7 @@ function updateLabels() {
     subTitle.value = "Измените данные по очагу";
   } else if (currentStep.value === 2) {
     cancelLabel.value = "Назад";
-    applyLabel.value = "Изменить";
+    applyLabel.value = "Сохранить";
     subTitle.value = "Измените изображения очага";
   }
 }
@@ -205,6 +213,23 @@ function resetForm() {
   cancelLabel.value = "Отмена";
   applyLabel.value = "Далее";
 }
+onMounted(() => {
+  if (!props.hotbed) {
+    return;
+  }
+  localHotbedData.value = props.hotbed;
+  attachedFiles.value = props.hotbed.details.images;
+});
+watch(
+  () => props.hotbed,
+  (newVal) => {
+    if (!newVal) {
+      return;
+    }
+    localHotbedData.value = newVal;
+    attachedFiles.value = newVal.details.images;
+  },
+);
 </script>
 
 <style scoped lang="scss">
@@ -225,10 +250,6 @@ $app-narrow-mobile: 364px;
     @media screen and (max-width: $app-mobile) {
       padding: 12px 24px;
       width: 100%;
-    }
-    &--step-1 {
-      width: 80%;
-      max-width: 80%;
     }
   }
   &__header {

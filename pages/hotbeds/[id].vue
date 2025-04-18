@@ -56,7 +56,14 @@
       </section>
     </div>
     <section class="b-page__table-section">
-      <!-- Future table will go here -->
+      <Map
+        v-if="!hotbedsLoading"
+        @add-marker=""
+        @edit-marker=""
+        :dataStatusStyles="workStageStyles"
+        :markers="existingHotbeds"
+        :shortInfoKeys="shortMarkerInfoNameKeys"
+      ></Map>
     </section>
     <GGDialogConfirm
       v-model="showBlockDialog"
@@ -65,7 +72,7 @@
       @cancel="cancelBlockAction"
       @confirm="confirmBlockAction"
     />
-    <PagesHotbedsEdit v-model="editMode" :hotbed="hotbed" />
+    <PagesHotbedsEdit v-model="editMode" :hotbed="hotbed" @hotbed-updated="editHotbed" />
   </main>
 </template>
 
@@ -110,6 +117,39 @@ const WORK_STAGES = [
     value: "Выполнено",
   },
 ];
+const existingHotbeds = ref<Marker[]>([]);
+const hotbedsLoading = ref(true);
+const shortMarkerInfoNameKeys = ref({
+  owner: {
+    name: "Владелец",
+    type: "text",
+  },
+  landType: {
+    name: "Тип земель",
+    type: "text",
+  },
+  workStage: {
+    name: "Статус работы",
+    type: "status",
+  },
+  problemAreaType: {
+    name: "Тип проблемы",
+    type: "text",
+  },
+  eliminationMethod: {
+    name: "Метод по устранению",
+    type: "text",
+  },
+  contractingOrganisation: {
+    name: "Подрядная организация",
+    type: "text",
+  },
+});
+const workStageStyles = {
+  Создано: "background-color: var(--app-blue-400)",
+  "В работе": "background-color: var(--app-green-400)",
+  Завершено: "background-color: var(--app-grey-400)",
+};
 const pageLoaded = ref(false);
 function toggleEditMode() {
   editMode.value = !editMode.value;
@@ -118,7 +158,16 @@ function toggleEditMode() {
 function cancelEdit() {
   editMode.value = false;
 }
-
+async function getHotbeds() {
+  hotbedsLoading.value = true;
+  const url = `${store.apiGeospatial}/geo/info/getAll`;
+  const response = await $fetch<Marker[]>(url, {
+    method: "GET",
+    headers: { Authorization: useGetToken() },
+  });
+  existingHotbeds.value = response;
+  hotbedsLoading.value = false;
+}
 async function saveChanges() {
   try {
     const response = await $fetch(
@@ -187,6 +236,21 @@ async function getHotbed() {
   hotbed.value = response;
   updateHotdedCardList();
   pageLoaded.value = true;
+}
+async function editHotbed(hotbed: any) {
+  const response = await $fetch<any>(
+    `${store.apiGeospatial}/geo/info/${route.params.id}`,
+    {
+      method: "PATCH",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: hotbed,
+    },
+  );
+  hotbed.value = response;
+  updateHotdedCardList();
+  editMode.value = false;
 }
 function updateHotdedCardList() {
   hotdebCardList.value = [
@@ -259,6 +323,7 @@ async function uploadPhoto(file: File) {
 }
 onMounted(() => {
   getHotbed();
+  getHotbeds();
 });
 </script>
 
@@ -457,10 +522,10 @@ onMounted(() => {
   &__data-card {
   }
   &__table-section {
-    background-color: var(--app-grey-100);
     border-radius: 8px;
     width: 100%;
-    min-height: 360px;
+    height: 100%;
+    height: 360px;
   }
 }
 </style>
