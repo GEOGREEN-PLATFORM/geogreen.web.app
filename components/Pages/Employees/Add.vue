@@ -1,114 +1,108 @@
 <template>
-  <CDialog v-model="dialogVisible" class="b-dialog">
-    <q-card class="b-dialog__container">
-      <header class="b-dialog__header">
-        <h2 class="b-dialog__title gg-h2">Создание оператора</h2>
-        <p v-if="subTitle" class="b-dialog__subtitle">{{ subTitle }}</p>
+  <CDialog v-model="dialogVisible" class="b-dialog" @show="formBindValidation">
+    <q-card class="b-card">
+      <header class="b-card__header">
+        <h2 class="b-card__title gg-h2">Создание оператора</h2>
+        <p v-if="subTitle" class="b-card__subtitle">{{ subTitle }}</p>
       </header>
-      <q-form ref="formRef" novalidate greedy class="b-dialog__form" @submit="onSubmit">
+      <q-form ref="formRef" novalidate greedy class="b-form" @submit="submitEmployeeData">
         <template v-if="currentStep === 1">
-          <section class="b-dialog__section">
-            <h3 class="b-dialog__section-title gg-h3">Личные данные</h3>
-            <div class="b-dialog__section-content">
-              <div class="b-dialog__fields-row">
+          <section class="b-form__section">
+            <h3 class="b-form__section-title gg-h3">Личные данные</h3>
+            <div class="b-form__section-content">
+              <div class="b-form__fields-row">
                 <CInput
                   v-model="employeeData.personalData.lastName"
                   label="Фамилия"
                   required
-                  class="b-dialog__field"
+                  class="b-form__field"
                 />
                 <CInput
                   v-model="employeeData.personalData.firstName"
                   label="Имя"
                   required
-                  class="b-dialog__field"
+                  class="b-form__field"
                 />
                 <CInput
                   v-model="employeeData.personalData.secondName"
                   label="Отчество"
                   required
-                  class="b-dialog__field"
+                  class="b-form__field"
                 />
               </div>
               <CInputDate
                 v-model="employeeData.personalData.dateOfBirth"
                 label="Дата рождения"
-                class="b-dialog__field"
+                class="b-form__field"
               />
             </div>
           </section>
-          <section class="b-dialog__section">
-            <h3 class="b-dialog__section-title gg-h3">Контакты</h3>
-            <div class="b-dialog__section-content">
+          <section class="b-form__section">
+            <h3 class="b-form__section-title gg-h3">Контакты</h3>
+            <div class="b-form__section-content">
               <CInput
                 v-model="employeeData.contacts.email"
                 label="Email"
                 hint="Электронная почта сотрудника"
-                class="b-dialog__field"
+                :rules="[validateEmail]"
+                class="b-form__field"
               />
               <CInput
                 v-model="employeeData.contacts.phoneNumber"
                 label="Номер телефона"
                 :required="false"
-                class="b-dialog__field"
+                class="b-form__field"
               />
             </div>
           </section>
         </template>
         <template v-else-if="currentStep === 2">
-          <section class="b-dialog__section">
-            <h3 class="b-dialog__section-title gg-h3">Личные данные</h3>
-            <div class="b-dialog__info-row gg-t-base">
-              <span class="b-dialog__info-label">ФИО:</span>
-              <span class="b-dialog__info-value">{{ fullName }}</span>
+          <section class="b-form__section">
+            <h3 class="b-form__section-title gg-h3">Личные данные</h3>
+            <div class="b-form__info-row gg-t-base">
+              <span class="b-form__info-label">ФИО:</span>
+              <span class="b-form__info-value">{{ fullName }}</span>
             </div>
-            <div class="b-dialog__info-row gg-t-base">
-              <span class="b-dialog__info-label">Дата рождения:</span>
-              <span class="b-dialog__info-value">{{ employeeData.personalData.dateOfBirth }}</span>
+            <div class="b-form__info-row gg-t-base">
+              <span class="b-form__info-label">Дата рождения:</span>
+              <span class="b-form__info-value">{{ employeeData.personalData.dateOfBirth }}</span>
             </div>
           </section>
-          <section class="b-dialog__section">
-            <h3 class="b-dialog__section-title gg-h3">Контакты</h3>
-            <div class="b-dialog__info-row gg-t-base">
-              <span class="b-dialog__info-label">Email:</span>
-              <span class="b-dialog__info-value">{{ employeeData.contacts.email }}</span>
+          <section class="b-form__section">
+            <h3 class="b-form__section-title gg-h3">Контакты</h3>
+            <div class="b-form__info-row gg-t-base">
+              <span class="b-form__info-label">Email:</span>
+              <span class="b-form__info-value">{{ employeeData.contacts.email }}</span>
             </div>
-            <div class="b-dialog__info-row gg-t-base">
-              <span class="b-dialog__info-label">Номер телефона:</span>
-              <span class="b-dialog__info-value">{{ employeeData.contacts.phoneNumber }}</span>
+            <div class="b-form__info-row gg-t-base">
+              <span class="b-form__info-label">Номер телефона:</span>
+              <span class="b-form__info-value">{{ employeeData.contacts.phoneNumber }}</span>
             </div>
           </section>
         </template>
         <template v-else-if="currentStep === 3">
-          <section class="b-dialog__section">
-            <div class="b-dialog__password-container">
-              <h3 class="b-dialog__password-title gg-h2">Пароль</h3>
-              <div class="b-dialog__password-wrapper">
-                <div class="b-dialog__password">{{ employeeData.password }}</div>
-                <div
-                  class="b-dialog__copy-wrapper"
-                  @mouseenter="onCopyMouseEnter"
-                  @mouseleave="onCopyMouseLeave"
-                  @click="copyPassword"
-                >
-                  <q-icon
-                    :class="{ 'pop-animation': isAnimating }"
-                    :name="mdiContentCopy"
-                    size="32px"
-                    class="b-dialog__copy-icon"
-                  />
-                  <span :style="`opacity: ${Number(showTooltip)}`" class="b-dialog__copy-tooltip">{{
-                    tooltipText
-                  }}</span>
-                </div>
+          <section class="b-form__section">
+            <div class="b-password">
+              <h3 class="b-password__title gg-h2">Пароль</h3>
+              <div class="b-password__text-copy-wrapper">
+                <div class="b-password__text">{{ employeeData.password }}</div>
+                <CButtonCopy
+                  :text="employeeData.password"
+                  tooltip-initial-text="Скопировать пароль"
+                  tooltip-success-text="Скопировано"
+                />
               </div>
             </div>
           </section>
         </template>
-
-        <footer class="b-dialog__footer">
+        <footer class="b-form__footer">
           <CButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
-          <CButton :label="applyLabel" :disabled="formHasError" type="submit" />
+          <CButton
+            :label="applyLabel"
+            :disabled="formHasError"
+            :loading="isAddLoading"
+            type="submit"
+          />
         </footer>
       </q-form>
     </q-card>
@@ -116,7 +110,9 @@
 </template>
 
 <script setup lang="ts">
-import { mdiContentCopy } from "@quasar/extras/mdi-v6";
+import { create } from "ol/transform";
+import { useMainStore } from "~/store/main";
+
 interface Props {
   modelValue: boolean;
 }
@@ -135,19 +131,10 @@ interface EmployeeData {
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits(["update:modelValue", "employeeCreated"]);
+const emits = defineEmits(["update:modelValue", "employeeCreated"]);
 const dialogVisible = ref(props.modelValue);
 const { formRef, formBindValidation, formHasError } = useFormValidation();
-
-watch(
-  () => props.modelValue,
-  (newVal) => {
-    dialogVisible.value = newVal;
-  },
-);
-watch(dialogVisible, (newVal) => {
-  emit("update:modelValue", newVal);
-});
+const { validateEmail } = useRules();
 
 const employeeData = reactive<EmployeeData>({
   personalData: {
@@ -167,12 +154,13 @@ const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
 const subTitle = ref("");
 const currentStep = ref(1);
-
+const isAddLoading = ref(false);
+const store = useMainStore();
 const fullName = computed(() =>
   `${employeeData.personalData.lastName} ${employeeData.personalData.firstName} ${employeeData.personalData.secondName}`.trim(),
 );
 
-function onSubmit() {
+function submitEmployeeData() {
   formRef.value?.validate().then((success) => {
     if (success) {
       nextStep();
@@ -197,13 +185,11 @@ function nextStep() {
     cancelLabel.value = "Назад";
   } else if (currentStep.value === 2) {
     currentStep.value++;
-    subTitle.value =
-      "Сохраните пароль для сотрудника. Утерянные пароли не восстанавливаются в системе!";
+    subTitle.value = "Сохраните пароль для сотрудника.";
     applyLabel.value = "Создать";
     employeeData.password = generatePassword();
   } else if (currentStep.value === 3) {
-    emit("employeeCreated", employeeData);
-    dialogVisible.value = false;
+    addEmployee(employeeData);
   }
 }
 
@@ -218,7 +204,42 @@ function updateLabels() {
     subTitle.value = "Проверьте корректность введённых данных";
   }
 }
-
+async function addEmployee(newEmployee: EmployeeData) {
+  isAddLoading.value = true;
+  try {
+    await $fetch(`${store.apiAuth}/register/operator`, {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: {
+        firstName: newEmployee.personalData.firstName,
+        lastName: newEmployee.personalData.lastName,
+        patronymic: newEmployee.personalData.secondName,
+        email: newEmployee.contacts.email,
+        password: newEmployee.password,
+        number: newEmployee.contacts.phoneNumber,
+        birthdate: tempDateConverterWillBeRemoved(
+          newEmployee.personalData.dateOfBirth,
+        ),
+      },
+    });
+    dialogVisible.value = false;
+    emits("employeeCreated");
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось создать оператора",
+    };
+  } finally {
+    isAddLoading.value = false;
+  }
+}
+function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
+  const [day, month, year] = ddmmyyyy.split(".");
+  return `${year}-${month}-${day}`;
+}
 function resetForm() {
   currentStep.value = 1;
   subTitle.value = "";
@@ -247,35 +268,18 @@ function generatePassword(): string {
   return passwordArr.join("");
 }
 
-const tooltipText = ref("Скопировать пароль");
-const showTooltip = ref(false);
-const isAnimating = ref(false);
-
-function onCopyMouseEnter() {
-  showTooltip.value = true;
-}
-
-function onCopyMouseLeave() {
-  showTooltip.value = false;
-  if (tooltipText.value === "Скопировано") {
-    tooltipText.value = "Скопировать пароль";
-  }
-}
-
-function copyPassword() {
-  navigator.clipboard.writeText(employeeData.password).then(() => {
-    tooltipText.value = "Скопировано";
-    showTooltip.value = true;
-    isAnimating.value = true;
-    setTimeout(() => {
-      isAnimating.value = false;
-      showTooltip.value = false;
-      setTimeout(() => {
-        tooltipText.value = "Скопировать пароль";
-      }, 300);
-    }, 1000);
-  });
-}
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    dialogVisible.value = newVal;
+  },
+);
+watch(
+  () => dialogVisible.value,
+  (newVal) => {
+    emits("update:modelValue", newVal);
+  },
+);
 </script>
 
 <style scoped lang="scss">
@@ -283,20 +287,17 @@ $app-desktop: 1294px;
 $app-laptop: 960px;
 $app-mobile: 600px;
 $app-narrow-mobile: 364px;
-
-.b-dialog {
-  &__container {
-    display: flex;
-    flex-direction: column;
-    width: 80%;
-    max-width: 784px;
-    background-color: var(--app-white);
-    border-radius: 12px;
-    padding: 24px 32px;
-    @media screen and (max-width: $app-mobile) {
-      padding: 12px 24px;
-      width: 100%;
-    }
+.b-card {
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+  max-width: 784px;
+  background-color: var(--app-white);
+  border-radius: 12px;
+  padding: 24px 32px;
+  @media screen and (max-width: $app-mobile) {
+    padding: 12px 24px;
+    width: 100%;
   }
   &__header {
     padding: 16px 0 20px;
@@ -309,10 +310,10 @@ $app-narrow-mobile: 364px;
     font-size: 18px;
     color: var(--app-grey-300);
   }
-  &__form {
-    display: flex;
-    flex-direction: column;
-  }
+}
+.b-form {
+  display: flex;
+  flex-direction: column;
   &__section {
     padding-top: 20px;
   }
@@ -341,69 +342,10 @@ $app-narrow-mobile: 364px;
     gap: 4px;
   }
   &__info-label {
-    color: var(--app-grey-500);
-  }
-  &__info-value {
     color: var(--app-grey-300);
   }
-  &__password-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 32px;
-    margin-bottom: 16px;
-  }
-  &__password-title {
-    margin: 0;
-  }
-  &__password-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  &__password {
-    font-size: 32px;
-    font-weight: bold;
-  }
-  &__copy-wrapper {
-    position: relative;
-    cursor: pointer;
-    &:hover {
-      .b-dialog__copy-icon {
-        transform: scale(1.1);
-      }
-      .b-dialog__copy-tooltip {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-        @media screen and (max-width: $app-mobile) {
-          transform: translateX(-100%) translateY(0);
-        }
-      }
-    }
-  }
-  &__copy-icon {
-    transition: transform 0.2s;
-  }
-  &__copy-tooltip {
-    position: absolute;
-    pointer-events: none;
-    bottom: -32px;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    opacity: 0;
-    background-color: var(--app-grey-300);
-    color: var(--app-white);
-    padding: 4px 8px;
-    font-size: 12px;
-    border-radius: 4px;
-    white-space: nowrap;
-    transition:
-      opacity 0.3s ease,
-      transform 0.3s ease;
-    @media screen and (max-width: $app-mobile) {
-      left: 100%;
-      transform: translateX(-100%) translateY(10px);
-    }
+  &__info-value {
+    color: var(--app-grey-500);
   }
   &__footer {
     display: flex;
@@ -412,15 +354,20 @@ $app-narrow-mobile: 364px;
     justify-content: flex-end;
   }
 }
-@keyframes pop {
-  0% {
-    transform: scale(1);
+.b-password {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  margin-bottom: 16px;
+  &__text-copy-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
-  50% {
-    transform: scale(1.2);
+  &__text {
+    font-size: 32px;
+    font-weight: bold;
   }
-}
-.pop-animation {
-  animation: pop 0.5s ease;
 }
 </style>

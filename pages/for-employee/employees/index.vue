@@ -65,10 +65,7 @@
         </CTable>
       </div>
     </section>
-    <EmployeesPageAddDialog
-      v-model="isEmployeeDialogOpen"
-      @employeeCreated="handleEmployeeCreated"
-    />
+    <PagesEmployeesAdd v-model="isEmployeeDialogOpen" @employeeCreated="getEmployees" />
   </main>
 </template>
 
@@ -234,34 +231,6 @@ async function getEmployees() {
   }
 }
 
-async function handleEmployeeCreated(newEmployee: EmployeeData) {
-  try {
-    await $fetch(`${store.apiAuth}/register/operator`, {
-      method: "POST",
-      headers: {
-        authorization: useGetToken(),
-      },
-      body: {
-        firstName: newEmployee.personalData.firstName,
-        lastName: newEmployee.personalData.lastName,
-        patronymic: newEmployee.personalData.secondName,
-        email: newEmployee.contacts.email,
-        password: newEmployee.password,
-        number: newEmployee.contacts.phoneNumber,
-        birthdate: tempDateConverterWillBeRemoved(
-          newEmployee.personalData.dateOfBirth,
-        ),
-      },
-    });
-    getEmployees();
-  } catch (error: any) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Ну удалось создать оператора",
-    };
-  }
-}
 function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
   const [day, month, year] = ddmmyyyy.split(".");
   return `${year}-${month}-${day}`;
