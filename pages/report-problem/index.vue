@@ -32,7 +32,7 @@
             только один очаг на карте.
           </p>
           <article class="report-form__map-container">
-            <Map
+            <CMap
               @add-marker="addUserHotbed"
               @delete-marker="deleteUserHotbed"
               @forbiddenAddMarker="handleForbiddenAddTry"
@@ -41,35 +41,35 @@
               :shortInfoKeys="shortMarkerInfoNameKeys"
               addZone="hide"
               :addMarker="isAddMarker ? 'forbid' : 'enable'"
-            ></Map>
+            ></CMap>
           </article>
         </fieldset>
         <fieldset class="report-form__fieldset">
           <legend class="report-form__legend gg-h3">Комментарий</legend>
-          <KTInputTextarea
+          <CInputTextarea
             class="report-form__comment"
             placeholder="Кратко опишите проблему"
             v-model="userReport.details.comment"
-          ></KTInputTextarea>
+          ></CInputTextarea>
         </fieldset>
         <fieldset class="report-form__fieldset">
           <legend class="report-form__legend gg-h3">Фотографии</legend>
-          <DragDrop
+          <CDragDrop
             @add="uploadFiles"
             class="report-form__upload-file-container"
             :maxSize="FILES_MAX_SIZE"
-          ></DragDrop>
+          ></CDragDrop>
           <section v-if="attachedFiles.length > 0" class="report-form__added-images">
             <FileContainers v-model:files="attachedFiles" raw></FileContainers>
           </section>
         </fieldset>
-        <GGButton
+        <CButton
           class="report-form__submit-button"
           label="Отправить"
           :disabled="!requiredFieldsFilled"
           :loading="isFormSending"
           @click="sendReport"
-        ></GGButton>
+        ></CButton>
       </q-form>
     </section>
   </main>

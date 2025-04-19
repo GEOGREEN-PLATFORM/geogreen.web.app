@@ -6,6 +6,27 @@ declare global {
     loading?: boolean;
     show?: boolean;
   }
+  interface ItemOption {
+    name: string;
+    value: string | number;
+  }
+  interface TableHeader {
+    name: string;
+    label: string;
+    align?: "left" | "right" | "center" | undefined;
+    sortable?: boolean;
+    field: string | ((row: unknown) => unknown);
+  }
+  interface TableRow {
+    [fieldName: string]: string | number;
+  }
+  interface TablePagination {
+    rowsPerPage: number;
+    page: number;
+    rowsNumber?: number;
+    sortBy?: string | null;
+    descending?: boolean;
+  }
   interface User {
     role: "user" | "admin" | "operator";
     id: string;
@@ -58,10 +79,7 @@ declare global {
   type FilterSelect = {
     type: "select";
     selected: string;
-    data: {
-      name: string;
-      value: string;
-    }[];
+    data: ItemOption[];
   };
   type FilterDateRange = {
     type: "date-range";

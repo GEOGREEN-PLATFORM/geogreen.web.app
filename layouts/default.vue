@@ -10,7 +10,7 @@
     <q-page-container style="height: 100dvh">
       <NuxtPage></NuxtPage>
     </q-page-container>
-    <PhotoViewer />
+    <CPhotoViewer />
     <CAlert></CAlert>
   </q-layout>
 </template>

@@ -1,5 +1,5 @@
 <template>
-  <AuthPageForm
+  <PagesAuthForm
     :button-options="pageState.buttonOpts"
     @main-button-click="handleMainAction(pageState.step + 1)"
     @sub-button-click="handleSubAction(pageState.step - 1)"
@@ -11,27 +11,27 @@
           <span>{{ pageState.hintText }}</span>
         </div>
         <div class="form-content__input-fields">
-          <KTInput
+          <CInput
             v-if="pageState.step === 0"
             v-model="userData.email"
             label="Почта"
             type="email"
             name="email"
           />
-          <KTInputOTP
+          <CInputOTP
             v-if="pageState.step === 1"
             v-model:is-error="isWrongCode"
             v-model="userData.confirmationCode"
             @is-full="handleMainAction(pageState.step + 1)"
           />
-          <KTInput
+          <CInput
             v-if="pageState.step === 2"
             v-model="userData.password"
             type="password"
             label="Новый пароль"
             autocomplete="new-password"
           />
-          <KTInput
+          <CInput
             v-if="pageState.step === 2"
             v-model="userData.repeatedPassword"
             type="password"
@@ -45,16 +45,16 @@
       v-if="pageState.step === 1 && (isWrongCode || userData.confirmationCode.length < 4)"
       #main-button
     >
-      <GGButton design-type="secondary" :disabled="sendCodeTimer !== 0"
+      <CButton design-type="secondary" :disabled="sendCodeTimer !== 0"
         ><div class="button-timer-slot">
           {{ `Отправить код ${sendCodeTimer !== 0 ? "через" : ""}` }}
           <span v-show="sendCodeTimer !== 0" class="button-timer-slot__time">
             {{ formattedSendTimer }}
           </span>
         </div>
-      </GGButton>
+      </CButton>
     </template>
-  </AuthPageForm>
+  </PagesAuthForm>
 </template>
 
 <script setup lang="ts">

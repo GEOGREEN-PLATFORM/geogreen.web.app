@@ -52,47 +52,47 @@
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
-              <KTInputDate
+              <CInputDate
                 v-model="userData.birthDate"
                 class="b-labeled-field__input"
                 height="44px"
-              ></KTInputDate>
+              ></CInputDate>
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Email:</div>
-              <KTInput
+              <CInput
                 v-model="userData.email"
                 type="email"
                 class="b-labeled-field__input"
                 height="44px"
-              ></KTInput>
+              ></CInput>
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
-              <KTInput
+              <CInput
                 v-model="userData.phone"
                 type="tel"
                 class="b-labeled-field__input"
                 height="44px"
-              ></KTInput>
+              ></CInput>
             </div>
             <div class="b-profile-card__form-actions">
-              <GGButton
+              <CButton
                 @click="cancelEdit"
                 size="medium"
                 design-type="secondary"
                 class="b-profile-card__button b-profile-card__button--cancel"
               >
                 Отменить
-              </GGButton>
+              </CButton>
 
-              <GGButton
+              <CButton
                 @click="saveChanges"
                 size="medium"
                 class="b-profile-card__button b-profile-card__button--save"
               >
                 Сохранить
-              </GGButton>
+              </CButton>
             </div>
           </div>
           <div v-else class="b-profile-card__info-list">
@@ -126,15 +126,15 @@
                 {{ userData.phone || "Не указано" }}
               </div>
             </div>
-            <GGButton
+            <CButton
               @click="toggleEditMode"
               size="medium"
               stretch="fill"
               class="b-profile-card__edit-button"
             >
               Редактировать
-            </GGButton>
-            <GGButton
+            </CButton>
+            <CButton
               @click="openBlockDialog"
               size="medium"
               stretch="fill"
@@ -142,7 +142,7 @@
               class="b-profile-card__block-button"
             >
               Заблокировать
-            </GGButton>
+            </CButton>
           </div>
         </div>
       </section>
@@ -153,7 +153,7 @@
     <section class="b-page__table-section">
       <!-- Future table will go here -->
     </section>
-    <GGDialogConfirm
+    <CDialogConfirm
       v-model="showBlockDialog"
       actionMainText="заблокировать сотрудника"
       actionButtonConfirmText="Заблокировать"

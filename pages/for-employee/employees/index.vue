@@ -4,30 +4,30 @@
       <div class="b-header__title-wrapper">
         <h1 class="b-header__title gg-h1">Сотрудники</h1>
         <div class="b-header__add-btn">
-          <GGButton @click="openEmployeeDialog" label="Добавить оператора" size="medium"></GGButton>
+          <CButton label="Добавить оператора" size="medium" @click="openEmployeeDialog"></CButton>
         </div>
         <div class="b-header__add-btn--mobile">
-          <GGButton
-            @click="openEmployeeDialog"
+          <CButton
             :icon="mdiPlus"
             iconColor="var(--app-white)"
             stretch="hug"
-          ></GGButton>
+            @click="openEmployeeDialog"
+          ></CButton>
         </div>
       </div>
       <div class="b-header__search">
-        <KTInput
+        <CInput
           v-model="searchEmployeeStr"
-          @update:model-value="searchEmployee"
           label="Поиск сотрудника"
           hideBottomSpace
           height="48px"
           :required="false"
+          @update:model-value="searchEmployee"
         >
           <template #append>
             <q-icon :name="mdiMagnify" />
           </template>
-        </KTInput>
+        </CInput>
       </div>
     </header>
     <section class="b-content">
@@ -45,9 +45,9 @@
           v-model:pagination="pagination"
           row-key="name"
           :slots="['status']"
+          :loading="employeesLoading"
           @click:row="(row: any) => goToEmployee(row.email)"
           @updateTable="getEmployees"
-          :loading="employeesLoading"
         >
           <template v-slot:body-cell-status="slotProps">
             <div class="b-account-status">
@@ -100,6 +100,12 @@ interface EmployeeData {
   };
   password: string;
 }
+interface PagePaginationEmployee {
+  users: EmployeeRaw[];
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+}
 const pagination = ref({
   page: 1,
   rowsPerPage: 10,
@@ -107,81 +113,53 @@ const pagination = ref({
 });
 const store = useMainStore();
 const debounce = useDebounce();
-const STATUS_OPTIONS = [
-  {
-    name: "Активен",
-    value: "active",
-  },
-  {
-    name: "Заблокирован",
-    value: "blocked",
-  },
-];
-const ROLE_OPTIONS = [
-  {
-    name: "Оператор",
-    value: "operator",
-  },
-  {
-    name: "Администратор",
-    value: "admin",
-  },
-];
-const tableHeaders = [
+const { EMPLOYEE_ROLE_OPTIONS, EMPLOYEE_ACCOUNT_STATUS_OPTIONS } =
+  useGetStatusOptions();
+const employees = ref<EmployeeRaw[]>([]);
+const tableHeaders: TableHeader[] = [
   {
     name: "initials",
     align: "left",
     label: "ФИО",
     field: "initials",
-    sortable: true,
+    sortable: false,
   },
   {
     name: "role",
     align: "center",
     label: "Роль",
     field: "role",
-    sortable: true,
+    sortable: false,
   },
   {
     name: "status",
     align: "center",
     label: "Статус аккаунта",
     field: "status",
-    sortable: true,
+    sortable: false,
   },
   {
     name: "dateCreated",
     align: "right",
     label: "Дата создания",
     field: "dateCreated",
-    sortable: true,
+    sortable: false,
   },
 ];
-const employees = ref<EmployeeRaw[]>([]);
-const tableRows = computed(() =>
-  employees.value.map((e) => ({
-    id: e.id,
-    email: e.email,
-    initials: `${e.lastName} ${e.firstName} ${e.patronymic}`,
-    role: ROLE_OPTIONS.find((o) => o.value === e.role)?.name ?? e.role,
-    status: e.enabled ? "Активен" : "Заблокирован",
-    dateCreated: date.formatDate(new Date(e.creationDate), "DD.MM.YYYY"),
-  })),
-);
 const filters = ref<FilterItem[]>([
   {
     type: "select",
     key: "role",
     label: "Роль",
     selected: "",
-    data: ROLE_OPTIONS,
+    data: EMPLOYEE_ROLE_OPTIONS,
   },
   {
     type: "select",
     key: "status",
     selected: "",
     label: "Статус аккаунта",
-    data: STATUS_OPTIONS,
+    data: EMPLOYEE_ACCOUNT_STATUS_OPTIONS,
   },
   {
     type: "date-range",
@@ -193,64 +171,67 @@ const filters = ref<FilterItem[]>([
 const searchEmployeeStr = ref("");
 const employeesLoading = ref(true);
 const isEmployeeDialogOpen = ref(false);
+const tableRows: ComputedRef<TableRow[]> = computed(() =>
+  employees.value.map((e) => ({
+    id: e.id,
+    email: e.email,
+    initials: `${e.lastName} ${e.firstName} ${e.patronymic}`,
+    role: EMPLOYEE_ROLE_OPTIONS.find((o) => o.value === e.role)?.name ?? e.role,
+    status: e.enabled ? "Активен" : "Заблокирован",
+    dateCreated: date.formatDate(new Date(e.creationDate), "DD.MM.YYYY"),
+  })),
+);
 function searchEmployee() {
   debounce(getEmployees, 500, "searchEmployee");
 }
-function openEmployeeDialog() {
-  isEmployeeDialogOpen.value = true;
-}
 async function getEmployees() {
   employeesLoading.value = true;
-  const params = new URLSearchParams();
-  if (searchEmployeeStr.value) {
-    params.append("search", searchEmployeeStr.value);
-  }
-  if (filters.value[0].selected) {
-    params.append("role", filters.value[0].selected as string);
-  }
-  if (filters.value[1].selected) {
-    params.append("status", filters.value[1].selected as string);
-  }
+  let fromDateParam = "";
+  let toDateParam = "";
   if (
     filters.value[2].selected &&
     typeof filters.value[2].selected === "string"
   ) {
-    params.append(
-      "fromDate",
-      tempDateConverterWillBeRemoved(filters.value[2].selected),
-    );
-    params.append(
-      "toDate",
-      tempDateConverterWillBeRemoved(filters.value[2].selected),
-    );
+    fromDateParam = filters.value[2].selected;
+    toDateParam = filters.value[2].selected;
   } else {
     const { from, to } = filters.value[2].selected as {
       from: string | null;
       to: string | null;
     };
-    if (from) {
-      params.append("fromDate", tempDateConverterWillBeRemoved(from));
-    }
-    if (to) {
-      params.append("toDate", tempDateConverterWillBeRemoved(to));
-    }
+    fromDateParam = from || "";
+    toDateParam = to || "";
   }
-
-  params.append("page", String(pagination.value.page - 1));
-  params.append("size", String(pagination.value.rowsPerPage));
-  const url = `${store.apiAuth}/user?${params.toString()}`;
-  const response = await $fetch<{
-    users: EmployeeRaw[];
-    currentPage: number;
-    totalItems: number;
-    totalPages: number;
-  }>(url, {
-    method: "GET",
-    headers: { Authorization: useGetToken() },
-  });
-  employees.value = response.users;
-  pagination.value.rowsNumber = response.totalItems;
-  employeesLoading.value = false;
+  const url = `${store.apiAuth}/user`;
+  try {
+    const response = await $fetch<PagePaginationEmployee>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+      params: {
+        search: searchEmployeeStr.value || undefined,
+        role: filters.value[0].selected || undefined,
+        status: filters.value[1].selected || undefined,
+        fromDate: fromDateParam
+          ? tempDateConverterWillBeRemoved(fromDateParam)
+          : undefined,
+        toDate: toDateParam
+          ? tempDateConverterWillBeRemoved(toDateParam)
+          : undefined,
+        page: pagination.value.page - 1,
+        size: pagination.value.rowsPerPage,
+      },
+    });
+    employees.value = response.users;
+    pagination.value.rowsNumber = response.totalItems;
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось загрузить сотрудников. Попробуйте ещё раз.",
+    };
+  } finally {
+    employeesLoading.value = false;
+  }
 }
 
 async function handleEmployeeCreated(newEmployee: EmployeeData) {
@@ -285,7 +266,9 @@ function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
   const [day, month, year] = ddmmyyyy.split(".");
   return `${year}-${month}-${day}`;
 }
-
+function openEmployeeDialog() {
+  isEmployeeDialogOpen.value = true;
+}
 function goToEmployee(id: string) {
   navigateTo(`/for-employee/employees/${id}`);
 }

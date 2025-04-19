@@ -1,5 +1,5 @@
 <template>
-  <GGDialog v-model="dialogVisible" class="b-dialog">
+  <CDialog v-model="dialogVisible" class="b-dialog">
     <q-card class="b-dialog__container">
       <header class="b-dialog__header">
         <h2 class="b-dialog__title gg-h2">Создание оператора</h2>
@@ -11,26 +11,26 @@
             <h3 class="b-dialog__section-title gg-h3">Личные данные</h3>
             <div class="b-dialog__section-content">
               <div class="b-dialog__fields-row">
-                <KTInput
+                <CInput
                   v-model="employeeData.personalData.lastName"
                   label="Фамилия"
                   required
                   class="b-dialog__field"
                 />
-                <KTInput
+                <CInput
                   v-model="employeeData.personalData.firstName"
                   label="Имя"
                   required
                   class="b-dialog__field"
                 />
-                <KTInput
+                <CInput
                   v-model="employeeData.personalData.secondName"
                   label="Отчество"
                   required
                   class="b-dialog__field"
                 />
               </div>
-              <KTInputDate
+              <CInputDate
                 v-model="employeeData.personalData.dateOfBirth"
                 label="Дата рождения"
                 class="b-dialog__field"
@@ -40,13 +40,13 @@
           <section class="b-dialog__section">
             <h3 class="b-dialog__section-title gg-h3">Контакты</h3>
             <div class="b-dialog__section-content">
-              <KTInput
+              <CInput
                 v-model="employeeData.contacts.email"
                 label="Email"
                 hint="Электронная почта сотрудника"
                 class="b-dialog__field"
               />
-              <KTInput
+              <CInput
                 v-model="employeeData.contacts.phoneNumber"
                 label="Номер телефона"
                 :required="false"
@@ -107,12 +107,12 @@
         </template>
 
         <footer class="b-dialog__footer">
-          <GGButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
-          <GGButton :label="applyLabel" :disabled="formHasError" type="submit" />
+          <CButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
+          <CButton :label="applyLabel" :disabled="formHasError" type="submit" />
         </footer>
       </q-form>
     </q-card>
-  </GGDialog>
+  </CDialog>
 </template>
 
 <script setup lang="ts">

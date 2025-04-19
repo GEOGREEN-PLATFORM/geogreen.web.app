@@ -12,37 +12,37 @@
         </div>
         <div v-if="pageLoaded" class="b-profile-card__content">
           <div class="b-profile-card__form">
-            <KTInputTextarea
+            <CInputTextarea
               class="report-form__comment"
               placeholder="Кратко опишите проблему"
               v-model="hotbed.details.comment"
               @blur="saveChanges"
-            ></KTInputTextarea>
+            ></CInputTextarea>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Мероприятие:</div>
-              <KTInputSelect
+              <CInputSelect
                 v-model="hotbed.relatedTaskId"
                 disabled
                 class="b-labeled-field__input"
-              ></KTInputSelect>
+              ></CInputSelect>
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Статус работы:</div>
-              <KTInputSelect
+              <CInputSelect
                 v-model="hotbed.details.workStage"
                 @update:model-value="saveChanges"
                 :options="WORK_STAGES"
                 class="b-labeled-field__input"
-              ></KTInputSelect>
+              ></CInputSelect>
             </div>
             <div class="b-profile-card__form-actions">
-              <GGButton
+              <CButton
                 @click="toggleEditMode"
                 size="medium"
                 class="b-profile-card__button b-profile-card__button--save"
               >
                 Еще
-              </GGButton>
+              </CButton>
             </div>
           </div>
         </div>
@@ -56,16 +56,16 @@
       </section>
     </div>
     <section class="b-page__table-section">
-      <Map
+      <CMap
         v-if="!hotbedsLoading"
         @add-marker=""
         @edit-marker=""
         :dataStatusStyles="workStageStyles"
         :markers="existingHotbeds"
         :shortInfoKeys="shortMarkerInfoNameKeys"
-      ></Map>
+      ></CMap>
     </section>
-    <GGDialogConfirm
+    <CDialogConfirm
       v-model="showBlockDialog"
       actionMainText="удалить очаг"
       actionButtonConfirmText="Удалить"

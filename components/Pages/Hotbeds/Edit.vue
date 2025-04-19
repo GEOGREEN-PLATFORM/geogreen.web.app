@@ -1,5 +1,5 @@
 <template>
-  <GGDialog v-model="dialogVisible" class="b-dialog">
+  <CDialog v-model="dialogVisible" class="b-dialog">
     <q-card class="b-dialog__container" :class="`b-dialog__container--step-${currentStep}`">
       <header class="b-dialog__header">
         <h2 class="b-dialog__title gg-h2">Добавление очага</h2>
@@ -9,36 +9,36 @@
         <template v-if="currentStep === 1">
           <section class="b-dialog__section">
             <div class="b-dialog__section-content">
-              <KTInputSelect
+              <CInputSelect
                 v-model="localHotbedData.details.problemAreaType"
                 @update:model-value="getEliminationMethodsByArea"
                 :options="store.formattedProblemAreaTypes"
                 label="Тип проблемы"
-              ></KTInputSelect>
-              <KTInputSelect
+              ></CInputSelect>
+              <CInputSelect
                 v-model="localHotbedData.details.landType"
                 :options="store.formattedLandTypes"
                 label="Тип земель"
-              ></KTInputSelect>
-              <KTInputSelect
+              ></CInputSelect>
+              <CInputSelect
                 v-model="localHotbedData.details.eliminationMethod"
                 :options="hotbedEliminationMethods"
                 :disabled="!localHotbedData.details.problemAreaType"
                 :hint="!localHotbedData.details.problemAreaType ? 'Выберите тип проблемы' : ''"
                 label="Метод по устранению"
-              ></KTInputSelect>
-              <KTInputSelect
+              ></CInputSelect>
+              <CInputSelect
                 v-model="localHotbedData.details.density"
                 :options="HOTBED_DENSITIES"
                 label="Плотность распространения"
-              ></KTInputSelect>
-              <KTInput
+              ></CInputSelect>
+              <CInput
                 v-model="localHotbedData.details.owner"
                 label="Владелец"
                 required
                 class="b-dialog__field"
               />
-              <KTInput
+              <CInput
                 v-model="localHotbedData.details.contractingOrganization"
                 label="Подрядная организация"
                 required
@@ -51,11 +51,11 @@
           <section class="b-dialog__section">
             <fieldset class="b-dialog__fieldset">
               <legend class="b-dialog__legend gg-h3 q-mb-sm">Фотографии</legend>
-              <DragDrop
+              <CDragDrop
                 @add="uploadFiles"
                 class="b-dialog__upload-file-container"
                 :maxSize="FILES_MAX_SIZE"
-              ></DragDrop>
+              ></CDragDrop>
               <section v-if="attachedFiles.length > 0" class="b-dialog__added-images">
                 <p class="b-dialog__block-caption gg-cap">Загруженные изображения</p>
                 <FileContainers v-model:files="attachedFiles"></FileContainers>
@@ -65,12 +65,12 @@
         </template>
 
         <footer class="b-dialog__footer">
-          <GGButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
-          <GGButton :label="applyLabel" :disabled="formHasError" type="submit" />
+          <CButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
+          <CButton :label="applyLabel" :disabled="formHasError" type="submit" />
         </footer>
       </q-form>
     </q-card>
-  </GGDialog>
+  </CDialog>
 </template>
 
 <script setup lang="ts">

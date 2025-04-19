@@ -1,5 +1,5 @@
 <template>
-  <GGDialog v-model="dialogVisible" class="b-dialog">
+  <CDialog v-model="dialogVisible" class="b-dialog">
     <q-card class="b-dialog__container" :class="`b-dialog__container--step-${currentStep}`">
       <header class="b-dialog__header">
         <h2 class="b-dialog__title gg-h2">Добавление очага</h2>
@@ -8,7 +8,7 @@
       <q-form ref="formRef" novalidate greedy class="b-dialog__form" @submit="onSubmit">
         <template v-if="currentStep === 1">
           <section class="b-dialog__section b-dialog__map">
-            <Map
+            <CMap
               @add-marker="addTempHotbed"
               @edit-marker="editTempHotbed"
               @delete-marker="deleteTempHotbed"
@@ -17,42 +17,42 @@
               :addMarker="isAddMarker ? 'forbid' : 'enable'"
               :markers="existingHotbeds"
               :shortInfoKeys="shortMarkerInfoNameKeys"
-            ></Map>
+            ></CMap>
           </section>
         </template>
         <template v-if="currentStep === 2">
           <section class="b-dialog__section">
             <div class="b-dialog__section-content">
-              <KTInputSelect
+              <CInputSelect
                 v-model="hotbedData.problemAreaType"
                 @update:model-value="getEliminationMethodsByArea"
                 :options="store.formattedProblemAreaTypes"
                 label="Тип проблемы"
-              ></KTInputSelect>
-              <KTInputSelect
+              ></CInputSelect>
+              <CInputSelect
                 v-model="hotbedData.landType"
                 :options="store.formattedLandTypes"
                 label="Тип земель"
-              ></KTInputSelect>
-              <KTInputSelect
+              ></CInputSelect>
+              <CInputSelect
                 v-model="hotbedData.eliminationMethod"
                 :options="hotbedEliminationMethods"
                 :disabled="!hotbedData.problemAreaType"
                 :hint="!hotbedData.problemAreaType ? 'Выберите тип проблемы' : ''"
                 label="Метод по устранению"
-              ></KTInputSelect>
-              <KTInputSelect
+              ></CInputSelect>
+              <CInputSelect
                 v-model="hotbedData.density"
                 :options="HOTBED_DENSITIES"
                 label="Плотность распространения"
-              ></KTInputSelect>
-              <KTInput
+              ></CInputSelect>
+              <CInput
                 v-model="hotbedData.owner"
                 label="Владелец"
                 required
                 class="b-dialog__field"
               />
-              <KTInput
+              <CInput
                 v-model="hotbedData.contractingOrganization"
                 label="Подрядная организация"
                 required
@@ -93,19 +93,19 @@
           <section class="b-dialog__section">
             <fieldset class="b-dialog__fieldset q-mb-md">
               <legend class="b-dialog__legend gg-h3 q-mb-sm">Комментарий</legend>
-              <KTInputTextarea
+              <CInputTextarea
                 class="b-dialog__comment"
                 placeholder="Кратко опишите проблему"
                 v-model="hotbedData.comment"
-              ></KTInputTextarea>
+              ></CInputTextarea>
             </fieldset>
             <fieldset class="b-dialog__fieldset">
               <legend class="b-dialog__legend gg-h3 q-mb-sm">Фотографии</legend>
-              <DragDrop
+              <CDragDrop
                 @add="uploadFiles"
                 class="b-dialog__upload-file-container"
                 :maxSize="FILES_MAX_SIZE"
-              ></DragDrop>
+              ></CDragDrop>
               <section v-if="attachedFiles.length > 0" class="b-dialog__added-images">
                 <p class="b-dialog__block-caption gg-cap">Загруженные изображения</p>
                 <FileContainers v-model:files="attachedFiles" raw></FileContainers>
@@ -115,12 +115,12 @@
         </template>
 
         <footer class="b-dialog__footer">
-          <GGButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
-          <GGButton :label="applyLabel" :disabled="formHasError || !isAddMarker" type="submit" />
+          <CButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
+          <CButton :label="applyLabel" :disabled="formHasError || !isAddMarker" type="submit" />
         </footer>
       </q-form>
     </q-card>
-  </GGDialog>
+  </CDialog>
 </template>
 
 <script setup lang="ts">

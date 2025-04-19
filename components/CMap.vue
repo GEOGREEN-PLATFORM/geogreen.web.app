@@ -163,10 +163,10 @@
                 :name="mdiInformation"
                 size="24px"
               >
-                <GGHint>
+                <CHint>
                   Выбранный маркер будет автоматически перемещён внутрь
                   {{ marker.coordinates?.length ? "измененной" : "добавленной" }} зоны
-                </GGHint>
+                </CHint>
               </q-icon>
               <span class="actions-label__text" @click="addZone(id)"
                 >{{ marker.coordinates?.length ? "Изменить" : "Добавить" }} зону</span
@@ -181,7 +181,7 @@
               v-if="store.user?.role !== 'user' && !marker.isTempCreatedBy"
             >
               <span class="actions-label__text">Плотность:</span>
-              <GGOptions
+              <COptions
                 v-model="marker.details.density"
                 inline
                 :options="densityOptions"
@@ -189,12 +189,12 @@
               />
             </li>
             <li class="actions-label__action" v-if="!marker.isTempCreatedBy">
-              <GGButton
+              <CButton
                 label="Подробнее"
                 size="small"
                 stretch="fill"
                 design-type="secondary"
-              ></GGButton>
+              ></CButton>
             </li>
             <li
               class="actions-label__action"
@@ -203,13 +203,13 @@
                 (marker.isTempCreatedBy === 'user' && store.user?.role === 'user')
               "
             >
-              <GGButton
+              <CButton
                 label="Удалить"
                 size="small"
                 stretch="fill"
                 bg-color="var(--app-red-500)"
                 @click="suggestDeleteMarker(marker.id)"
-              ></GGButton>
+              ></CButton>
             </li>
           </ul>
         </div>
@@ -217,7 +217,7 @@
       <ol-fullscreen-control />
       <ol-zoom-control :zoomInLabel="plusElem" :zoomOutLabel="minusElem" />
     </ol-map>
-    <GGDialogConfirm
+    <CDialogConfirm
       v-model="confirmationDialog.isOpened"
       :action-main-text="confirmationDialog.mainText"
       :action-button-confirm-text="confirmationDialog.buttonText"

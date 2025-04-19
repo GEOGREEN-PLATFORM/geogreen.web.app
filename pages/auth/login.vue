@@ -1,17 +1,17 @@
 <template>
-  <AuthPageForm :button-options="buttonOptions" @main-button-click="sendLogin">
+  <PagesAuthForm :button-options="buttonOptions" @main-button-click="sendLogin">
     <template #form-content>
       <h1 class="form-content__head gg-h1">Войти в аккаунт</h1>
       <div class="form-content">
         <div class="form-content__input-fields">
-          <KTInput
+          <CInput
             v-model="userData.email"
             label="Почта"
             :rules="[validateEmail]"
             name="email"
             type="email"
           />
-          <KTInput
+          <CInput
             v-model="userData.password"
             label="Пароль"
             :rules="[validatePassword]"
@@ -34,7 +34,7 @@
         </div>
       </div>
     </template>
-  </AuthPageForm>
+  </PagesAuthForm>
 </template>
 
 <script setup lang="ts">

@@ -1,92 +1,139 @@
 <template>
   <div
-    class="kt-input-select"
+    class="c-input-main"
     :class="{
       required: required,
     }"
   >
-    <q-select
-      :model-value="modelValue"
-      @update:model-value="selectValue"
-      :options="props.options"
+    <q-input
+      ref="qInputRef"
+      v-model="inputValue"
+      :rounded="rounded"
       :outlined="outlined"
       :label="label"
-      ref="qInputRef"
-      :rounded="rounded"
+      :type="currentType"
       :rules="validationRules"
+      lazy-rules
       :no-error-icon="hideErrorIcon"
       :hide-bottom-space="hideBottomSpace"
       :placeholder="placeholder"
       :name="name"
-      :option-value="optionValue"
-      :option-label="optionLabel"
-      :disable="disabled"
+      @update:model-value="updateValue"
+      @blur="emits('blur')"
+      :autogrow="autogrow"
+      :autocomplete="autocomplete"
+      :mask="maska"
       :hint="hint"
-      emit-value
-      map-options
-    />
+      :readonly="readonly"
+    >
+      <template #append>
+        <slot name="append">
+          <q-icon
+            v-if="type === 'password'"
+            :name="showPassword ? mdiEyeOutline : mdiEyeOffOutline"
+            class="cursor-pointer"
+            @click="togglePassword"
+          />
+        </slot>
+      </template>
+    </q-input>
   </div>
 </template>
 
 <script setup lang="ts">
+import { mdiEyeOffOutline, mdiEyeOutline } from "@quasar/extras/mdi-v6";
 import type { ValidationRule } from "quasar";
 
 interface Props {
   modelValue: string;
   rounded?: boolean;
   outlined?: boolean;
-  label: string;
+  label?: string;
+  type?:
+    | "number"
+    | "password"
+    | "search"
+    | "time"
+    | "text"
+    | "email"
+    | "textarea"
+    | "tel"
+    | "file"
+    | "url"
+    | "date"
+    | "datetime-local"
+    | undefined;
   required?: boolean;
   rules?: ValidationRule[];
   hideBottomSpace?: boolean;
   hideErrorIcon?: boolean;
   placeholder?: string;
   name?: string;
-  options: {
-    name: string;
-    value: string;
-  }[];
+  autogrow?: boolean;
+  autocomplete?: string;
+  maska?: string;
   height?: string;
-  optionValue?: string;
-  optionLabel?: string;
   hint?: string;
-  disabled?: boolean;
+  readonly?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
   rounded: true,
   outlined: true,
   required: true,
-  disabled: false,
   rules: () => [],
+  type: "text",
   placeholder: "Введите текст",
   hideErrorIcon: true,
   hideBottomSpace: false,
+  autogrow: false,
   height: "56px",
-  optionValue: "value",
-  optionLabel: "name",
 });
+
 const emits = defineEmits<{
-  "update:modelValue": [string];
+  "update:modelValue": [string | number];
+  blur: [];
 }>();
+
+const showPassword = ref(false);
+const currentType = ref(props.type);
+const inputValue = ref("");
+const qInputRef = ref();
 const validationRules = ref<ValidationRule[]>([]);
-function selectValue(value: string) {
-  emits("update:modelValue", value);
+
+function updateValue(value: string | number | null) {
+  nextTick(() => {
+    qInputRef.value?.validate();
+    emits("update:modelValue", value || "");
+  });
+}
+function togglePassword() {
+  showPassword.value = !showPassword.value;
+  currentType.value = showPassword.value ? "text" : "password";
 }
 onMounted(() => {
+  inputValue.value = props.modelValue;
   if (props.required) {
     validationRules.value = [
       (val) => (val && val.length > 0) || "Поле не может быть пустым",
     ];
-  } else {
+  }
+  if (props.rules?.length > 0) {
     validationRules.value = props.rules;
   }
 });
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    inputValue.value = newVal;
+  },
+);
 </script>
 
 <style lang="scss">
-.kt-input-select {
+.c-input-main {
   width: 100%;
+  min-height: v-bind(height);
   .q-field--outlined.q-field--rounded .q-field__control {
     border-radius: 16px;
   }
@@ -180,7 +227,7 @@ onMounted(() => {
     box-shadow: inset 0 0 20px 20px transparent;
   }
 }
-.kt-input-select.required {
+.c-input-main.required {
   .q-field__label {
     &::after {
       content: "*";

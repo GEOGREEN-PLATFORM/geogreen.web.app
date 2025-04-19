@@ -4,19 +4,19 @@
       <div class="b-header__title-wrapper">
         <h1 class="b-header__title gg-h1">Очаги</h1>
         <div class="b-header__add-btn">
-          <GGButton @click="openHotbedDialog" label="Добавить очаг" size="medium"></GGButton>
+          <CButton @click="openHotbedDialog" label="Добавить очаг" size="medium"></CButton>
         </div>
         <div class="b-header__add-btn--mobile">
-          <GGButton
+          <CButton
             @click="openHotbedDialog"
             :icon="mdiPlus"
             iconColor="var(--app-white)"
             stretch="hug"
-          ></GGButton>
+          ></CButton>
         </div>
       </div>
       <div class="b-header__search">
-        <KTInput
+        <CInput
           v-model="searchHotbedStr"
           @update:model-value="searchHotbed"
           label="Поиск очага"
@@ -27,7 +27,7 @@
           <template #append>
             <q-icon :name="mdiMagnify" />
           </template>
-        </KTInput>
+        </CInput>
       </div>
     </header>
     <section class="b-content">

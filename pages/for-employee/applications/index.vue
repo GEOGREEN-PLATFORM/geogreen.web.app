@@ -47,14 +47,14 @@
             </section>
             <footer class="b-request-card__footer justify-between">
               <div>
-                <GGButton @click="approveRequest(request.id)" label="Принять заявку"></GGButton>
+                <CButton @click="approveRequest(request.id)" label="Принять заявку"></CButton>
               </div>
               <div>
-                <GGButton
+                <CButton
                   @click="rejectRequest(request.id)"
                   label="Отклонить заявку"
                   bg-color="var(--app-red-500)"
-                ></GGButton>
+                ></CButton>
               </div>
             </footer>
             <div
@@ -67,17 +67,17 @@
         </section>
       </q-scroll-area>
     </section>
-    <GGDialog v-model="isMapOpen" class="b-dialog">
+    <CDialog v-model="isMapOpen" class="b-dialog">
       <div class="b-dialog__content">
-        <Map
+        <CMap
           :dataStatusStyles="workStageStyles"
           :markers="existingHotbedsByType"
           :shortInfoKeys="shortMarkerInfoNameKeys"
           hide-controls
           :selectedMarker="selectedHotbed"
-        ></Map>
+        ></CMap>
       </div>
-    </GGDialog>
+    </CDialog>
   </main>
 </template>
 

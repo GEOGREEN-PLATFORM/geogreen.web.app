@@ -17,7 +17,7 @@
         </p>
       </div>
       <p class="drag-drop-container__main-text gg-t-big">или</p>
-      <GGButton
+      <CButton
         label="Выберите файл"
         size="small"
         stretch="hug"
