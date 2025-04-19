@@ -11,10 +11,10 @@
       </div>
       <q-scroll-area class="b-page__requests-container">
         <section class="b-page__requests">
-          <q-card v-for="request in requests" class="b-request-card">
+          <q-card v-for="(request, index) in requests" :key="request.id" class="b-request-card">
             <header class="b-request-card__header">
               <div class="b-request-card__title-wrapper">
-                <h2 class="b-request-card__title gg-h2">{{ request.problemType.code }}</h2>
+                <h2 class="b-request-card__title gg-h2">{{ request.problemAreaType }}</h2>
                 <div class="b-request-card__reliability-icon">
                   <q-icon
                     :name="request.photoVerification ? mdiCheck : mdiAlert"
@@ -23,7 +23,9 @@
                   />
                 </div>
               </div>
-              <span class="b-request-card__timestamp gg-caption"> {{ request.createDate }} </span>
+              <span class="b-request-card__timestamp gg-caption">
+                Заявка создана {{ timeConverter(request.createDate) }}
+              </span>
             </header>
             <section class="b-request-card__content q-mb-lg">
               <button
@@ -36,7 +38,7 @@
                 <p class="b-request-card__comment gg-t-base">{{ request.userComment }}</p>
                 <div class="b-request-card__images">
                   <FileContainers
-                    :files="formatToUrl(request.images)"
+                    :files="request.images"
                     :clearable="false"
                     hide-caption
                   ></FileContainers>
@@ -55,6 +57,12 @@
                 ></GGButton>
               </div>
             </footer>
+            <div
+              class="intersection"
+              style="height: 1px; width: 100%; opacity: 0"
+              v-if="Math.ceil((requests.length - 1) / 2) === index"
+              v-intersection.once="loadMore"
+            ></div>
           </q-card>
         </section>
       </q-scroll-area>
@@ -75,26 +83,35 @@
 
 <script setup lang="ts">
 import { mdiAlert, mdiCheck } from "@quasar/extras/mdi-v6";
+import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
 
-interface RequestData {
+interface ApplicationData {
   id: string;
-  x: number;
-  y: number;
-  userPhone?: string;
-  userEmail?: string;
-  userComment?: string;
-  images: string[];
-  status: string;
+  coordinates: Coordinate;
+  userId: string;
+  userComment: string;
+  images: {
+    previewImageId: string;
+    fullImageId: string;
+  }[];
+  status: "Создана" | "Одобрена" | "Отклонена";
   createDate: string;
   operatorComment: string;
   photoVerification: boolean;
   updateDate: string;
-  operatorName: null;
-  operatorId: null;
-  problemAreaType: string;
+  operatorName: string | null;
+  operatorId: string | null;
+  problemAreaType: ProblemAreaTypes;
+}
+interface ApplicationPageRequest {
+  content: ApplicationData[];
+  totalElements: number;
+  totalPages: number;
+  numberOfElements: number;
 }
 const store = useMainStore();
+const { timeConverter } = useFormatters();
 const PROBLEM_AREA_TYPE_OPTIONS = [
   {
     name: "Борщевик",
@@ -159,54 +176,93 @@ const filters = reactive<FilterItem[]>([
   },
 ]);
 
-const requests = ref<RequestData[]>([]);
+const requests = ref<ApplicationData[]>([]);
+const pagination = reactive({
+  page: 0,
+  size: 3,
+  totalElements: 0,
+  totalPages: 0,
+  numberOfElements: 0,
+});
 async function getUserRequests() {
-  requests.value = await $fetch(`${store.apiUserReport}/report/getAll`, {
-    method: "GET",
-    headers: {
-      authorization: useGetToken(),
+  const response = await $fetch<ApplicationPageRequest>(
+    `${store.apiUserReport}/report/getAll`,
+    {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+      params: {
+        page: pagination.page,
+        size: pagination.size,
+      },
     },
-  });
+  );
+  requests.value = [...requests.value, ...response.content];
+  pagination.totalElements = response.totalElements;
+  pagination.totalPages = response.totalPages;
+  pagination.numberOfElements = response.numberOfElements;
+}
+function loadMore(entry: IntersectionObserverEntry) {
+  if (pagination.page < pagination.totalPages) {
+    pagination.page++;
+    getUserRequests();
+    return true;
+  }
+  return false;
 }
 async function getExistingHotbedsOfProblemsByType(
   problemAreaType: ProblemAreaTypes,
 ) {
   const data = await $fetch<Marker[]>(
     `${store.apiGeospatial}/geo/info/getAll/${problemAreaType}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+    },
   );
   existingHotbedsByType.value = data;
 }
-function formatToUrl(images: string[]) {
-  return images.map(
-    (image) => `${store.apiFileServer}/file/image/download/${image}`,
-  );
-}
 async function approveRequest(id: string) {
-  requests.value = await $fetch(`${store.apiUserReport}/report/${id}`, {
-    method: "PUT",
+  const response = await $fetch(`${store.apiUserReport}/report/${id}`, {
+    method: "PATCH",
+    headers: {
+      authorization: useGetToken(),
+    },
+    body: {
+      statusCode: "ОДОБРЕНА",
+      operatorComment: "",
+      operatorId: store.user?.id || "",
+    },
   });
-  getUserRequests();
+  rejectRequestFromList(id);
 }
 
 async function rejectRequest(id: string) {
-  requests.value = await $fetch(`${store.apiUserReport}/report/${id}`, {
-    method: "PUT",
+  const response = await $fetch(`${store.apiUserReport}/report/${id}`, {
+    method: "PATCH",
+    headers: {
+      authorization: useGetToken(),
+    },
     body: {
-      statusCode: "Отклонена",
-      operatorComment: "тут много борщевика",
-      operatorId: "fae85f64-5717-4562-b3fc-2c963f66afa6",
-      operatorName: "Иванов И.И.",
+      statusCode: "ОТКЛОНЕНА",
+      operatorComment: "",
+      operatorId: store.user?.id || "",
     },
   });
-  getUserRequests();
+  rejectRequestFromList(id);
 }
-
-async function viewOnMap(request: RequestData) {
-  await getExistingHotbedsOfProblemsByType(request.problemType.code);
+function rejectRequestFromList(id: string) {
+  requests.value = requests.value.filter((request) => request.id !== id);
+}
+async function viewOnMap(request: ApplicationData) {
+  await getExistingHotbedsOfProblemsByType(request.problemAreaType);
   existingHotbedsByType.value.push({
     id: "user-temp-created",
-    coordinate: [request.x, request.y],
-    userTempCreated: true,
+    coordinate: request.coordinates,
+    isTempCreatedBy: "user",
     details: {
       square: 21879072,
       owner: "",
@@ -215,7 +271,7 @@ async function viewOnMap(request: RequestData) {
       workStage: "",
       eliminationMethod: "",
       images: [],
-      problemAreaType: request.problemType.code,
+      problemAreaType: request.problemAreaType,
       comment: "",
       density: null,
     },

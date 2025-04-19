@@ -2,7 +2,7 @@
   <article class="file">
     <div class="file__preview">
       <NuxtImg
-        @click="openPhoto(localFileUrl)"
+        @click="openPhoto(localUrl)"
         v-if="isImage"
         :src="localUrl"
         alt="Файл"

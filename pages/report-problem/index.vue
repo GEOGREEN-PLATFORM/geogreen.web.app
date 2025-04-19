@@ -35,12 +35,12 @@
             <Map
               @add-marker="addUserHotbed"
               @delete-marker="deleteUserHotbed"
-              @forbiddenAddTry="handleForbiddenAddTry"
+              @forbiddenAddMarker="handleForbiddenAddTry"
               :dataStatusStyles="workStageStyles"
               :markers="existingHotbeds"
               :shortInfoKeys="shortMarkerInfoNameKeys"
-              :add-zone-enabled="false"
-              :forbidAddMarker="isAddMarker"
+              addZone="hide"
+              :addMarker="isAddMarker ? 'forbid' : 'enable'"
             ></Map>
           </article>
         </fieldset>
@@ -83,11 +83,8 @@ interface UserReport {
   details: {
     images: ImageIds[];
     problemAreaType: ProblemAreaTypes | "";
+    userId: string;
     comment: string;
-  };
-  userDetails?: {
-    userPhone: string;
-    userEmail: string;
   };
 }
 const types: ProblemAreaTypes[] = ["Борщевик", "Свалка", "Пожар"]; //TODO: fetch from server
@@ -104,9 +101,11 @@ const userReport = reactive<UserReport>({
   details: {
     images: [],
     problemAreaType: "",
+    userId: store.user?.id || "",
     comment: "",
   },
 });
+const router = useRouter();
 const isAddMarker = shallowRef(false);
 const shortMarkerInfoNameKeys = ref({
   owner: {
@@ -165,7 +164,7 @@ function addUserHotbed(coordinate: Coordinate) {
     existingHotbeds.value.push({
       id: "user-temp-created",
       coordinate: coordinate,
-      userTempCreated: true,
+      isTempCreatedBy: "user",
       details: {
         square: 21879072,
         owner: "",
@@ -191,7 +190,7 @@ function addUserHotbed(coordinate: Coordinate) {
 }
 function deleteUserHotbed(marker: Marker) {
   existingHotbeds.value = existingHotbeds.value.filter(
-    (m) => !m.userTempCreated,
+    (m) => !m.isTempCreatedBy,
   );
   isAddMarker.value = false;
   userReport.coordinate = [];
@@ -222,11 +221,10 @@ async function sendReport() {
       const image = await uploadPhoto(file);
       userReport.details.images.push(image);
     }
-    // for (const image of userReport.details.images) {
-    //   // const result = await analysePhotoOnHogweedPresence(image);
-    //   // console.log("Анализ для", image, result);
-    //   //дописать логику на проверку борщевика
-    // }
+    for (const image of userReport.details.images) {
+      const result = await analysePhotoOnHogweedPresence(image.fullImageId);
+      console.log("Анализ для", image, result);
+    }
     await $fetch(`${store.apiUserReport}/report`, {
       method: "POST",
       headers: {
@@ -239,11 +237,8 @@ async function sendReport() {
     userReport.details.problemAreaType = "";
     userReport.coordinate = [];
     isAddMarker.value = false;
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "success",
-      text: "Отчет отправлен",
-    };
+    store.thanksForReport = true;
+    navigateTo("/report-problem/thanks");
   } catch (err: any) {
     useState<Alert>("showAlert").value = {
       show: true,
@@ -259,6 +254,9 @@ async function analysePhotoOnHogweedPresence(photoId: string) {
   try {
     return await $fetch(`${store.apiPhotoAnalyse}/analyse`, {
       method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
       body: { photoId },
     });
   } catch (err) {

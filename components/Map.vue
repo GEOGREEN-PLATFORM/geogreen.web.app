@@ -114,7 +114,9 @@
           >
             {{
               marker.isTempCreatedBy === "user"
-                ? "Вы сообщаете об этом очаге"
+                ? store.user?.role === "user"
+                  ? "Вы сообщаете об этом очаге"
+                  : "Пользователь сообщает об этом очаге"
                 : "Вы добавляете этот очаг"
             }}
           </div>
@@ -147,14 +149,14 @@
           <div v-else class="popup-marker__no-data">Данные не найдены</div>
           <div
             v-if="
-              !marker.userTempCreated || (marker.userTempCreated && store.user?.role === 'user')
+              !marker.isTempCreatedBy || (marker.isTempCreatedBy && store.user?.role === 'user')
             "
             class="popup-marker__divider"
           />
           <ul class="actions-label">
             <li
               class="actions-label__action"
-              v-if="store.user?.role !== 'user' && !marker.userTempCreated"
+              v-if="store.user?.role !== 'user' && !marker.isTempCreatedBy"
             >
               <q-icon
                 class="actions-label__icon actions-label__icon--blue"
@@ -176,7 +178,7 @@
             </li>
             <li
               class="actions-label__action"
-              v-if="store.user?.role !== 'user' && !marker.userTempCreated"
+              v-if="store.user?.role !== 'user' && !marker.isTempCreatedBy"
             >
               <span class="actions-label__text">Плотность:</span>
               <GGOptions
@@ -197,7 +199,8 @@
             <li
               class="actions-label__action"
               v-else-if="
-                !marker.userTempCreated || (marker.userTempCreated && store.user?.role === 'user')
+                !marker.isTempCreatedBy ||
+                (marker.isTempCreatedBy === 'user' && store.user?.role === 'user')
               "
             >
               <GGButton
