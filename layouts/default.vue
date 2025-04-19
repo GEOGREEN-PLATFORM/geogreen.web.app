@@ -7,7 +7,7 @@
       <div class="hr-line"></div>
     </q-header>
 
-    <q-page-container>
+    <q-page-container style="height: 100dvh">
       <NuxtPage></NuxtPage>
     </q-page-container>
     <PhotoViewer />
@@ -58,6 +58,12 @@ const pages: Page[] = [
         name: "Задачи",
         selected: false,
         path: "/tasks",
+      },
+      {
+        key: "applications",
+        name: "Заявки",
+        selected: false,
+        path: "/applications",
       },
     ],
   },

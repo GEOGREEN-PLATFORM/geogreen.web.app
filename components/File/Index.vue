@@ -1,22 +1,27 @@
 <template>
   <article class="file">
     <div class="file__preview">
-      <NuxtImg v-if="isImage" :src="localUrl" alt="Файл" class="file__image" />
+      <NuxtImg
+        @click="openPhoto(localUrl)"
+        v-if="isImage"
+        :src="localUrl"
+        alt="Файл"
+        class="file__image"
+      />
       <video v-else-if="isVideo" controls class="file__video">
         <source :src="localUrl" :type="videoType" />
       </video>
       <div v-else class="file__placeholder">Файл</div>
     </div>
-    <button class="file__delete" @click="onDelete">
+    <button v-if="clearable" class="file__delete" @click="onDelete">
       <q-icon color="red-400" :name="mdiDeleteOutline" size="24px" />
     </button>
-    <p v-if="isLocalFile" class="file__name gg-cap">{{ fileName }}</p>
+    <p v-if="!hideCaption && isLocalFile" class="file__name gg-cap">{{ fileName }}</p>
   </article>
 </template>
 
 <script setup lang="ts">
 import { mdiDeleteOutline } from "@quasar/extras/mdi-v6";
-import { computed, onMounted, ref } from "vue";
 import { useMainStore } from "~/store/main";
 
 interface ImageObj {
@@ -26,12 +31,22 @@ interface ImageObj {
 type FileOrObj = File | ImageObj;
 const store = useMainStore();
 
-const props = defineProps<{ file: FileOrObj }>();
+interface Props {
+  file: FileOrObj;
+  clearable?: boolean;
+  hideCaption?: boolean;
+}
+const props = withDefaults(defineProps<Props>(), {
+  raw: false,
+  clearable: true,
+  hideCaption: false,
+});
 const emits = defineEmits<{
   (e: "remove"): void;
   (e: "localDelete"): void;
   (e: "sendDelete", imageId: string): void;
 }>();
+const { openPhoto } = usePhotoViewer();
 
 const localUrl = ref<string>("");
 
@@ -86,13 +101,14 @@ function onDelete() {
   flex-direction: column;
   align-items: center;
   position: relative;
-  width: 150px;
-
+  cursor: pointer;
+  width: 118px;
   &__preview {
     width: 100%;
-    aspect-ratio: 16 / 9;
+    width: 118px;
+    height: 64px;
     background: var(--app-grey-050);
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     position: relative;
     display: flex;

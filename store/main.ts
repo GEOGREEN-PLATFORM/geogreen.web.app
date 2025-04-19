@@ -15,6 +15,7 @@ interface MainState {
   problemAreaTypes: string[];
   landTypes: string[];
   workStages: string[];
+  thanksForReport: boolean;
 }
 
 export const useMainStore = defineStore("main", {
@@ -53,6 +54,7 @@ export const useMainStore = defineStore("main", {
     problemAreaTypes: [],
     landTypes: [],
     workStages: [],
+    thanksForReport: false,
   }),
   getters: {
     apiGeospatial: (state) => {

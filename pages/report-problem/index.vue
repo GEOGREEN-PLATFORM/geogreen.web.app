@@ -35,12 +35,12 @@
             <Map
               @add-marker="addUserHotbed"
               @delete-marker="deleteUserHotbed"
-              @forbiddenAddTry="handleForbiddenAddTry"
+              @forbiddenAddMarker="handleForbiddenAddTry"
               :dataStatusStyles="workStageStyles"
               :markers="existingHotbeds"
               :shortInfoKeys="shortMarkerInfoNameKeys"
-              :add-zone-enabled="false"
-              :forbidAddMarker="isAddMarker"
+              addZone="hide"
+              :addMarker="isAddMarker ? 'forbid' : 'enable'"
             ></Map>
           </article>
         </fieldset>
@@ -60,7 +60,6 @@
             :maxSize="FILES_MAX_SIZE"
           ></DragDrop>
           <section v-if="attachedFiles.length > 0" class="report-form__added-images">
-            <p class="report-form__block-caption gg-cap">Загруженные изображения</p>
             <FileContainers v-model:files="attachedFiles" raw></FileContainers>
           </section>
         </fieldset>
@@ -82,13 +81,10 @@ import { useMainStore } from "~/store/main";
 interface UserReport {
   coordinate: Coordinate;
   details: {
-    images: string[];
+    images: ImageIds[];
     problemAreaType: ProblemAreaTypes | "";
+    userId: string;
     comment: string;
-  };
-  userDetails?: {
-    userPhone: string;
-    userEmail: string;
   };
 }
 const types: ProblemAreaTypes[] = ["Борщевик", "Свалка", "Пожар"]; //TODO: fetch from server
@@ -105,9 +101,11 @@ const userReport = reactive<UserReport>({
   details: {
     images: [],
     problemAreaType: "",
+    userId: store.user?.id || "",
     comment: "",
   },
 });
+const router = useRouter();
 const isAddMarker = shallowRef(false);
 const shortMarkerInfoNameKeys = ref({
   owner: {
@@ -145,6 +143,12 @@ async function getExistingHotbedsOfProblemsByType(
 ) {
   const data = await $fetch<Marker[]>(
     `${store.apiGeospatial}/geo/info/getAll/${problemAreaType}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+    },
   );
   existingHotbeds.value = data;
 }
@@ -160,7 +164,7 @@ function addUserHotbed(coordinate: Coordinate) {
     existingHotbeds.value.push({
       id: "user-temp-created",
       coordinate: coordinate,
-      userTempCreated: true,
+      isTempCreatedBy: "user",
       details: {
         square: 21879072,
         owner: "",
@@ -186,7 +190,7 @@ function addUserHotbed(coordinate: Coordinate) {
 }
 function deleteUserHotbed(marker: Marker) {
   existingHotbeds.value = existingHotbeds.value.filter(
-    (m) => !m.userTempCreated,
+    (m) => !m.isTempCreatedBy,
   );
   isAddMarker.value = false;
   userReport.coordinate = [];
@@ -214,16 +218,18 @@ async function sendReport() {
   isFormSending.value = true;
   try {
     for (const file of attachedFiles.value) {
-      const fullImageId = await uploadPhoto(file);
-      userReport.details.images.push(fullImageId);
+      const image = await uploadPhoto(file);
+      userReport.details.images.push(image);
     }
-    for (const fullImageId of userReport.details.images) {
-      const result = await analysePhotoOnHogweedPresence(fullImageId);
-      console.log("Анализ для", fullImageId, result);
-      //дописать логику на проверку борщевика
+    for (const image of userReport.details.images) {
+      const result = await analysePhotoOnHogweedPresence(image.fullImageId);
+      console.log("Анализ для", image, result);
     }
     await $fetch(`${store.apiUserReport}/report`, {
       method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
       body: userReport,
     });
     attachedFiles.value = [];
@@ -231,11 +237,8 @@ async function sendReport() {
     userReport.details.problemAreaType = "";
     userReport.coordinate = [];
     isAddMarker.value = false;
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "success",
-      text: "Отчет отправлен",
-    };
+    store.thanksForReport = true;
+    navigateTo("/report-problem/thanks");
   } catch (err: any) {
     useState<Alert>("showAlert").value = {
       show: true,
@@ -251,6 +254,9 @@ async function analysePhotoOnHogweedPresence(photoId: string) {
   try {
     return await $fetch(`${store.apiPhotoAnalyse}/analyse`, {
       method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
       body: { photoId },
     });
   } catch (err) {
@@ -261,14 +267,14 @@ async function uploadPhoto(file: File) {
   try {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await $fetch<{ fullImageId: string }>(
+    const response = await $fetch<ImageIds>(
       `${store.apiFileServer}/file/image/upload`,
       {
         method: "POST",
         body: formData,
       },
     );
-    return response.fullImageId;
+    return response;
   } catch (err) {
     throw new Error("Ошибка при загрузке фото");
   }
@@ -370,18 +376,8 @@ onMounted(() => {
     max-width: 100%;
   }
   &__added-images {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 24px;
-    padding: 0px 8px;
-  }
-  &__block-caption {
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--app-grey-050);
     width: 100%;
+    margin-top: 24px;
   }
 }
 </style>
