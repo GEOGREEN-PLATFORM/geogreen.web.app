@@ -27,6 +27,12 @@ declare global {
     sortBy?: string | null;
     descending?: boolean;
   }
+  interface MapPopupShortInfoKeys {
+    [key: string]: {
+      name: string;
+      type: "images" | "text" | "status";
+    };
+  }
   interface User {
     role: "user" | "admin" | "operator";
     id: string;

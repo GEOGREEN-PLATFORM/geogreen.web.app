@@ -19,8 +19,14 @@ export default function useGetStatusOptions() {
       value: "admin",
     },
   ];
+  const HOTBED_WORK_STAGE_STYLES = {
+    Создано: "work-stage created",
+    "В работе": "work-stage working",
+    Завершено: "work-stage completed",
+  };
   return {
     EMPLOYEE_ACCOUNT_STATUS_OPTIONS,
     EMPLOYEE_ROLE_OPTIONS,
+    HOTBED_WORK_STAGE_STYLES,
   };
 }

@@ -1,0 +1,12 @@
+.work-stage {
+  color: var(--app-white);
+}
+.work-stage.created {
+  background-color: var(--app-grey-200);
+}
+.work-stage.working {
+  background-color: var(--app-orange-300);
+}
+.work-stage.completed {
+  background-color: var(--app-green-400);
+}

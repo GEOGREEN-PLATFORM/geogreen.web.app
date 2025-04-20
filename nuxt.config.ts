@@ -13,6 +13,7 @@ export default defineNuxtConfig({
       PORTAL_API_KEYCLOAK: "",
     },
   },
+  ssr: true,
   modules: [
     "@pinia/nuxt",
     "nuxt-quasar-ui",

@@ -138,7 +138,7 @@
                 <div v-if="shortInfoKeys[name].type === 'text'">{{ value || "Нет данных" }}</div>
                 <div
                   v-else-if="shortInfoKeys[name].type === 'status' && typeof value === 'string'"
-                  :style="getStatusStyles(value)"
+                  :class="getStatusClasses(value)"
                   class="data-list__status-block"
                 >
                   {{ value || "Нет данных" }}
@@ -256,13 +256,8 @@ import markerIconRedSrc from "/icons/map_marker_red.png";
 
 interface Props {
   markers: Marker[];
-  shortInfoKeys: {
-    [key: string]: {
-      name: string;
-      type: "images" | "text" | "status";
-    };
-  };
-  dataStatusStyles: {
+  shortInfoKeys: MapPopupShortInfoKeys;
+  dataStatusClasses: {
     [key: string]: string;
   };
   addZone: "hide" | "enable" | "forbid";
@@ -491,8 +486,8 @@ function getMarkerIconByDensity(
     src: markersSrcByDensity.value[density || "default"],
   });
 }
-function getStatusStyles(status: string) {
-  return props.dataStatusStyles[status];
+function getStatusClasses(status: string) {
+  return props.dataStatusClasses[status];
 }
 function updateFeatures(id: string, marker: Marker) {
   gGreenCluster.zonesFeatures = convertZonesToFeatures(

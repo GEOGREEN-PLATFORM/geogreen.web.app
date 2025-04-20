@@ -10,7 +10,7 @@ interface MainState {
   protocol: string;
   protocolWS: string;
   user: User | null;
-  problemAreaTypes: string[];
+  problemAreaTypes: ProblemAreaTypes[];
   landTypes: string[];
   workStages: string[];
   thanksForReport: boolean;
