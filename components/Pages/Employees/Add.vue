@@ -52,6 +52,8 @@
                 label="Номер телефона"
                 :required="false"
                 class="b-form__field"
+                :rules="[(val: string) => !val || val.length === 18 || 'Неверный формат']"
+                maska="+7 (###) ###-##-##"
               />
             </div>
           </section>

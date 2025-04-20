@@ -36,11 +36,15 @@ declare global {
     email: string;
     number: string | null;
     birthdate: string | null;
-    image: string | null;
+    image: ImageObj | null;
     role: string;
     enabled: boolean;
     creationDate: string;
     password?: string;
+  }
+  interface ImageObj {
+    fullImageId: string;
+    previewImageId: string;
   }
   interface OauthToken {
     access_token: string;
@@ -48,10 +52,6 @@ declare global {
     refresh_token: string;
     refresh_token_expires_in: number;
     token_type: string;
-  }
-  interface ImageIds {
-    previewImageId: string;
-    fullImageId: string;
   }
   interface Alert {
     show: boolean;

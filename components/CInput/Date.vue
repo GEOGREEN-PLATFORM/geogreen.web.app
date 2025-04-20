@@ -41,7 +41,7 @@ import { mdiCalendarMonthOutline } from "@quasar/extras/mdi-v6";
 
 interface Props {
   modelValue: string | DateRange;
-  label: string;
+  label?: string;
   range?: boolean;
 }
 
