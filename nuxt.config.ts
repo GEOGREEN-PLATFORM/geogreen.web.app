@@ -5,13 +5,12 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       PORTAL_HTTP_PROTOCOL: "",
-      PORTAL_API_HOST: "",
-      PORTAL_PORT_GEOSPATIAL: "",
-      PORTAL_PORT_FILE_SERVER: "",
-      PORTAL_PORT_PHOTO_ANALYSE: "",
-      PORTAL_PORT_USER_REPORT: "",
-      PORTAL_PORT_AUTH: "",
-      PORTAL_PORT_KEYCLOAK: "",
+      PORTAL_API_GEOSPATIAL: "",
+      PORTAL_API_FILE_SERVER: "",
+      PORTAL_API_PHOTO_ANALYSE: "",
+      PORTAL_API_USER_REPORT: "",
+      PORTAL_API_AUTH: "",
+      PORTAL_API_KEYCLOAK: "",
     },
   },
   modules: [
