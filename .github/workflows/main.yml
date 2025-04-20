@@ -54,11 +54,11 @@ jobs:
         with:
           node-version: 20
 
-    - name: Extract version
-      id: extract_version
-      run: |
-        VERSION=$(node -p "require('./package.json').version")
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Extract version
+        id: extract_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
 
       - name: Create & push Git tag
