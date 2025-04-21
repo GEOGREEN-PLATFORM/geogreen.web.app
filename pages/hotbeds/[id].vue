@@ -60,7 +60,7 @@
         v-if="!hotbedsLoading"
         @add-marker=""
         @edit-marker=""
-        :dataStatusStyles="workStageStyles"
+        :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
         :markers="existingHotbeds"
         :shortInfoKeys="shortMarkerInfoNameKeys"
       ></CMap>
@@ -94,6 +94,7 @@ const store = useMainStore();
 const route = useRoute();
 const fileInput = ref<HTMLInputElement>();
 const { openPhoto } = usePhotoViewer();
+const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
 const hotbed = ref();
 const hotdebCardList = ref();
 const linksByLabel = ref({});
@@ -119,7 +120,7 @@ const WORK_STAGES = [
 ];
 const existingHotbeds = ref<Marker[]>([]);
 const hotbedsLoading = ref(true);
-const shortMarkerInfoNameKeys = ref({
+const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
     type: "text",

@@ -53,10 +53,11 @@
             <div class="b-account-status">
               <div
                 class="b-account-status__item gg-t-small"
-                :class="{
-                  'b-account-status__item--active': slotProps.row.status === 'Активен',
-                  'b-account-status__item--blocked': slotProps.row.status === 'Заблокирован',
-                }"
+                :class="
+                  EMPLOYEE_ACCOUNT_STATUS_STYLES[
+                    slotProps.row.statusKey as keyof typeof EMPLOYEE_ACCOUNT_STATUS_STYLES
+                  ]
+                "
               >
                 {{ slotProps.row.status }}
               </div>
@@ -84,19 +85,6 @@ interface EmployeeRaw {
   creationDate: string;
   email: string;
 }
-interface EmployeeData {
-  personalData: {
-    firstName: string;
-    secondName: string;
-    lastName: string;
-    dateOfBirth: string;
-  };
-  contacts: {
-    email: string;
-    phoneNumber: string;
-  };
-  password: string;
-}
 interface PagePaginationEmployee {
   users: EmployeeRaw[];
   currentPage: number;
@@ -110,8 +98,11 @@ const pagination = ref({
 });
 const store = useMainStore();
 const debounce = useDebounce();
-const { EMPLOYEE_ROLE_OPTIONS, EMPLOYEE_ACCOUNT_STATUS_OPTIONS } =
-  useGetStatusOptions();
+const {
+  EMPLOYEE_ROLE_OPTIONS,
+  EMPLOYEE_ACCOUNT_STATUS_OPTIONS,
+  EMPLOYEE_ACCOUNT_STATUS_STYLES,
+} = useGetStatusOptions();
 const employees = ref<EmployeeRaw[]>([]);
 const tableHeaders: TableHeader[] = [
   {
@@ -175,6 +166,7 @@ const tableRows: ComputedRef<TableRow[]> = computed(() =>
     initials: `${e.lastName} ${e.firstName} ${e.patronymic}`,
     role: EMPLOYEE_ROLE_OPTIONS.find((o) => o.value === e.role)?.name ?? e.role,
     status: e.enabled ? "Активен" : "Заблокирован",
+    statusKey: e.enabled ? "active" : "blocked",
     dateCreated: date.formatDate(new Date(e.creationDate), "DD.MM.YYYY"),
   })),
 );
@@ -308,12 +300,6 @@ onMounted(() => {
       padding: 4px 16px;
       border-radius: 16px;
       color: var(--app-white);
-      &--active {
-        background-color: var(--app-green-300);
-      }
-      &--blocked {
-        background-color: var(--app-grey-300);
-      }
     }
   }
 }

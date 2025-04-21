@@ -12,7 +12,6 @@ interface MainState {
   user: User | null;
   problemAreaTypes: ProblemAreaTypes[];
   landTypes: string[];
-  workStages: string[];
   thanksForReport: boolean;
 }
 
@@ -45,7 +44,6 @@ export const useMainStore = defineStore("main", {
     user: null,
     problemAreaTypes: [],
     landTypes: [],
-    workStages: [],
     thanksForReport: false,
   }),
   getters: {
@@ -72,12 +70,6 @@ export const useMainStore = defineStore("main", {
     },
     formattedLandTypes: (state) => {
       return state.landTypes.map((el) => ({
-        name: el,
-        value: el,
-      }));
-    },
-    formattedWorkStages: (state) => {
-      return state.workStages.map((el) => ({
         name: el,
         value: el,
       }));

@@ -18,6 +18,7 @@
       @blur="emits('blur')"
       height="96px"
       :required="false"
+      :maxLength="1000"
     >
     </CInput>
   </div>

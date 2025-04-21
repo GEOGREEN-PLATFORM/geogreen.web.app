@@ -25,6 +25,7 @@
       :mask="maska"
       :hint="hint"
       :readonly="readonly"
+      :maxlength="maxLength"
     >
       <template #append>
         <slot name="append">
@@ -75,6 +76,7 @@ interface Props {
   height?: string;
   hint?: string;
   readonly?: boolean;
+  maxLength?: number;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",

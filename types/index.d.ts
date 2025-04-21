@@ -18,7 +18,7 @@ declare global {
     field: string | ((row: unknown) => unknown);
   }
   interface TableRow {
-    [fieldName: string]: string | number;
+    [fieldName: string]: string | number | undefined | null;
   }
   interface TablePagination {
     rowsPerPage: number;
@@ -103,14 +103,22 @@ declare global {
       owner?: string;
       landType?: string;
       contractingOrganization?: string;
+      problemAreaType?: ProblemAreaTypes;
+      workStage?: string;
       workStatus?: string;
+      images?: ImageObj[] | [];
+      comment?: string;
       eliminationMethod?: string;
       photos?: string[];
-      density?: Density;
+      density?: Density | null;
     };
     relatedTaskId?: string | null;
     coordinates?: Coordinate[];
     isTempCreatedBy?: string;
+  }
+  interface ZoneWithDensity {
+    density: Density | null;
+    coordinates: Coordinate[];
   }
   type Density = "default" | "low" | "medium" | "high";
   interface Tab {

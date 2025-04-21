@@ -14,19 +14,16 @@
                 <CInput
                   v-model="employeeData.personalData.lastName"
                   label="Фамилия"
-                  required
                   class="b-form__field"
                 />
                 <CInput
                   v-model="employeeData.personalData.firstName"
                   label="Имя"
-                  required
                   class="b-form__field"
                 />
                 <CInput
                   v-model="employeeData.personalData.secondName"
                   label="Отчество"
-                  required
                   class="b-form__field"
                 />
               </div>

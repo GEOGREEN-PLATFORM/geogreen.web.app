@@ -17,16 +17,14 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return navigateTo("/auth/login");
     }
   }
-  // if (!store.problemAreaTypes.length) {
-  //   store.problemAreaTypes = await $fetch(
-  //     `${store.apiGeospatial}/geo/dict/problem-area-types`);
-  // }
-  // if (!store.landTypes.length) {
-  //   store.landTypes = await $fetch(
-  //     `${store.apiGeospatial}/geo/dict/land-types`);
-  // }
-  // if (!store.workStages.length) {
-  //   store.workStages = await $fetch(
-  //     `${store.apiGeospatial}/geo/dict/work-stages`);
-  // }
+  if (!store.problemAreaTypes.length) {
+    store.problemAreaTypes = await $fetch(
+      `${store.apiGeospatial}/geo/dict/problem-area-types`,
+    );
+  }
+  if (!store.landTypes.length) {
+    store.landTypes = await $fetch(
+      `${store.apiGeospatial}/geo/dict/land-types`,
+    );
+  }
 });

@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
-const shortMarkerInfoNameKeys = ref({
+const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
     type: "text",

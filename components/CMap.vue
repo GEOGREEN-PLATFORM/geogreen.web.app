@@ -134,30 +134,28 @@
               class="data-list__item"
             >
               <div class="data-list__name">{{ shortInfoKeys[name].name }}</div>
-              <div class="data-list__value">
-                <div v-if="shortInfoKeys[name].type === 'text'">{{ value || "Нет данных" }}</div>
+              <div v-if="value" class="data-list__value">
+                <div v-if="shortInfoKeys[name].type === 'text'">{{ value }}</div>
                 <div
                   v-else-if="shortInfoKeys[name].type === 'status' && typeof value === 'string'"
                   :class="getStatusClasses(value)"
                   class="data-list__status-block"
                 >
-                  {{ value || "Нет данных" }}
+                  {{ value }}
                 </div>
               </div>
+              <div v-else class="data-list__value--empty">Не указано</div>
             </li>
           </ul>
           <div v-else class="popup-marker__no-data">Данные не найдены</div>
           <div
             v-if="
-              !marker.isTempCreatedBy || (marker.isTempCreatedBy && store.user?.role === 'user')
+              store.user?.role !== 'user' || (marker.isTempCreatedBy && store.user?.role === 'user')
             "
             class="popup-marker__divider"
           />
           <ul class="actions-label">
-            <li
-              class="actions-label__action"
-              v-if="store.user?.role !== 'user' && !marker.isTempCreatedBy"
-            >
+            <li class="actions-label__action" v-if="store.user?.role !== 'user'">
               <q-icon
                 class="actions-label__icon actions-label__icon--blue"
                 :name="mdiInformation"
@@ -176,10 +174,7 @@
                 :name="marker.coordinates?.length ? mdiPencil : mdiPlus"
               />
             </li>
-            <li
-              class="actions-label__action"
-              v-if="store.user?.role !== 'user' && !marker.isTempCreatedBy"
-            >
+            <li class="actions-label__action" v-if="store.user?.role !== 'user'">
               <span class="actions-label__text">Плотность:</span>
               <COptions
                 v-model="marker.details.density"
@@ -199,7 +194,7 @@
             <li
               class="actions-label__action"
               v-else-if="
-                !marker.isTempCreatedBy ||
+                (marker.isTempCreatedBy === 'employee' && store.user?.role !== 'user') ||
                 (marker.isTempCreatedBy === 'user' && store.user?.role === 'user')
               "
             >
@@ -260,11 +255,12 @@ interface Props {
   dataStatusClasses: {
     [key: string]: string;
   };
-  addZone: "hide" | "enable" | "forbid";
-  addMarker: "hide" | "enable" | "forbid";
-  toggleVisibility: "hide" | "enable" | "forbid";
+  addZone?: "hide" | "enable" | "forbid";
+  addMarker?: "hide" | "enable" | "forbid";
+  toggleVisibility?: "hide" | "enable" | "forbid";
   hideControls?: boolean;
   selectedMarker?: Marker;
+  editableMarkers?: "all" | string[];
 }
 const store = useMainStore();
 const mapRef = ref();
@@ -276,7 +272,7 @@ const props = withDefaults(defineProps<Props>(), {
   hideControls: false,
 });
 const emit = defineEmits<{
-  addMarker: [coordinate: Coordinate, zone?: unknown];
+  addMarker: [coordinate: Coordinate, zone?: ZoneWithDensity];
   deleteMarker: [id: string];
   editMarker: [id: string, marker: Marker];
   forbiddenAddMarker: [];
@@ -417,7 +413,7 @@ function deleteMarker() {
   closeMarkerPopup(gGreenCluster.currentSelectedMarkerId);
 }
 
-function addMakrer(coordinate: Coordinate, zone?: unknown) {
+function addMakrer(coordinate: Coordinate, zone?: ZoneWithDensity) {
   if (props.addMarker === "enable") {
     emit("addMarker", coordinate, zone);
   } else {
@@ -627,13 +623,8 @@ function createZone(event: DrawEvent) {
   } else if (event.feature) {
     const coordinate = getCenter(event.feature.getGeometry()!.getExtent());
     const zoneCoordinates = event.feature.getGeometry()!.getCoordinates();
-    const newMarker: Marker = {
-      coordinate,
+    addMakrer(coordinate, {
       coordinates: zoneCoordinates,
-      details: { square: 0, density: gGreenZone.density },
-    };
-    addMakrer(newMarker.coordinate, {
-      coordinates: newMarker.coordinates,
       density: gGreenZone.density,
     });
   }
@@ -683,7 +674,7 @@ onMounted(() => {
     openMarkerPopup(props.selectedMarker.id);
     const marker = gGreenCluster.markersDict.get(props.selectedMarker.id);
     if (marker) {
-      gGreenOlMap.center = marker.coordinate;
+      gGreenOlMap.center = marker.coordinate as Coordinate;
       gGreenOlMap.resolution = 16;
     }
   }
@@ -767,6 +758,9 @@ onMounted(() => {
           color: var(--app-white);
           border-radius: 12px;
           height: 24px;
+        }
+        &--empty {
+          color: var(--app-grey-200);
         }
       }
     }

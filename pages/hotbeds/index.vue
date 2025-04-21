@@ -30,7 +30,7 @@
         </CInput>
       </div>
     </header>
-    <section class="b-content">
+    <section class="b-page__content">
       <div class="b-filter q-mb-lg">
         <CFilter
           v-model="filters"
@@ -87,7 +87,8 @@ const pagination = ref({
 });
 const store = useMainStore();
 const debounce = useDebounce();
-const tableHeaders = [
+const { HOTBED_WORK_STAGE_OPTIONS } = useGetStatusOptions();
+const tableHeaders: TableHeader[] = [
   {
     name: "problemAreaType",
     align: "left",
@@ -139,7 +140,7 @@ const tableHeaders = [
   },
 ];
 const hotbeds = ref<Marker[]>([]);
-const tableRows = computed(() =>
+const tableRows: ComputedRef<TableRow[]> = computed(() =>
   hotbeds.value.map((e) => ({
     id: e.id,
     problemAreaType: e.details?.problemAreaType,
@@ -147,8 +148,8 @@ const tableRows = computed(() =>
     landType: e.details?.landType,
     owner: e.details?.owner,
     eliminationMethod: e.details?.eliminationMethod,
-    dateCreated: date.formatDate(e.details?.dateCreated, "DD.MM.YYYY"),
-    dateUpdated: date.formatDate(e.details?.dateUpdated, "DD.MM.YYYY"),
+    // dateCreated: date.formatDate(e.details?.dateCreated, "DD.MM.YYYY"),
+    // dateUpdated: date.formatDate(e.details?.dateUpdated, "DD.MM.YYYY"),
   })),
 );
 const filters = ref<FilterItem[]>([
@@ -164,7 +165,7 @@ const filters = ref<FilterItem[]>([
     key: "wordStage",
     selected: "",
     label: "Статус работы",
-    data: store.formattedWorkStages,
+    data: HOTBED_WORK_STAGE_OPTIONS,
   },
   {
     type: "select",
@@ -189,11 +190,37 @@ const filters = ref<FilterItem[]>([
 const searchHotbedStr = ref("");
 const hotbedsLoading = ref(true);
 const isHotbedDialogOpen = ref(false);
-function searchHotbed() {
-  debounce(getHotbeds, 500, "searchHotbed");
-}
-function openHotbedDialog() {
-  isHotbedDialogOpen.value = true;
+async function handleHotbedCreated(newHotbed: HotbedData) {
+  try {
+    await $fetch(`${store.apiGeospatial}/geo/info`, {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: {
+        coordinate: newHotbed.coordinate,
+        details: {
+          owner: newHotbed.owner,
+          landType: newHotbed.landType,
+          contractingOrganization: newHotbed.contractingOrganization,
+          eliminationMethod: newHotbed.eliminationMethod,
+          images: newHotbed.images,
+          workStage: "Создано",
+          problemAreaType: newHotbed.problemAreaType,
+          comment: newHotbed.comment,
+          density: newHotbed.density,
+        },
+        coordinates: newHotbed.coordinates[0] || [],
+      },
+    });
+    getHotbeds();
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Ну удалось создать очаг",
+    };
+  }
 }
 async function getHotbeds() {
   hotbedsLoading.value = true;
@@ -243,44 +270,16 @@ async function getHotbeds() {
   // pagination.value.rowsNumber = response.totalItems;
   hotbedsLoading.value = false;
 }
-
-async function handleHotbedCreated(newHotbed: HotbedData) {
-  try {
-    await $fetch(`${store.apiGeospatial}/geo/info`, {
-      method: "POST",
-      headers: {
-        authorization: useGetToken(),
-      },
-      body: {
-        coordinate: newHotbed.coordinate,
-        details: {
-          owner: newHotbed.owner,
-          landType: newHotbed.landType,
-          contractingOrganization: newHotbed.contractingOrganization,
-          eliminationMethod: newHotbed.eliminationMethod,
-          images: newHotbed.images,
-          workStage: "Создано",
-          problemAreaType: newHotbed.problemAreaType,
-          comment: newHotbed.comment,
-          density: newHotbed.density,
-        },
-        coordinates: newHotbed.coordinates[0] || [],
-      },
-    });
-    getHotbeds();
-  } catch (error: any) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Ну удалось создать очаг",
-    };
-  }
-}
 function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
   const [day, month, year] = ddmmyyyy.split(".");
   return `${year}-${month}-${day}`;
 }
-
+function searchHotbed() {
+  debounce(getHotbeds, 500, "searchHotbed");
+}
+function openHotbedDialog() {
+  isHotbedDialogOpen.value = true;
+}
 function goToHotbed(id: string) {
   navigateTo(`/hotbeds/${id}`);
 }

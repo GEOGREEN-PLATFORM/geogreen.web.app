@@ -59,7 +59,7 @@
             :maxSize="FILES_MAX_SIZE"
           ></CDragDrop>
           <section v-if="attachedFiles.length > 0" class="b-form__added-images">
-            <FileContainers v-model:files="attachedFiles" raw></FileContainers>
+            <CFileContainers v-model:files="attachedFiles" raw></CFileContainers>
           </section>
         </fieldset>
         <CButton
@@ -88,6 +88,7 @@ interface UserReport {
 }
 const FILES_MAX_SIZE = 10_000_000;
 const attachedFiles = ref<File[]>([]);
+const { uploadPhoto } = useFiles();
 const isFormSending = shallowRef(false);
 const store = useMainStore();
 const existingHotbeds = ref<Marker[]>([]);
@@ -131,6 +132,10 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
     type: "text",
   },
 });
+function selectProblemType(type: ProblemAreaTypes) {
+  userReport.details.problemAreaType = type;
+  getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
+}
 async function getExistingHotbedsOfProblemsByType(
   problemAreaType: ProblemAreaTypes,
 ) {
@@ -145,68 +150,6 @@ async function getExistingHotbedsOfProblemsByType(
   );
   existingHotbeds.value = data;
 }
-function handleForbiddenAddTry() {
-  useState<Alert>("showAlert").value = {
-    show: true,
-    text: "Вы уже добавили очаг на карту. Удалите его, чтобы добавить новый.",
-  };
-}
-function addUserHotbed(coordinate: Coordinate) {
-  if (userReport.details.problemAreaType) {
-    userReport.coordinate = coordinate;
-    existingHotbeds.value.push({
-      id: "user-temp-created",
-      coordinate: coordinate,
-      isTempCreatedBy: "user",
-      details: {
-        square: 21879072,
-        owner: "",
-        landType: "",
-        contractingOrganization: "",
-        workStage: "",
-        eliminationMethod: "",
-        images: [],
-        problemAreaType: userReport.details.problemAreaType,
-        comment: "",
-        density: null,
-      },
-      relatedTaskId: null,
-      coordinates: [],
-    });
-    isAddMarker.value = true;
-  } else {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      text: "Выберите тип проблемы",
-    };
-  }
-}
-function deleteUserHotbed(marker: Marker) {
-  existingHotbeds.value = existingHotbeds.value.filter(
-    (m) => !m.isTempCreatedBy,
-  );
-  isAddMarker.value = false;
-  userReport.coordinate = [];
-}
-async function uploadFiles(files: File[]) {
-  const currentTotal = attachedFiles.value.reduce((sum, f) => sum + f.size, 0);
-  const newFilesTotal = files.reduce((sum, f) => sum + f.size, 0);
-  if (newFilesTotal + currentTotal > FILES_MAX_SIZE) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: `Добавляемые файлы превышают ${FILES_MAX_SIZE / 1e6} MB`,
-    };
-    return;
-  }
-  files.forEach((file) => {
-    attachedFiles.value.push(file);
-  });
-}
-function selectProblemType(type: ProblemAreaTypes) {
-  userReport.details.problemAreaType = type;
-  getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
-}
 async function sendReport() {
   isFormSending.value = true;
   try {
@@ -214,10 +157,10 @@ async function sendReport() {
       const image = await uploadPhoto(file);
       userReport.details.images.push(image);
     }
-    for (const image of userReport.details.images) {
-      const result = await analysePhotoOnHogweedPresence(image.fullImageId);
-      console.log("Анализ для", image, result);
-    }
+    // for (const image of userReport.details.images) {
+    //   const result = await analysePhotoOnHogweedPresence(image.fullImageId);
+    //   console.log("Анализ для", image, result);
+    // }
     await $fetch(`${store.apiUserReport}/report`, {
       method: "POST",
       headers: {
@@ -256,21 +199,63 @@ async function analysePhotoOnHogweedPresence(photoId: string) {
     throw new Error("Ошибка при анализе фото");
   }
 }
-async function uploadPhoto(file: File) {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await $fetch<ImageObj>(
-      `${store.apiFileServer}/file/image/upload`,
-      {
-        method: "POST",
-        body: formData,
+function addUserHotbed(coordinate: Coordinate) {
+  if (userReport.details.problemAreaType) {
+    userReport.coordinate = coordinate;
+    existingHotbeds.value.push({
+      id: "user-temp-created",
+      coordinate: coordinate,
+      isTempCreatedBy: "user",
+      details: {
+        square: 0,
+        owner: "",
+        landType: "",
+        contractingOrganization: "",
+        workStage: "",
+        eliminationMethod: "",
+        images: [],
+        problemAreaType: userReport.details.problemAreaType,
+        comment: "",
+        density: null,
       },
-    );
-    return response;
-  } catch (err) {
-    throw new Error("Ошибка при загрузке фото");
+      relatedTaskId: null,
+      coordinates: [],
+    });
+    isAddMarker.value = true;
+  } else {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      text: "Выберите тип проблемы",
+    };
   }
+}
+function deleteUserHotbed(id: string) {
+  existingHotbeds.value = existingHotbeds.value.filter(
+    (m) => !m.isTempCreatedBy,
+  );
+  isAddMarker.value = false;
+  userReport.coordinate = [];
+}
+function handleForbiddenAddTry() {
+  useState<Alert>("showAlert").value = {
+    show: true,
+    text: "Вы уже добавили очаг на карту. Удалите его, чтобы добавить новый.",
+  };
+}
+async function uploadFiles(files: File[]) {
+  const currentTotal = attachedFiles.value.reduce((sum, f) => sum + f.size, 0);
+  const newFilesTotal = files.reduce((sum, f) => sum + f.size, 0);
+  if (newFilesTotal + currentTotal > FILES_MAX_SIZE) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: `Добавляемые файлы превышают ${FILES_MAX_SIZE / 1e6} MB`,
+    };
+    return;
+  }
+  files.forEach((file) => {
+    attachedFiles.value.push(file);
+  });
 }
 onMounted(() => {
   if (userReport.details.problemAreaType) {

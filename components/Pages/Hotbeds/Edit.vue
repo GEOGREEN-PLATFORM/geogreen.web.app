@@ -29,7 +29,7 @@
               ></CInputSelect>
               <CInputSelect
                 v-model="localHotbedData.details.density"
-                :options="HOTBED_DENSITIES"
+                :options="HOTBED_DENSITIES_OPTIONS"
                 label="Плотность распространения"
               ></CInputSelect>
               <CInput
@@ -57,8 +57,7 @@
                 :maxSize="FILES_MAX_SIZE"
               ></CDragDrop>
               <section v-if="attachedFiles.length > 0" class="b-dialog__added-images">
-                <p class="b-dialog__block-caption gg-cap">Загруженные изображения</p>
-                <FileContainers v-model:files="attachedFiles"></FileContainers>
+                <CFileContainers v-model:files="attachedFiles"></CFileContainers>
               </section>
             </fieldset>
           </section>
@@ -74,20 +73,15 @@
 </template>
 
 <script setup lang="ts">
-import { mdiContentCopy } from "@quasar/extras/mdi-v6";
-import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
 interface Props {
   modelValue: boolean;
   hotbed: any;
 }
 
-const HOTBED_DENSITIES = [
-  { name: "Низкая", value: "Низкая" },
-  { name: "Средняя", value: "Средняя" },
-  { name: "Высокая", value: "Высокая" },
-];
-
+const { HOTBED_WORK_STAGE_STYLES, HOTBED_DENSITIES_OPTIONS } =
+  useGetStatusOptions();
+const { uploadPhoto } = useFiles();
 const localHotbedData = ref({} as any);
 const props = defineProps<Props>();
 const emit = defineEmits(["update:modelValue", "hotbedUpdated"]);
@@ -169,22 +163,6 @@ async function updateHotbed() {
     localHotbedData.value.details.images.push(image);
   }
   emit("hotbedUpdated", localHotbedData.value);
-}
-async function uploadPhoto(file: File) {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await $fetch<{
-      previewImageId: string;
-      fullImageId: string;
-    }>(`${store.apiFileServer}/file/image/upload`, {
-      method: "POST",
-      body: formData,
-    });
-    return response;
-  } catch (err) {
-    throw new Error("Ошибка при загрузке фото");
-  }
 }
 function nextStep() {
   if (currentStep.value === 1) {

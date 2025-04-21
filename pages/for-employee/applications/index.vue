@@ -37,11 +37,11 @@
               <section class="b-request-card__main-info">
                 <p class="b-request-card__comment gg-t-base">{{ request.userComment }}</p>
                 <div class="b-request-card__images">
-                  <FileContainers
+                  <CFileContainers
                     :files="request.images"
                     :clearable="false"
                     hide-caption
-                  ></FileContainers>
+                  ></CFileContainers>
                 </div>
               </section>
             </section>
@@ -126,7 +126,7 @@ const PROBLEM_AREA_TYPE_OPTIONS = [
     value: "Пожар",
   },
 ];
-const shortMarkerInfoNameKeys = ref({
+const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
     type: "text",
@@ -232,7 +232,7 @@ async function approveRequest(id: string) {
       authorization: useGetToken(),
     },
     body: {
-      statusCode: "ОДОБРЕНА",
+      statusCode: "Одобрена",
       operatorComment: "",
       operatorId: store.user?.id || "",
     },
@@ -247,7 +247,7 @@ async function rejectRequest(id: string) {
       authorization: useGetToken(),
     },
     body: {
-      statusCode: "ОТКЛОНЕНА",
+      statusCode: "Отклонена",
       operatorComment: "",
       operatorId: store.user?.id || "",
     },
@@ -264,7 +264,7 @@ async function viewOnMap(request: ApplicationData) {
     coordinate: request.coordinates,
     isTempCreatedBy: "user",
     details: {
-      square: 21879072,
+      square: 0,
       owner: "",
       landType: "",
       contractingOrganization: "",

@@ -10,3 +10,13 @@
 .work-stage.completed {
   background-color: var(--app-green-400);
 }
+
+.account-state {
+  color: var(--app-white);
+}
+.account-state.active {
+  background-color: var(--app-green-300);
+}
+.account-state.blocked {
+  background-color: var(--app-grey-300);
+}
