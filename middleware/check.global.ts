@@ -17,14 +17,4 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return navigateTo("/auth/login");
     }
   }
-  if (!store.problemAreaTypes.length) {
-    store.problemAreaTypes = await $fetch(
-      `${store.apiGeospatial}/geo/dict/problem-area-types`,
-    );
-  }
-  if (!store.landTypes.length) {
-    store.landTypes = await $fetch(
-      `${store.apiGeospatial}/geo/dict/land-types`,
-    );
-  }
 });
