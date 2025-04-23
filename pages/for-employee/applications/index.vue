@@ -70,7 +70,7 @@
     <CDialog v-model="isMapOpen" class="b-dialog">
       <div class="b-dialog__content">
         <CMap
-          :dataStatusStyles="workStageStyles"
+          :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
           :markers="existingHotbedsByType"
           :shortInfoKeys="shortMarkerInfoNameKeys"
           hide-controls
@@ -112,20 +112,8 @@ interface ApplicationPageRequest {
 }
 const store = useMainStore();
 const { timeConverter } = useFormatters();
-const PROBLEM_AREA_TYPE_OPTIONS = [
-  {
-    name: "Борщевик",
-    value: "Борщевик",
-  },
-  {
-    name: "Свалка",
-    value: "Свалка",
-  },
-  {
-    name: "Пожар",
-    value: "Пожар",
-  },
-];
+const { PROBLEM_AREA_TYPE_OPTIONS, HOTBED_WORK_STAGE_STYLES } =
+  useGetStatusOptions();
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
@@ -152,11 +140,6 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
     type: "text",
   },
 });
-const workStageStyles = {
-  Создано: "background-color: var(--app-blue-400)",
-  "В работе": "background-color: var(--app-green-400)",
-  Завершено: "background-color: var(--app-grey-400)",
-};
 const isMapOpen = shallowRef(false);
 const existingHotbedsByType = ref<Marker[]>([]);
 const selectedHotbed = ref<Marker>();

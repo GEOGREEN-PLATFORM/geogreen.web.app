@@ -48,6 +48,20 @@ export default function useGetStatusOptions() {
     { name: "Средняя", value: "medium" },
     { name: "Высокая", value: "high" },
   ];
+  const PROBLEM_AREA_TYPE_OPTIONS = [
+    {
+      name: "Борщевик",
+      value: "Борщевик",
+    },
+    {
+      name: "Свалка",
+      value: "Свалка",
+    },
+    {
+      name: "Пожар",
+      value: "Пожар",
+    },
+  ];
   return {
     EMPLOYEE_ACCOUNT_STATUS_OPTIONS,
     EMPLOYEE_ACCOUNT_STATUS_STYLES,
@@ -55,5 +69,6 @@ export default function useGetStatusOptions() {
     HOTBED_WORK_STAGE_STYLES,
     HOTBED_WORK_STAGE_OPTIONS,
     HOTBED_DENSITIES_OPTIONS,
+    PROBLEM_AREA_TYPE_OPTIONS,
   };
 }
