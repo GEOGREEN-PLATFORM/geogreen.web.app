@@ -33,6 +33,11 @@ declare global {
       type: "images" | "text" | "status";
     };
   }
+  interface CardItem {
+    label: string;
+    value?: string;
+    type: "text" | "link" | "status";
+  }
   interface User {
     role: "user" | "admin" | "operator";
     id: string;
@@ -100,17 +105,15 @@ declare global {
     coordinate?: Coordinate;
     details: {
       square: number;
-      owner?: string;
-      landType?: string;
-      contractingOrganization?: string;
-      problemAreaType?: ProblemAreaTypes;
-      workStage?: string;
-      workStatus?: string;
-      images?: ImageObj[] | [];
-      comment?: string;
-      eliminationMethod?: string;
-      photos?: string[];
-      density?: Density | null;
+      owner: string;
+      landType: string;
+      contractingOrganization: string;
+      problemAreaType: ProblemAreaTypes;
+      workStage: string;
+      images: ImageObj[] | [];
+      comment: string;
+      eliminationMethod: string;
+      density: Density | null;
     };
     relatedTaskId?: string | null;
     coordinates?: Coordinate[];

@@ -44,22 +44,21 @@
           :rows="tableRows"
           v-model:pagination="pagination"
           row-key="name"
-          :slots="['status']"
+          :slots="['workStage']"
           @click:row="(row: any) => goToHotbed(row.id)"
           @updateTable="getHotbeds"
           :loading="hotbedsLoading"
         >
-          <template v-slot:body-cell-status="slotProps">
-            <div class="b-account-status">
-              <div
-                class="b-account-status__item gg-t-small"
-                :class="{
-                  'b-account-status__item--active': slotProps.row.status === 'Активен',
-                  'b-account-status__item--blocked': slotProps.row.status === 'Заблокирован',
-                }"
-              >
-                {{ slotProps.row.status }}
-              </div>
+          <template v-slot:body-cell-workStage="slotProps">
+            <div
+              class="b-status-coniainter gg-t-small"
+              :class="
+                HOTBED_WORK_STAGE_STYLES[
+                  slotProps.row.workStage as keyof typeof HOTBED_WORK_STAGE_STYLES
+                ]
+              "
+            >
+              {{ slotProps.row.workStage }}
             </div>
           </template>
         </CTable>
@@ -75,10 +74,20 @@
 
 <script setup lang="ts">
 import { mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
+import type { Coordinate } from "ol/coordinate";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
 interface HotbedData {
-  [key: string]: any;
+  problemAreaType: string;
+  landType: string;
+  eliminationMethod: string;
+  owner: string;
+  contractingOrganization: string;
+  comment: string;
+  images: ImageObj[];
+  density: Density;
+  coordinate: Coordinate | null;
+  coordinates: Coordinate[];
 }
 const pagination = ref({
   page: 1,
@@ -87,56 +96,50 @@ const pagination = ref({
 });
 const store = useMainStore();
 const debounce = useDebounce();
-const { HOTBED_WORK_STAGE_OPTIONS } = useGetStatusOptions();
+const { HOTBED_WORK_STAGE_OPTIONS, HOTBED_WORK_STAGE_STYLES } =
+  useGetStatusOptions();
 const tableHeaders: TableHeader[] = [
   {
     name: "problemAreaType",
     align: "left",
     label: "Тип проблемы",
     field: "problemAreaType",
-    sortable: true,
   },
   {
     name: "workStage",
     align: "center",
     label: "Статус работы",
     field: "workStage",
-    sortable: true,
   },
   {
     name: "landType",
     align: "center",
     label: "Тип земель",
     field: "landType",
-    sortable: true,
   },
   {
     name: "owner",
     align: "right",
     label: "Владелец",
     field: "owner",
-    sortable: true,
   },
   {
     name: "eliminationMethod",
     align: "right",
     label: "Метод по устранению",
     field: "eliminationMethod",
-    sortable: true,
   },
   {
     name: "dateCreated",
     align: "right",
     label: "Дата создания",
     field: "dateCreated",
-    sortable: true,
   },
   {
     name: "dateUpdated",
     align: "right",
     label: "Дата изменения",
     field: "dateUpdated",
-    sortable: true,
   },
 ];
 const hotbeds = ref<Marker[]>([]);
@@ -162,7 +165,7 @@ const filters = ref<FilterItem[]>([
   },
   {
     type: "select",
-    key: "wordStage",
+    key: "workStage",
     selected: "",
     label: "Статус работы",
     data: HOTBED_WORK_STAGE_OPTIONS,
@@ -337,26 +340,15 @@ onMounted(() => {
       }
     }
   }
-  .b-account-status {
+  .b-status-coniainter {
     display: flex;
-    justify-content: center;
     align-items: center;
-    &__item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: max-content;
-      height: 32px;
-      padding: 4px 16px;
-      border-radius: 16px;
-      color: var(--app-white);
-      &--active {
-        background-color: var(--app-green-300);
-      }
-      &--blocked {
-        background-color: var(--app-grey-300);
-      }
-    }
+    justify-content: center;
+    width: max-content;
+    height: 32px;
+    padding: 4px 16px;
+    border-radius: 16px;
+    color: var(--app-white);
   }
 }
 </style>

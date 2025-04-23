@@ -35,17 +35,14 @@ interface Props {
   modelValue: string;
   rounded?: boolean;
   outlined?: boolean;
-  label: string;
+  label?: string;
   required?: boolean;
   rules?: ValidationRule[];
   hideBottomSpace?: boolean;
   hideErrorIcon?: boolean;
   placeholder?: string;
   name?: string;
-  options: {
-    name: string;
-    value: string;
-  }[];
+  options: ItemOption[];
   height?: string;
   optionValue?: string;
   optionLabel?: string;

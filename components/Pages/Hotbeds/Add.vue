@@ -17,6 +17,7 @@
               :addMarker="isAddMarker ? 'forbid' : 'enable'"
               :markers="existingHotbeds"
               :shortInfoKeys="shortMarkerInfoNameKeys"
+              :selectedMarker="addedHotbed"
             ></CMap>
           </section>
         </template>
@@ -112,7 +113,11 @@
 
         <footer class="b-form__footer">
           <CButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
-          <CButton :label="applyLabel" :disabled="formHasError || !isAddMarker" type="submit" />
+          <CButton
+            :label="applyLabel"
+            :disabled="(currentStep === 2 && formHasError) || !isAddMarker"
+            type="submit"
+          />
         </footer>
       </q-form>
     </q-card>
@@ -120,12 +125,23 @@
 </template>
 
 <script setup lang="ts">
-import { mdiContentCopy } from "@quasar/extras/mdi-v6";
 import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
 interface Props {
   modelValue: boolean;
   hotbeds: Marker[];
+}
+interface HotbedData {
+  problemAreaType: string;
+  landType: string;
+  eliminationMethod: string;
+  owner: string;
+  contractingOrganization: string;
+  comment: string;
+  images: ImageObj[];
+  density: Density;
+  coordinate: Coordinate | null;
+  coordinates: Coordinate[];
 }
 const props = defineProps<Props>();
 const emit = defineEmits(["update:modelValue", "hotbedCreated"]);
@@ -133,7 +149,7 @@ const store = useMainStore();
 const dialogVisible = ref(props.modelValue);
 const { formRef, formBindValidation, formHasError } = useFormValidation();
 const existingHotbeds = ref<Marker[]>([]);
-const hotbedEliminationMethods = ref([]);
+const hotbedEliminationMethods = ref<ItemOption[]>([]);
 const { HOTBED_WORK_STAGE_STYLES, HOTBED_DENSITIES_OPTIONS } =
   useGetStatusOptions();
 const FILES_MAX_SIZE = 10_000_000;
@@ -142,7 +158,7 @@ const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
 const subTitle = ref("Отметьте на карте новый очаг проблемы");
 const currentStep = ref(1);
-const hotbedData = ref({
+const hotbedData = ref<HotbedData>({
   problemAreaType: "",
   landType: "",
   eliminationMethod: "",
@@ -150,9 +166,9 @@ const hotbedData = ref({
   contractingOrganization: "",
   comment: "",
   images: [],
-  density: "",
-  coordinate: null as Coordinate | null,
-  coordinates: [] as Coordinate[],
+  density: "default",
+  coordinate: null,
+  coordinates: [],
 });
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
@@ -202,6 +218,12 @@ function onSubmit() {
     }
   });
 }
+const addedHotbed = computed(() => {
+  return existingHotbeds.value[existingHotbeds.value.length - 1]
+    .isTempCreatedBy === "employee"
+    ? existingHotbeds.value[existingHotbeds.value.length - 1]
+    : null;
+});
 function addTempHotbed(coordinate: Coordinate, zone?: ZoneWithDensity) {
   hotbedData.value.coordinate = coordinate;
   hotbedData.value.coordinates = zone?.coordinates || [];
@@ -277,8 +299,8 @@ function changeHotdedsDensity() {
       (m) => m.isTempCreatedBy === "employee",
     );
     if (hotbedIndex === -1) return;
-    existingHotbeds.value[hotbedIndex].details.density =
-      hotbedData.value.density;
+    existingHotbeds.value[hotbedIndex].details.density = hotbedData.value
+      .density as Density;
   }
 }
 async function createHotbed() {
@@ -357,9 +379,9 @@ function resetForm() {
     contractingOrganization: "",
     comment: "",
     images: [],
-    density: "",
-    coordinate: null as Coordinate | null,
-    coordinates: [] as Coordinate[],
+    density: "default",
+    coordinate: null,
+    coordinates: [],
   };
 }
 watch(
@@ -368,6 +390,21 @@ watch(
     existingHotbeds.value = newVal;
   },
 );
+watch(
+  () => hotbedData.value,
+  (newData) => {
+    const details = addedHotbed.value?.details;
+    if (details) {
+      Object.keys(newData).forEach((key) => {
+        if (Object.hasOwn(newData, key) && Object.hasOwn(details, key)) {
+          // @ts-expect-error динамическое присвоение
+          details[key] = newData[key];
+        }
+      });
+    }
+  },
+  { deep: true },
+);
 
 watch(
   () => props.modelValue,
@@ -375,9 +412,12 @@ watch(
     dialogVisible.value = newVal;
   },
 );
-watch(dialogVisible, (newVal) => {
-  emit("update:modelValue", newVal);
-});
+watch(
+  () => dialogVisible.value,
+  (newVal) => {
+    emit("update:modelValue", newVal);
+  },
+);
 onMounted(() => {
   existingHotbeds.value = props.hotbeds;
 });
@@ -394,11 +434,10 @@ $app-narrow-mobile: 364px;
 .b-form {
   display: flex;
   flex-direction: column;
-  &__section {
-    padding-top: 20px;
-  }
   &__map {
     height: 60vh;
+    border-radius: 8px;
+    overflow: hidden;
   }
   &__section-title {
     margin-bottom: 12px;

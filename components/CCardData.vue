@@ -14,7 +14,7 @@
             >
             <div
               class="c-card-items__value c-card-items__value--status"
-              :style="statusStylesByValue[item.value]"
+              :class="statusClassesByValue[item.value]"
               v-else-if="item.type === 'status'"
             >
               {{ item.value }}
@@ -29,17 +29,13 @@
 
 <script setup lang="ts">
 interface Props {
-  list: {
-    label: string;
-    value: string;
-    type: "text" | "link" | "status";
-  }[];
+  list: CardItem[];
   linksByLabel?: Record<string, string>;
-  statusStylesByValue?: Record<string, string>;
+  statusClassesByValue?: Record<string, string>;
 }
 const props = withDefaults(defineProps<Props>(), {
   linksByLabel: () => ({}),
-  statusStylesByValue: () => ({}),
+  statusClassesByValue: () => ({}),
 });
 </script>
 
@@ -56,6 +52,7 @@ const props = withDefaults(defineProps<Props>(), {
       flex-direction: row;
       justify-content: flex-start;
       align-items: center;
+      flex-wrap: nowrap;
       gap: 12px;
     }
     &__item {
@@ -64,18 +61,21 @@ const props = withDefaults(defineProps<Props>(), {
       align-items: center;
     }
     &__label {
+      min-width: 144px;
       width: 144px;
       color: var(--app-grey-400);
     }
     &__value {
       font-size: 16px;
       color: var(--app-grey-900);
+      overflow-wrap: anywhere;
       &--link {
         color: var(--app-blue-500);
       }
       &--status {
         border-radius: 16px;
         padding: 4px 16px;
+        color: var(--app-white);
       }
       &--empty {
         font-size: 14px;

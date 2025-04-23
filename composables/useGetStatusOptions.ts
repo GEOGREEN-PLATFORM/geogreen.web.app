@@ -42,7 +42,8 @@ export default function useGetStatusOptions() {
     "В работе": "work-stage working",
     Завершено: "work-stage completed",
   };
-  const HOTBED_DENSITIES_OPTIONS = [
+  const HOTBED_DENSITIES_OPTIONS: ItemOption[] = [
+    { name: "Не известна", value: "default" },
     { name: "Низкая", value: "low" },
     { name: "Средняя", value: "medium" },
     { name: "Высокая", value: "high" },

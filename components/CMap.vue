@@ -259,7 +259,7 @@ interface Props {
   addMarker?: "hide" | "enable" | "forbid";
   toggleVisibility?: "hide" | "enable" | "forbid";
   hideControls?: boolean;
-  selectedMarker?: Marker;
+  selectedMarker?: Marker | null;
   editableMarkers?: "all" | string[];
 }
 const store = useMainStore();

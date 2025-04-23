@@ -2,16 +2,25 @@
   <CDialog v-model="dialogVisible" class="b-dialog">
     <q-card class="b-dialog__container" :class="`b-dialog__container--step-${currentStep}`">
       <header class="b-dialog__header">
-        <h2 class="b-dialog__title gg-h2">Добавление очага</h2>
+        <h2 class="b-dialog__title gg-h2">Изменение очага</h2>
         <p v-if="subTitle" class="b-dialog__subtitle">{{ subTitle }}</p>
       </header>
-      <q-form ref="formRef" novalidate greedy class="b-dialog__form" @submit="onSubmit">
+      <q-form
+        v-if="localHotbedData"
+        ref="formRef"
+        novalidate
+        greedy
+        class="b-dialog__form"
+        @submit="onSubmit"
+      >
         <template v-if="currentStep === 1">
           <section class="b-dialog__section">
             <div class="b-dialog__section-content">
               <CInputSelect
                 v-model="localHotbedData.details.problemAreaType"
-                @update:model-value="getEliminationMethodsByArea"
+                @update:model-value="
+                  (val: string) => handleProblemAreaTypeChange(val as ProblemAreaTypes)
+                "
                 :options="store.formattedProblemAreaTypes"
                 label="Тип проблемы"
               ></CInputSelect>
@@ -76,13 +85,12 @@
 import { useMainStore } from "~/store/main";
 interface Props {
   modelValue: boolean;
-  hotbed: any;
+  hotbed: Marker;
 }
 
-const { HOTBED_WORK_STAGE_STYLES, HOTBED_DENSITIES_OPTIONS } =
-  useGetStatusOptions();
+const { HOTBED_DENSITIES_OPTIONS } = useGetStatusOptions();
 const { uploadPhoto } = useFiles();
-const localHotbedData = ref({} as any);
+const localHotbedData = ref<Marker>();
 const props = defineProps<Props>();
 const emit = defineEmits(["update:modelValue", "hotbedUpdated"]);
 const store = useMainStore();
@@ -100,7 +108,7 @@ watch(dialogVisible, (newVal) => {
 });
 const hotbedEliminationMethods = ref();
 const FILES_MAX_SIZE = 10_000_000;
-const attachedFiles = ref<File[]>([]);
+const attachedFiles = ref<(ImageObj | File)[]>([]);
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
 const subTitle = ref("Измените данные по очагу");
@@ -136,8 +144,12 @@ function onBack() {
     updateLabels();
   }
 }
-async function getEliminationMethodsByArea(area: string) {
-  localHotbedData.value.eliminationMethod = "";
+function handleProblemAreaTypeChange(newArea: ProblemAreaTypes) {
+  if (!localHotbedData.value) return;
+  localHotbedData.value.details.eliminationMethod = "";
+  getEliminationMethodsByArea(newArea);
+}
+async function getEliminationMethodsByArea(area: ProblemAreaTypes) {
   hotbedEliminationMethods.value = (
     await $fetch<string[]>(
       `${store.apiGeospatial}/geo/dict/elimination-methods/${area}`,
@@ -152,6 +164,7 @@ async function getEliminationMethodsByArea(area: string) {
   }));
 }
 async function updateHotbed() {
+  if (!localHotbedData.value) return;
   localHotbedData.value.details.images = [];
   for (const file of attachedFiles.value) {
     let image = null;
@@ -170,6 +183,7 @@ function nextStep() {
     updateLabels();
   } else if (currentStep.value === 2) {
     updateHotbed();
+    resetForm();
   }
 }
 
@@ -184,19 +198,24 @@ function updateLabels() {
     subTitle.value = "Измените изображения очага";
   }
 }
-
+function configureData() {
+  localHotbedData.value = structuredClone(toRaw(props.hotbed));
+  attachedFiles.value = [...props.hotbed.details.images];
+  getEliminationMethodsByArea(props.hotbed.details.problemAreaType);
+}
 function resetForm() {
   currentStep.value = 1;
   subTitle.value = "";
   cancelLabel.value = "Отмена";
   applyLabel.value = "Далее";
+  localHotbedData.value = structuredClone(toRaw(props.hotbed));
+  attachedFiles.value = [...props.hotbed.details.images];
 }
 onMounted(() => {
   if (!props.hotbed) {
     return;
   }
-  localHotbedData.value = props.hotbed;
-  attachedFiles.value = props.hotbed.details.images;
+  configureData();
 });
 watch(
   () => props.hotbed,
@@ -204,8 +223,7 @@ watch(
     if (!newVal) {
       return;
     }
-    localHotbedData.value = newVal;
-    attachedFiles.value = newVal.details.images;
+    configureData();
   },
 );
 </script>
@@ -244,9 +262,6 @@ $app-narrow-mobile: 364px;
   &__form {
     display: flex;
     flex-direction: column;
-  }
-  &__section {
-    padding-top: 20px;
   }
   &__map {
     height: 60vh;
