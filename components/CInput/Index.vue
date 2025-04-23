@@ -1,6 +1,6 @@
 <template>
   <div
-    class="kt-input-main"
+    class="c-input-main"
     :class="{
       required: required,
     }"
@@ -25,6 +25,7 @@
       :mask="maska"
       :hint="hint"
       :readonly="readonly"
+      :maxlength="maxLength"
     >
       <template #append>
         <slot name="append">
@@ -75,6 +76,7 @@ interface Props {
   height?: string;
   hint?: string;
   readonly?: boolean;
+  maxLength?: number;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -131,7 +133,7 @@ watch(
 </script>
 
 <style lang="scss">
-.kt-input-main {
+.c-input-main {
   width: 100%;
   min-height: v-bind(height);
   .q-field--outlined.q-field--rounded .q-field__control {
@@ -227,7 +229,7 @@ watch(
     box-shadow: inset 0 0 20px 20px transparent;
   }
 }
-.kt-input-main.required {
+.c-input-main.required {
   .q-field__label {
     &::after {
       content: "*";

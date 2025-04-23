@@ -37,24 +37,24 @@
               <section class="b-request-card__main-info">
                 <p class="b-request-card__comment gg-t-base">{{ request.userComment }}</p>
                 <div class="b-request-card__images">
-                  <FileContainers
+                  <CFileContainers
                     :files="request.images"
                     :clearable="false"
                     hide-caption
-                  ></FileContainers>
+                  ></CFileContainers>
                 </div>
               </section>
             </section>
             <footer class="b-request-card__footer justify-between">
               <div>
-                <GGButton @click="approveRequest(request.id)" label="Принять заявку"></GGButton>
+                <CButton @click="approveRequest(request.id)" label="Принять заявку"></CButton>
               </div>
               <div>
-                <GGButton
+                <CButton
                   @click="rejectRequest(request.id)"
                   label="Отклонить заявку"
                   bg-color="var(--app-red-500)"
-                ></GGButton>
+                ></CButton>
               </div>
             </footer>
             <div
@@ -67,17 +67,17 @@
         </section>
       </q-scroll-area>
     </section>
-    <GGDialog v-model="isMapOpen" class="b-dialog">
+    <CDialog v-model="isMapOpen" class="b-dialog">
       <div class="b-dialog__content">
-        <Map
-          :dataStatusStyles="workStageStyles"
+        <CMap
+          :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
           :markers="existingHotbedsByType"
           :shortInfoKeys="shortMarkerInfoNameKeys"
           hide-controls
           :selectedMarker="selectedHotbed"
-        ></Map>
+        ></CMap>
       </div>
-    </GGDialog>
+    </CDialog>
   </main>
 </template>
 
@@ -112,21 +112,9 @@ interface ApplicationPageRequest {
 }
 const store = useMainStore();
 const { timeConverter } = useFormatters();
-const PROBLEM_AREA_TYPE_OPTIONS = [
-  {
-    name: "Борщевик",
-    value: "Борщевик",
-  },
-  {
-    name: "Свалка",
-    value: "Свалка",
-  },
-  {
-    name: "Пожар",
-    value: "Пожар",
-  },
-];
-const shortMarkerInfoNameKeys = ref({
+const { PROBLEM_AREA_TYPE_OPTIONS, HOTBED_WORK_STAGE_STYLES } =
+  useGetStatusOptions();
+const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
     type: "text",
@@ -152,11 +140,6 @@ const shortMarkerInfoNameKeys = ref({
     type: "text",
   },
 });
-const workStageStyles = {
-  Создано: "background-color: var(--app-blue-400)",
-  "В работе": "background-color: var(--app-green-400)",
-  Завершено: "background-color: var(--app-grey-400)",
-};
 const isMapOpen = shallowRef(false);
 const existingHotbedsByType = ref<Marker[]>([]);
 const selectedHotbed = ref<Marker>();
@@ -232,7 +215,7 @@ async function approveRequest(id: string) {
       authorization: useGetToken(),
     },
     body: {
-      statusCode: "ОДОБРЕНА",
+      statusCode: "Одобрена",
       operatorComment: "",
       operatorId: store.user?.id || "",
     },
@@ -247,7 +230,7 @@ async function rejectRequest(id: string) {
       authorization: useGetToken(),
     },
     body: {
-      statusCode: "ОТКЛОНЕНА",
+      statusCode: "Отклонена",
       operatorComment: "",
       operatorId: store.user?.id || "",
     },
@@ -264,7 +247,7 @@ async function viewOnMap(request: ApplicationData) {
     coordinate: request.coordinates,
     isTempCreatedBy: "user",
     details: {
-      square: 21879072,
+      square: 0,
       owner: "",
       landType: "",
       contractingOrganization: "",

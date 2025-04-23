@@ -1,14 +1,14 @@
 <template>
-  <AuthPageForm :button-options="buttonOptions" @main-button-click="sendRegister">
+  <PagesAuthForm :button-options="buttonOptions" @main-button-click="sendRegister">
     <template #form-content>
       <div class="form-content">
         <h1 class="form-content__head gg-h1">Создать аккаунт</h1>
         <div class="form-content__input-fields">
           <div class="form-content__inline-block">
-            <KTInput v-model="userData.firstName" label="Имя" />
-            <KTInput v-model="userData.lastName" label="Фамилия" />
+            <CInput v-model="userData.firstName" label="Имя" />
+            <CInput v-model="userData.lastName" label="Фамилия" />
           </div>
-          <KTInput
+          <CInput
             v-model="userData.email"
             label="Почта"
             :rules="[validateEmail]"
@@ -16,7 +16,7 @@
             name="email"
             autocomplete="new-email"
           />
-          <KTInput
+          <CInput
             v-model="userData.password"
             label="Пароль"
             type="password"
@@ -24,7 +24,7 @@
             :rules="[validatePassword]"
             hint="Пароль должен содержать от 8 до 20 символов"
           />
-          <KTInput
+          <CInput
             v-model="userData.repeatedPassword"
             label="Подтвердите пароль"
             autocomplete="new-password"
@@ -48,7 +48,7 @@
         </div>
       </div>
     </template>
-  </AuthPageForm>
+  </PagesAuthForm>
 </template>
 
 <script setup lang="ts">

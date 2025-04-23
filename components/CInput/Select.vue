@@ -1,6 +1,6 @@
 <template>
   <div
-    class="kt-input-select"
+    class="c-input-select"
     :class="{
       required: required,
     }"
@@ -35,17 +35,14 @@ interface Props {
   modelValue: string;
   rounded?: boolean;
   outlined?: boolean;
-  label: string;
+  label?: string;
   required?: boolean;
   rules?: ValidationRule[];
   hideBottomSpace?: boolean;
   hideErrorIcon?: boolean;
   placeholder?: string;
   name?: string;
-  options: {
-    name: string;
-    value: string;
-  }[];
+  options: ItemOption[];
   height?: string;
   optionValue?: string;
   optionLabel?: string;
@@ -85,7 +82,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss">
-.kt-input-select {
+.c-input-select {
   width: 100%;
   .q-field--outlined.q-field--rounded .q-field__control {
     border-radius: 16px;
@@ -180,7 +177,7 @@ onMounted(() => {
     box-shadow: inset 0 0 20px 20px transparent;
   }
 }
-.kt-input-select.required {
+.c-input-select.required {
   .q-field__label {
     &::after {
       content: "*";

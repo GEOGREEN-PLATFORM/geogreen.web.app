@@ -13,6 +13,7 @@ export default defineNuxtConfig({
       PORTAL_API_KEYCLOAK: "",
     },
   },
+  ssr: true,
   modules: [
     "@pinia/nuxt",
     "nuxt-quasar-ui",
@@ -38,6 +39,7 @@ export default defineNuxtConfig({
     "@/assets/styles/typography.scss",
     "@/assets/styles/fonts.scss",
     "@/assets/styles/main.scss",
+    "@/assets/styles/status_model_classes.scss",
   ],
   quasar: {
     lang: "ru",

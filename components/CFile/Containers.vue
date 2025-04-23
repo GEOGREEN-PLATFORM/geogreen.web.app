@@ -3,7 +3,7 @@
     <p class="file-container__block-caption gg-cap">Загруженные изображения</p>
     <ul class="file-container__list">
       <li v-for="(file, index) in filesCopy" :key="getKey(file)">
-        <File
+        <CFile
           :file="file"
           @localDelete="removeLocal(index)"
           @sendDelete="removeRemote(index, $event)"
@@ -74,6 +74,7 @@ function removeRemote(index: number, imageId: string) {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
+  width: 100%;
   gap: 12px;
   padding: 0px 8px;
   &__block-caption {

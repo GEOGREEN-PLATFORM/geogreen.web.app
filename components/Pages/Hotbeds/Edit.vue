@@ -1,44 +1,53 @@
 <template>
-  <GGDialog v-model="dialogVisible" class="b-dialog">
+  <CDialog v-model="dialogVisible" class="b-dialog">
     <q-card class="b-dialog__container" :class="`b-dialog__container--step-${currentStep}`">
       <header class="b-dialog__header">
-        <h2 class="b-dialog__title gg-h2">Добавление очага</h2>
+        <h2 class="b-dialog__title gg-h2">Изменение очага</h2>
         <p v-if="subTitle" class="b-dialog__subtitle">{{ subTitle }}</p>
       </header>
-      <q-form ref="formRef" novalidate greedy class="b-dialog__form" @submit="onSubmit">
+      <q-form
+        v-if="localHotbedData"
+        ref="formRef"
+        novalidate
+        greedy
+        class="b-dialog__form"
+        @submit="onSubmit"
+      >
         <template v-if="currentStep === 1">
           <section class="b-dialog__section">
             <div class="b-dialog__section-content">
-              <KTInputSelect
+              <CInputSelect
                 v-model="localHotbedData.details.problemAreaType"
-                @update:model-value="getEliminationMethodsByArea"
+                @update:model-value="
+                  (val: string) => handleProblemAreaTypeChange(val as ProblemAreaTypes)
+                "
                 :options="store.formattedProblemAreaTypes"
                 label="Тип проблемы"
-              ></KTInputSelect>
-              <KTInputSelect
+              ></CInputSelect>
+              <CInputSelect
                 v-model="localHotbedData.details.landType"
                 :options="store.formattedLandTypes"
                 label="Тип земель"
-              ></KTInputSelect>
-              <KTInputSelect
+              ></CInputSelect>
+              <CInputSelect
                 v-model="localHotbedData.details.eliminationMethod"
                 :options="hotbedEliminationMethods"
                 :disabled="!localHotbedData.details.problemAreaType"
                 :hint="!localHotbedData.details.problemAreaType ? 'Выберите тип проблемы' : ''"
                 label="Метод по устранению"
-              ></KTInputSelect>
-              <KTInputSelect
+              ></CInputSelect>
+              <CInputSelect
                 v-model="localHotbedData.details.density"
-                :options="HOTBED_DENSITIES"
+                :options="HOTBED_DENSITIES_OPTIONS"
                 label="Плотность распространения"
-              ></KTInputSelect>
-              <KTInput
+              ></CInputSelect>
+              <CInput
                 v-model="localHotbedData.details.owner"
                 label="Владелец"
                 required
                 class="b-dialog__field"
               />
-              <KTInput
+              <CInput
                 v-model="localHotbedData.details.contractingOrganization"
                 label="Подрядная организация"
                 required
@@ -51,44 +60,37 @@
           <section class="b-dialog__section">
             <fieldset class="b-dialog__fieldset">
               <legend class="b-dialog__legend gg-h3 q-mb-sm">Фотографии</legend>
-              <DragDrop
+              <CDragDrop
                 @add="uploadFiles"
                 class="b-dialog__upload-file-container"
                 :maxSize="FILES_MAX_SIZE"
-              ></DragDrop>
+              ></CDragDrop>
               <section v-if="attachedFiles.length > 0" class="b-dialog__added-images">
-                <p class="b-dialog__block-caption gg-cap">Загруженные изображения</p>
-                <FileContainers v-model:files="attachedFiles"></FileContainers>
+                <CFileContainers v-model:files="attachedFiles"></CFileContainers>
               </section>
             </fieldset>
           </section>
         </template>
 
         <footer class="b-dialog__footer">
-          <GGButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
-          <GGButton :label="applyLabel" :disabled="formHasError" type="submit" />
+          <CButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
+          <CButton :label="applyLabel" :disabled="formHasError" type="submit" />
         </footer>
       </q-form>
     </q-card>
-  </GGDialog>
+  </CDialog>
 </template>
 
 <script setup lang="ts">
-import { mdiContentCopy } from "@quasar/extras/mdi-v6";
-import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
 interface Props {
   modelValue: boolean;
-  hotbed: any;
+  hotbed: Marker;
 }
 
-const HOTBED_DENSITIES = [
-  { name: "Низкая", value: "Низкая" },
-  { name: "Средняя", value: "Средняя" },
-  { name: "Высокая", value: "Высокая" },
-];
-
-const localHotbedData = ref({} as any);
+const { HOTBED_DENSITIES_OPTIONS } = useGetStatusOptions();
+const { uploadPhoto } = useFiles();
+const localHotbedData = ref<Marker>();
 const props = defineProps<Props>();
 const emit = defineEmits(["update:modelValue", "hotbedUpdated"]);
 const store = useMainStore();
@@ -106,7 +108,7 @@ watch(dialogVisible, (newVal) => {
 });
 const hotbedEliminationMethods = ref();
 const FILES_MAX_SIZE = 10_000_000;
-const attachedFiles = ref<File[]>([]);
+const attachedFiles = ref<(ImageObj | File)[]>([]);
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
 const subTitle = ref("Измените данные по очагу");
@@ -142,8 +144,12 @@ function onBack() {
     updateLabels();
   }
 }
-async function getEliminationMethodsByArea(area: string) {
-  localHotbedData.value.eliminationMethod = "";
+function handleProblemAreaTypeChange(newArea: ProblemAreaTypes) {
+  if (!localHotbedData.value) return;
+  localHotbedData.value.details.eliminationMethod = "";
+  getEliminationMethodsByArea(newArea);
+}
+async function getEliminationMethodsByArea(area: ProblemAreaTypes) {
   hotbedEliminationMethods.value = (
     await $fetch<string[]>(
       `${store.apiGeospatial}/geo/dict/elimination-methods/${area}`,
@@ -158,6 +164,7 @@ async function getEliminationMethodsByArea(area: string) {
   }));
 }
 async function updateHotbed() {
+  if (!localHotbedData.value) return;
   localHotbedData.value.details.images = [];
   for (const file of attachedFiles.value) {
     let image = null;
@@ -170,28 +177,13 @@ async function updateHotbed() {
   }
   emit("hotbedUpdated", localHotbedData.value);
 }
-async function uploadPhoto(file: File) {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await $fetch<{
-      previewImageId: string;
-      fullImageId: string;
-    }>(`${store.apiFileServer}/file/image/upload`, {
-      method: "POST",
-      body: formData,
-    });
-    return response;
-  } catch (err) {
-    throw new Error("Ошибка при загрузке фото");
-  }
-}
 function nextStep() {
   if (currentStep.value === 1) {
     currentStep.value++;
     updateLabels();
   } else if (currentStep.value === 2) {
     updateHotbed();
+    resetForm();
   }
 }
 
@@ -206,19 +198,24 @@ function updateLabels() {
     subTitle.value = "Измените изображения очага";
   }
 }
-
+function configureData() {
+  localHotbedData.value = structuredClone(toRaw(props.hotbed));
+  attachedFiles.value = [...props.hotbed.details.images];
+  getEliminationMethodsByArea(props.hotbed.details.problemAreaType);
+}
 function resetForm() {
   currentStep.value = 1;
   subTitle.value = "";
   cancelLabel.value = "Отмена";
   applyLabel.value = "Далее";
+  localHotbedData.value = structuredClone(toRaw(props.hotbed));
+  attachedFiles.value = [...props.hotbed.details.images];
 }
 onMounted(() => {
   if (!props.hotbed) {
     return;
   }
-  localHotbedData.value = props.hotbed;
-  attachedFiles.value = props.hotbed.details.images;
+  configureData();
 });
 watch(
   () => props.hotbed,
@@ -226,8 +223,7 @@ watch(
     if (!newVal) {
       return;
     }
-    localHotbedData.value = newVal;
-    attachedFiles.value = newVal.details.images;
+    configureData();
   },
 );
 </script>
@@ -266,9 +262,6 @@ $app-narrow-mobile: 364px;
   &__form {
     display: flex;
     flex-direction: column;
-  }
-  &__section {
-    padding-top: 20px;
   }
   &__map {
     height: 60vh;

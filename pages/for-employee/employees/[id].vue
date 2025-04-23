@@ -12,7 +12,7 @@
               accept="image/*"
             />
             <img
-              v-if="!isDefaultAvatar"
+              v-if="userData.image && avatarSrc"
               :src="avatarSrc"
               alt="Аватар"
               class="b-avatar__item"
@@ -35,8 +35,9 @@
             <input
               type="text"
               v-model="userData.fullName"
-              class="b-name__name-input gg-h1"
-              :class="{ 'b-name__name-input--edit': editMode }"
+              placeholder="Введите ФИО"
+              class="b-name__input gg-h1"
+              :class="{ 'b-name__input--edit': editMode }"
               :readonly="!editMode"
             />
             <span v-if="!editMode" class="b-name__block-icon" @click="openBlockDialog">
@@ -45,56 +46,67 @@
           </div>
         </div>
         <div class="b-profile-card__content">
-          <div v-if="editMode" class="b-profile-card__form">
+          <q-form
+            v-if="editMode"
+            ref="formRef"
+            novalidate
+            greedy
+            @submit="saveChanges"
+            class="b-form"
+          >
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Роль:</div>
               <div class="b-labeled-field__value gg-t-base">{{ userData.role }}</div>
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
-              <KTInputDate
+              <CInputDate
                 v-model="userData.birthDate"
                 class="b-labeled-field__input"
                 height="44px"
-              ></KTInputDate>
+                :required="false"
+              ></CInputDate>
             </div>
-            <div class="b-labeled-field">
+            <div class="b-labeled-field b-labeled-field--required">
               <div class="b-labeled-field__label gg-t-big">Email:</div>
-              <KTInput
+              <CInput
                 v-model="userData.email"
                 type="email"
                 class="b-labeled-field__input"
                 height="44px"
-              ></KTInput>
+              ></CInput>
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
-              <KTInput
+              <CInput
                 v-model="userData.phone"
-                type="tel"
                 class="b-labeled-field__input"
                 height="44px"
-              ></KTInput>
+                :required="false"
+                :rules="[(val: string) => !val || val.length === 18 || 'Неверный формат']"
+                maska="+7 (###) ###-##-##"
+              ></CInput>
             </div>
-            <div class="b-profile-card__form-actions">
-              <GGButton
+            <div class="b-form__actions">
+              <CButton
                 @click="cancelEdit"
                 size="medium"
                 design-type="secondary"
-                class="b-profile-card__button b-profile-card__button--cancel"
+                class="b-form__button b-form__button--cancel"
               >
                 Отменить
-              </GGButton>
+              </CButton>
 
-              <GGButton
-                @click="saveChanges"
+              <CButton
                 size="medium"
-                class="b-profile-card__button b-profile-card__button--save"
+                class="b-form__button b-form__button--save"
+                type="submit"
+                :disabled="formHasError || isAvatarUploading"
               >
                 Сохранить
-              </GGButton>
+              </CButton>
             </div>
-          </div>
+          </q-form>
           <div v-else class="b-profile-card__info-list">
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Роль:</div>
@@ -126,15 +138,15 @@
                 {{ userData.phone || "Не указано" }}
               </div>
             </div>
-            <GGButton
+            <CButton
               @click="toggleEditMode"
               size="medium"
               stretch="fill"
               class="b-profile-card__edit-button"
             >
               Редактировать
-            </GGButton>
-            <GGButton
+            </CButton>
+            <CButton
               @click="openBlockDialog"
               size="medium"
               stretch="fill"
@@ -142,7 +154,7 @@
               class="b-profile-card__block-button"
             >
               Заблокировать
-            </GGButton>
+            </CButton>
           </div>
         </div>
       </section>
@@ -153,7 +165,7 @@
     <section class="b-page__table-section">
       <!-- Future table will go here -->
     </section>
-    <GGDialogConfirm
+    <CDialogConfirm
       v-model="showBlockDialog"
       actionMainText="заблокировать сотрудника"
       actionButtonConfirmText="Заблокировать"
@@ -168,40 +180,37 @@ import { mdiAccountOutline, mdiCancel, mdiUpload } from "@quasar/extras/mdi-v6";
 import { ref } from "vue";
 import { useMainStore } from "~/store/main";
 
+interface UserData {
+  fullName: string;
+  role: string;
+  birthDate: string;
+  email: string;
+  phone: string;
+  image: ImageObj | null;
+}
 const editMode = ref(false);
-const isDefaultAvatar = ref(true);
-const avatarSrc = ref("");
 const showBlockDialog = ref(false);
 const store = useMainStore();
+const isAvatarUploading = shallowRef(false);
+const avatarSrc = ref("");
 const route = useRoute();
 const fileInput = ref<HTMLInputElement>();
 const { openPhoto } = usePhotoViewer();
-const initialUserData = ref({
+const { formRef, formBindValidation, formHasError } = useFormValidation();
+const { uploadPhoto, getImageUrl } = useFiles();
+const initialUserData = ref<UserData>({
   fullName: "",
   role: "",
   birthDate: "",
   email: "",
   phone: "",
-  image: {
-    previewImageId: "",
-    fullImageId: "",
-  },
+  image: null,
 });
 
 const userData = ref({ ...initialUserData.value });
-
-function toggleEditMode() {
-  editMode.value = !editMode.value;
-}
-
-function cancelEdit() {
-  userData.value = { ...initialUserData.value };
-  editMode.value = false;
-}
-
 async function saveChanges() {
   try {
-    await $fetch(`${store.apiAuth}/register/operator`, {
+    await $fetch(`${store.apiAuth}/user/${route.params.id}`, {
       method: "PUT",
       headers: {
         authorization: useGetToken(),
@@ -213,6 +222,7 @@ async function saveChanges() {
         email: userData.value.email,
         number: userData.value.phone,
         birthdate: tempDateConverterWillBeRemoved(userData.value.birthDate),
+        image: userData.value.image,
       },
     });
     getUser();
@@ -220,20 +230,34 @@ async function saveChanges() {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Ну удалось создать оператора",
+      text: "Не удалось сохранить изменения",
     };
   }
   editMode.value = false;
 }
-
-function openBlockDialog() {
-  showBlockDialog.value = true;
+async function getUser() {
+  const response = await $fetch<User>(
+    `${store.apiAuth}/user/${route.params.id}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+    },
+  );
+  userData.value = {
+    role: response.role === "operator" ? "Оператор" : "Администратор",
+    email: response.email,
+    phone: response.number || "",
+    birthDate: convertFromServerTempWillBeRemoved(response.birthdate),
+    fullName: `${response.lastName} ${response.firstName} ${response.patronymic}`,
+    image: response.image || null,
+  };
+  avatarSrc.value = userData.value.image
+    ? getImageUrl(userData.value.image.fullImageId)
+    : "";
+  initialUserData.value = { ...userData.value };
 }
-
-function cancelBlockAction() {
-  showBlockDialog.value = false;
-}
-
 async function confirmBlockAction() {
   await blockUser();
   showBlockDialog.value = false;
@@ -254,27 +278,40 @@ async function blockUser() {
     text: "Учетная запись сотрудника заблокирована",
   };
 }
-function triggerFileUpload() {
-  fileInput.value?.click();
+function toggleEditMode() {
+  editMode.value = !editMode.value;
+  if (editMode.value) {
+    formBindValidation();
+  }
 }
-async function getUser() {
-  const response = await $fetch<User>(
-    `${store.apiAuth}/user/${route.params.id}`,
-    {
-      method: "GET",
-      headers: {
-        authorization: useGetToken(),
-      },
-    },
-  );
-  userData.value = {
-    role: response.role === "operator" ? "Оператор" : "Администратор",
-    email: response.email,
-    phone: response.number || "",
-    birthDate: convertFromServerTempWillBeRemoved(response.birthdate),
-    fullName: `${response.lastName} ${response.firstName} ${response.patronymic}`,
-  };
-  initialUserData.value = { ...userData.value };
+function cancelEdit() {
+  userData.value = { ...initialUserData.value };
+  editMode.value = false;
+}
+
+async function onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const fileList = input.files;
+  if (!fileList || fileList.length === 0) {
+    console.warn("Файл не выбран");
+    return;
+  }
+  const file = fileList[0];
+  isAvatarUploading.value = true;
+
+  try {
+    const uploadedUrl = await uploadPhoto(file);
+    userData.value.image = uploadedUrl;
+    avatarSrc.value = getImageUrl(uploadedUrl.fullImageId);
+  } catch (error) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось загрузить фотографию",
+    };
+  } finally {
+    isAvatarUploading.value = false;
+  }
 }
 function convertFromServerTempWillBeRemoved(date: string | null) {
   if (!date) return "";
@@ -282,29 +319,17 @@ function convertFromServerTempWillBeRemoved(date: string | null) {
 }
 function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
   const [day, month, year] = ddmmyyyy.split(".");
-  return `${day}-${month}-${year}`;
+  return `${year}-${month}-${day}`;
 }
-function onFileSelected(event: Event) {
-  const file = event.target?.files[0];
-  if (file) {
-    uploadPhoto(file);
-  }
+function triggerFileUpload() {
+  fileInput.value?.click();
 }
-async function uploadPhoto(file: File) {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await $fetch<{ fullImageId: string }>(
-      `${store.apiFileServer}/file/image/upload`,
-      {
-        method: "POST",
-        body: formData,
-      },
-    );
-    return response.fullImageId;
-  } catch (err) {
-    throw new Error("Ошибка при загрузке фото");
-  }
+function openBlockDialog() {
+  showBlockDialog.value = true;
+}
+
+function cancelBlockAction() {
+  showBlockDialog.value = false;
 }
 onMounted(() => {
   getUser();
@@ -312,12 +337,11 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
 .b-page {
-  $app-desktop: 1294px;
-  $app-laptop: 960px;
-  $app-mobile: 600px;
-  $app-narrow-mobile: 364px;
-
   background-color: var(--app-white);
   width: 100%;
   padding: 24px;
@@ -332,175 +356,6 @@ onMounted(() => {
       flex-direction: column;
     }
   }
-  .b-profile-card {
-    background-color: var(--app-white);
-    padding: 24px;
-    border-radius: 8px;
-    flex: 1;
-    max-width: 560px;
-    &__user-header {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 32px;
-      @media screen and (max-width: $app-mobile) {
-        display: flex;
-        flex-direction: column;
-      }
-    }
-    @media screen and (max-width: $app-laptop) {
-      max-width: 100%;
-    }
-    @media screen and (max-width: $app-mobile) {
-      padding: 0px;
-    }
-    &__content {
-      width: 100%;
-    }
-    &__info-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    &__form {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    &__form-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-    }
-    .b-labeled-field {
-      display: flex;
-      min-height: 64px;
-      height: 64px;
-      align-items: center;
-      &__label {
-        min-width: 196px;
-        color: var(--app-grey-300);
-        @media screen and (max-width: $app-mobile) {
-          min-width: 140px;
-          width: 140px;
-          overflow-wrap: break-word;
-        }
-      }
-      &__value {
-        overflow-wrap: anywhere;
-        &--empty {
-          color: var(--app-grey-200);
-        }
-      }
-      &__input {
-        margin-left: -12px;
-        margin-top: 20px;
-      }
-    }
-    &__edit-button {
-      margin-top: 24px;
-    }
-    &__block-button {
-      display: none;
-      margin-top: 12px;
-      @media screen and (max-width: $app-mobile) {
-        display: block;
-      }
-    }
-  }
-  .b-name {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    &__name-input {
-      background: transparent;
-      border: none;
-      padding: 4px 0;
-      outline: none;
-      width: fit-content;
-      border-bottom: 1px solid transparent;
-      color: var(--app-grey-500);
-      &--edit {
-        border-bottom: 1px solid var(--app-grey-300);
-      }
-      &:focus {
-        border-bottom: 1px solid var(--app-green-500);
-      }
-      &[readonly] {
-        cursor: default;
-      }
-    }
-    &__block-icon {
-      cursor: pointer;
-      @media screen and (max-width: $app-mobile) {
-        display: none;
-      }
-    }
-    @media screen and (max-width: $app-mobile) {
-      max-width: 100%;
-      &__name-input {
-        width: 100%;
-      }
-    }
-  }
-  .b-avatar {
-    position: relative;
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    overflow: hidden;
-    background-color: var(--app-grey-050);
-    cursor: pointer;
-    @media screen and (max-width: $app-mobile) {
-      width: 100%;
-      height: 120px;
-      border-radius: 4px;
-    }
-    &__file-input {
-      position: absolute;
-      width: 0;
-      height: 0;
-      opacity: 0;
-    }
-    &__item {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-
-      &--placeholder {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: var(--app-grey-100);
-        color: var(--app-grey-500);
-      }
-    }
-
-    &__item-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-
-      &:hover {
-        opacity: 1;
-      }
-    }
-
-    &__item-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  }
   &__data-card {
     background-color: #fff5e6;
     border-radius: 8px;
@@ -512,6 +367,183 @@ onMounted(() => {
     border-radius: 8px;
     width: 100%;
     min-height: 360px;
+  }
+}
+.b-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  &__input {
+    background: transparent;
+    border: none;
+    padding: 4px 0;
+    outline: none;
+    width: fit-content;
+    border-bottom: 1px solid transparent;
+    color: var(--app-grey-500);
+    &--edit {
+      border-bottom: 1px solid var(--app-grey-300);
+    }
+    &:focus {
+      border-bottom: 1px solid var(--app-green-500);
+    }
+    &[readonly] {
+      cursor: default;
+    }
+  }
+  &__block-icon {
+    cursor: pointer;
+    @media screen and (max-width: $app-mobile) {
+      display: none;
+    }
+  }
+  @media screen and (max-width: $app-mobile) {
+    max-width: 100%;
+    &__input {
+      width: 100%;
+    }
+  }
+}
+.b-profile-card {
+  background-color: var(--app-white);
+  padding: 24px;
+  border-radius: 8px;
+  flex: 1;
+  max-width: 560px;
+  &__user-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    @media screen and (max-width: $app-mobile) {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+  @media screen and (max-width: $app-laptop) {
+    max-width: 100%;
+  }
+  @media screen and (max-width: $app-mobile) {
+    padding: 0px;
+  }
+  &__content {
+    width: 100%;
+  }
+  &__info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  &__edit-button {
+    margin-top: 24px;
+  }
+  &__block-button {
+    display: none;
+    margin-top: 12px;
+    @media screen and (max-width: $app-mobile) {
+      display: block;
+    }
+  }
+}
+.b-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  &__actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+}
+.b-labeled-field {
+  display: flex;
+  min-height: 64px;
+  height: 64px;
+  align-items: center;
+  &__label {
+    min-width: 196px;
+    color: var(--app-grey-300);
+    @media screen and (max-width: $app-mobile) {
+      min-width: 140px;
+      width: 140px;
+      overflow-wrap: break-word;
+    }
+  }
+  &__value {
+    overflow-wrap: anywhere;
+    &--empty {
+      color: var(--app-grey-200);
+    }
+  }
+  &__input {
+    margin-left: -12px;
+    margin-top: 20px;
+  }
+  &--required {
+    .b-labeled-field__label {
+      &::after {
+        content: "*";
+        color: var(--app-red-500);
+      }
+    }
+  }
+}
+.b-avatar {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: var(--app-grey-050);
+  cursor: pointer;
+  @media screen and (max-width: $app-mobile) {
+    width: 100%;
+    height: 120px;
+    border-radius: 4px;
+  }
+  &__file-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+  }
+  &__item {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+
+    &--placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--app-grey-100);
+      color: var(--app-grey-500);
+    }
+  }
+
+  &__item-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &__item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>

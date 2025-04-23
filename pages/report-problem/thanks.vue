@@ -8,7 +8,7 @@
       <div class="b-heart">
         <NuxtImg src="/icons/green_heart.svg" alt="heart" />
       </div>
-      <GGButton @click="navigateTo('/')">На главную</GGButton>
+      <CButton @click="navigateTo('/')">На главную</CButton>
     </div>
   </div>
 </template>

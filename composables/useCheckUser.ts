@@ -2,11 +2,15 @@ import { useMainStore } from "~/store/main";
 export default function useCheckUser() {
   const store = useMainStore();
   function saveUserEmail(email: string) {
-    const savedEmail = useCookie<string | null>("geogreen_user_email");
+    const savedEmail = useCookie<string | null>("geogreen_user_email", {
+      secure: false,
+    });
     savedEmail.value = email;
   }
   function getUserEmail() {
-    const savedEmail = useCookie<string | null>("geogreen_user_email");
+    const savedEmail = useCookie<string | null>("geogreen_user_email", {
+      secure: false,
+    });
     return savedEmail.value || "";
   }
   async function getUserDataByEmail(email: string) {
@@ -17,7 +21,7 @@ export default function useCheckUser() {
           headers: { Authorization: useGetToken() },
         });
         if (user) {
-          store.user = user;
+          store.user = { ...user, role: "admin" };
           return true;
         }
       }

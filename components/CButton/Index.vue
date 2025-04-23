@@ -1,5 +1,5 @@
 <template>
-  <div class="kt-button-main" :class="{ 'button-icon': icon }">
+  <div class="c-button-main" :class="{ 'button-icon': icon }">
     <q-btn
       :class="{
         [designType]: true,
@@ -57,7 +57,7 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.kt-button-main {
+.c-button-main {
   display: flex;
   width: 100%;
   &:has(.hug) {
@@ -103,7 +103,7 @@ onMounted(() => {
 </style>
 
 <style lang="scss">
-.kt-button-main {
+.c-button-main {
   .q-btn--rounded {
     border-radius: 12px;
   }
@@ -122,7 +122,7 @@ onMounted(() => {
     opacity: 1 !important;
   }
 }
-.kt-button-main.button-icon {
+.c-button-main.button-icon {
   .q-btn__content {
     .q-icon {
       color: v-bind(iconColor);

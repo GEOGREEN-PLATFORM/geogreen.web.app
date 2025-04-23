@@ -14,7 +14,7 @@
       </div>
     </div>
     <div class="toolbar-right">
-      <LightDarkToggle></LightDarkToggle>
+      <CThemeToggle></CThemeToggle>
       <CTabs
         v-model="currentPage"
         returnObj
@@ -24,42 +24,42 @@
         shrink
       ></CTabs>
       <div v-if="!store.user" class="login-buttons">
-        <GGButton
+        <CButton
           label="Войти"
           strech="hug"
           size="small"
           @click="navigateTo('/auth/login')"
-        ></GGButton>
-        <GGButton
+        ></CButton>
+        <CButton
           label="Регистрация"
           strech="hug"
           design-type="secondary"
           size="small"
           @click="navigateTo('/auth/register')"
-        ></GGButton>
+        ></CButton>
       </div>
       <div class="user" @click="handleAccountClick">
-        <GGButton
+        <CButton
           :icon="mdiAccountOutline"
           strech="hug"
           design-type="secondary"
           size="small"
           iconColor="var(--app-grey-400)"
-        ></GGButton>
+        ></CButton>
       </div>
     </div>
     <Transition name="slide-left">
       <div v-show="isMobileMenuOpened" class="c-menu-container__mobile">
         <div class="menu-top">
-          <LightDarkToggle></LightDarkToggle>
+          <CThemeToggle></CThemeToggle>
           <div class="user" @click="handleAccountClick">
-            <GGButton
+            <CButton
               :icon="mdiAccountOutline"
               strech="hug"
               design-type="secondary"
               size="small"
               iconColor="var(--app-grey-400)"
-            ></GGButton>
+            ></CButton>
           </div>
           <q-icon :name="mdiCog" color="grey-500" size="32px"></q-icon>
         </div>
@@ -74,19 +74,19 @@
             vertical
           ></CTabs>
           <div v-if="!store.user" class="login-buttons">
-            <GGButton
+            <CButton
               label="Войти"
               strech="fill"
               size="medium"
               @click="navigateTo('/auth/login')"
-            ></GGButton>
-            <GGButton
+            ></CButton>
+            <CButton
               label="Регистрация"
               strech="fill"
               design-type="secondary"
               size="medium"
               @click="navigateTo('/auth/register')"
-            ></GGButton>
+            ></CButton>
           </div>
         </div>
       </div>

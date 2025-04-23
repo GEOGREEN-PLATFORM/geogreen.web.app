@@ -1,12 +1,12 @@
 <template>
-  <GGDialog v-model="isOpen" class="c-photo-dialog">
+  <CDialog v-model="isOpen" class="c-photo-dialog">
     <NuxtImg
       class="c-photo-dialog__image"
       style="max-width: 80vw; max-height: 80vh"
       :src="photoUrl"
       @click="closePhoto"
     />
-  </GGDialog>
+  </CDialog>
 </template>
 
 <script setup lang="ts">

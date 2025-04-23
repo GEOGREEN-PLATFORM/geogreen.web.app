@@ -1,7 +1,7 @@
 <template>
   <div class="c-filter-container">
     <div class="filter-button">
-      <GGButton
+      <CButton
         @click="toggleContentShow"
         size="small"
         stretch="hug"
@@ -15,27 +15,27 @@
             {{ activeFiltersCount }}
           </div>
         </div>
-      </GGButton>
+      </CButton>
     </div>
     <Transition name="slide-fade">
       <div v-show="showContent" class="filter-content">
         <div class="filter-items">
           <div v-for="item in filterItems" class="filter-items__item">
             <div class="filter-items__select" v-if="item.type === 'select' && item.data">
-              <KTInputSelect
+              <CInputSelect
                 v-model="item.selected"
                 :options="item.data"
                 :label="item.label"
                 :required="false"
-              ></KTInputSelect>
+              ></CInputSelect>
             </div>
             <div class="filter-items__date-range" v-if="item.type === 'date-range'">
-              <KTInputDate
+              <CInputDate
                 :label="item.label"
                 v-model="item.selected"
                 :required="false"
                 range
-              ></KTInputDate>
+              ></CInputDate>
             </div>
           </div>
         </div>

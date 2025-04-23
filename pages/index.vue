@@ -3,7 +3,7 @@
     style="height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center"
   >
     <div style="width: 100vw; height: 100vh">
-      <Map
+      <CMap
         :markers="markers"
         @add-marker="addMarker"
         @delete-marker="deleteMarker"
@@ -13,7 +13,7 @@
       />
       <div class="text-center" @click="navigateTo('/auth/register')">В регистрацию</div>
       ТЕСТИРОВАНИЕ ACTIONS
-      <!-- <GGDialogConfirm v-model="showConfirm"></GGDialogConfirm> -->
+      <!-- <CDialogConfirm v-model="showConfirm"></CDialogConfirm> -->
     </div>
   </div>
 </template>
@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
-const shortMarkerInfoNameKeys = ref({
+const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
     type: "text",

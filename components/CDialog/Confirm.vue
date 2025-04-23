@@ -1,5 +1,5 @@
 <template>
-  <GGDialog :model-value="modelValue" @update:model-value="toggleOpenState">
+  <CDialog :model-value="modelValue" @update:model-value="toggleOpenState">
     <q-card class="confirm-dialog">
       <q-card-section class="confirm-dialog__title">
         <span>Подтверждение</span>
@@ -8,14 +8,14 @@
         <span>Вы действительно хотите {{ actionMainText }}?</span>
       </q-card-section>
       <q-card-actions align="right" class="confirm-dialog__actions">
-        <GGButton
+        <CButton
           v-close-popup
           label="Отмена"
           design-type="tertiary"
           textColor="var(--app-blue-500)"
           @click="cancelAction"
         />
-        <GGButton
+        <CButton
           v-close-popup
           :label="actionButtonConfirmText"
           design-type="primary"
@@ -25,7 +25,7 @@
         />
       </q-card-actions>
     </q-card>
-  </GGDialog>
+  </CDialog>
 </template>
 
 <script setup lang="ts">

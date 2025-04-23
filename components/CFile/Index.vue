@@ -161,6 +161,8 @@ function onDelete() {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
     color: var(--app-grey-300);
+    overflow-wrap: anywhere;
+    max-width: 100%;
   }
 }
 </style>

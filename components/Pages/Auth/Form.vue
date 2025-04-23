@@ -3,7 +3,7 @@
     <slot name="form-content" />
     <div class="auth-form__action-buttons">
       <slot name="main-button">
-        <GGButton
+        <CButton
           v-if="buttonOptions.main.show !== false"
           :disabled="formHasError"
           :label="buttonOptions.main.label"
@@ -12,7 +12,7 @@
           type="submit"
         />
       </slot>
-      <GGButton
+      <CButton
         v-if="buttonOptions.sub.show !== false"
         :label="buttonOptions.sub.label"
         :design-type="buttonOptions.sub.designType"

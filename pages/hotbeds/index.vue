@@ -4,19 +4,19 @@
       <div class="b-header__title-wrapper">
         <h1 class="b-header__title gg-h1">Очаги</h1>
         <div class="b-header__add-btn">
-          <GGButton @click="openHotbedDialog" label="Добавить очаг" size="medium"></GGButton>
+          <CButton @click="openHotbedDialog" label="Добавить очаг" size="medium"></CButton>
         </div>
         <div class="b-header__add-btn--mobile">
-          <GGButton
+          <CButton
             @click="openHotbedDialog"
             :icon="mdiPlus"
             iconColor="var(--app-white)"
             stretch="hug"
-          ></GGButton>
+          ></CButton>
         </div>
       </div>
       <div class="b-header__search">
-        <KTInput
+        <CInput
           v-model="searchHotbedStr"
           @update:model-value="searchHotbed"
           label="Поиск очага"
@@ -27,10 +27,10 @@
           <template #append>
             <q-icon :name="mdiMagnify" />
           </template>
-        </KTInput>
+        </CInput>
       </div>
     </header>
-    <section class="b-content">
+    <section class="b-page__content">
       <div class="b-filter q-mb-lg">
         <CFilter
           v-model="filters"
@@ -44,22 +44,21 @@
           :rows="tableRows"
           v-model:pagination="pagination"
           row-key="name"
-          :slots="['status']"
+          :slots="['workStage']"
           @click:row="(row: any) => goToHotbed(row.id)"
           @updateTable="getHotbeds"
           :loading="hotbedsLoading"
         >
-          <template v-slot:body-cell-status="slotProps">
-            <div class="b-account-status">
-              <div
-                class="b-account-status__item gg-t-small"
-                :class="{
-                  'b-account-status__item--active': slotProps.row.status === 'Активен',
-                  'b-account-status__item--blocked': slotProps.row.status === 'Заблокирован',
-                }"
-              >
-                {{ slotProps.row.status }}
-              </div>
+          <template v-slot:body-cell-workStage="slotProps">
+            <div
+              class="b-status-coniainter gg-t-small"
+              :class="
+                HOTBED_WORK_STAGE_STYLES[
+                  slotProps.row.workStage as keyof typeof HOTBED_WORK_STAGE_STYLES
+                ]
+              "
+            >
+              {{ slotProps.row.workStage }}
             </div>
           </template>
         </CTable>
@@ -75,10 +74,20 @@
 
 <script setup lang="ts">
 import { mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
+import type { Coordinate } from "ol/coordinate";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
 interface HotbedData {
-  [key: string]: any;
+  problemAreaType: string;
+  landType: string;
+  eliminationMethod: string;
+  owner: string;
+  contractingOrganization: string;
+  comment: string;
+  images: ImageObj[];
+  density: Density;
+  coordinate: Coordinate | null;
+  coordinates: Coordinate[];
 }
 const pagination = ref({
   page: 1,
@@ -87,59 +96,54 @@ const pagination = ref({
 });
 const store = useMainStore();
 const debounce = useDebounce();
-const tableHeaders = [
+const { HOTBED_WORK_STAGE_OPTIONS, HOTBED_WORK_STAGE_STYLES } =
+  useGetStatusOptions();
+const tableHeaders: TableHeader[] = [
   {
     name: "problemAreaType",
     align: "left",
     label: "Тип проблемы",
     field: "problemAreaType",
-    sortable: true,
   },
   {
     name: "workStage",
     align: "center",
     label: "Статус работы",
     field: "workStage",
-    sortable: true,
   },
   {
     name: "landType",
     align: "center",
     label: "Тип земель",
     field: "landType",
-    sortable: true,
   },
   {
     name: "owner",
     align: "right",
     label: "Владелец",
     field: "owner",
-    sortable: true,
   },
   {
     name: "eliminationMethod",
     align: "right",
     label: "Метод по устранению",
     field: "eliminationMethod",
-    sortable: true,
   },
   {
     name: "dateCreated",
     align: "right",
     label: "Дата создания",
     field: "dateCreated",
-    sortable: true,
   },
   {
     name: "dateUpdated",
     align: "right",
     label: "Дата изменения",
     field: "dateUpdated",
-    sortable: true,
   },
 ];
 const hotbeds = ref<Marker[]>([]);
-const tableRows = computed(() =>
+const tableRows: ComputedRef<TableRow[]> = computed(() =>
   hotbeds.value.map((e) => ({
     id: e.id,
     problemAreaType: e.details?.problemAreaType,
@@ -147,8 +151,8 @@ const tableRows = computed(() =>
     landType: e.details?.landType,
     owner: e.details?.owner,
     eliminationMethod: e.details?.eliminationMethod,
-    dateCreated: date.formatDate(e.details?.dateCreated, "DD.MM.YYYY"),
-    dateUpdated: date.formatDate(e.details?.dateUpdated, "DD.MM.YYYY"),
+    // dateCreated: date.formatDate(e.details?.dateCreated, "DD.MM.YYYY"),
+    // dateUpdated: date.formatDate(e.details?.dateUpdated, "DD.MM.YYYY"),
   })),
 );
 const filters = ref<FilterItem[]>([
@@ -161,10 +165,10 @@ const filters = ref<FilterItem[]>([
   },
   {
     type: "select",
-    key: "wordStage",
+    key: "workStage",
     selected: "",
     label: "Статус работы",
-    data: store.formattedWorkStages,
+    data: HOTBED_WORK_STAGE_OPTIONS,
   },
   {
     type: "select",
@@ -189,11 +193,37 @@ const filters = ref<FilterItem[]>([
 const searchHotbedStr = ref("");
 const hotbedsLoading = ref(true);
 const isHotbedDialogOpen = ref(false);
-function searchHotbed() {
-  debounce(getHotbeds, 500, "searchHotbed");
-}
-function openHotbedDialog() {
-  isHotbedDialogOpen.value = true;
+async function handleHotbedCreated(newHotbed: HotbedData) {
+  try {
+    await $fetch(`${store.apiGeospatial}/geo/info`, {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: {
+        coordinate: newHotbed.coordinate,
+        details: {
+          owner: newHotbed.owner,
+          landType: newHotbed.landType,
+          contractingOrganization: newHotbed.contractingOrganization,
+          eliminationMethod: newHotbed.eliminationMethod,
+          images: newHotbed.images,
+          workStage: "Создано",
+          problemAreaType: newHotbed.problemAreaType,
+          comment: newHotbed.comment,
+          density: newHotbed.density,
+        },
+        coordinates: newHotbed.coordinates[0] || [],
+      },
+    });
+    getHotbeds();
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Ну удалось создать очаг",
+    };
+  }
 }
 async function getHotbeds() {
   hotbedsLoading.value = true;
@@ -243,44 +273,16 @@ async function getHotbeds() {
   // pagination.value.rowsNumber = response.totalItems;
   hotbedsLoading.value = false;
 }
-
-async function handleHotbedCreated(newHotbed: HotbedData) {
-  try {
-    await $fetch(`${store.apiGeospatial}/geo/info`, {
-      method: "POST",
-      headers: {
-        authorization: useGetToken(),
-      },
-      body: {
-        coordinate: newHotbed.coordinate,
-        details: {
-          owner: newHotbed.owner,
-          landType: newHotbed.landType,
-          contractingOrganization: newHotbed.contractingOrganization,
-          eliminationMethod: newHotbed.eliminationMethod,
-          images: newHotbed.images,
-          workStage: "Создано",
-          problemAreaType: newHotbed.problemAreaType,
-          comment: newHotbed.comment,
-          density: newHotbed.density,
-        },
-        coordinates: newHotbed.coordinates[0] || [],
-      },
-    });
-    getHotbeds();
-  } catch (error: any) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Ну удалось создать очаг",
-    };
-  }
-}
 function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
   const [day, month, year] = ddmmyyyy.split(".");
   return `${year}-${month}-${day}`;
 }
-
+function searchHotbed() {
+  debounce(getHotbeds, 500, "searchHotbed");
+}
+function openHotbedDialog() {
+  isHotbedDialogOpen.value = true;
+}
 function goToHotbed(id: string) {
   navigateTo(`/hotbeds/${id}`);
 }
@@ -338,26 +340,15 @@ onMounted(() => {
       }
     }
   }
-  .b-account-status {
+  .b-status-coniainter {
     display: flex;
-    justify-content: center;
     align-items: center;
-    &__item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: max-content;
-      height: 32px;
-      padding: 4px 16px;
-      border-radius: 16px;
-      color: var(--app-white);
-      &--active {
-        background-color: var(--app-green-300);
-      }
-      &--blocked {
-        background-color: var(--app-grey-300);
-      }
-    }
+    justify-content: center;
+    width: max-content;
+    height: 32px;
+    padding: 4px 16px;
+    border-radius: 16px;
+    color: var(--app-white);
   }
 }
 </style>

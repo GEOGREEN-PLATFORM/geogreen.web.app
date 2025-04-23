@@ -6,6 +6,38 @@ declare global {
     loading?: boolean;
     show?: boolean;
   }
+  interface ItemOption {
+    name: string;
+    value: string | number;
+  }
+  interface TableHeader {
+    name: string;
+    label: string;
+    align?: "left" | "right" | "center" | undefined;
+    sortable?: boolean;
+    field: string | ((row: unknown) => unknown);
+  }
+  interface TableRow {
+    [fieldName: string]: string | number | undefined | null;
+  }
+  interface TablePagination {
+    rowsPerPage: number;
+    page: number;
+    rowsNumber?: number;
+    sortBy?: string | null;
+    descending?: boolean;
+  }
+  interface MapPopupShortInfoKeys {
+    [key: string]: {
+      name: string;
+      type: "images" | "text" | "status";
+    };
+  }
+  interface CardItem {
+    label: string;
+    value?: string;
+    type: "text" | "link" | "status";
+  }
   interface User {
     role: "user" | "admin" | "operator";
     id: string;
@@ -15,11 +47,15 @@ declare global {
     email: string;
     number: string | null;
     birthdate: string | null;
-    image: string | null;
+    image: ImageObj | null;
     role: string;
     enabled: boolean;
     creationDate: string;
     password?: string;
+  }
+  interface ImageObj {
+    fullImageId: string;
+    previewImageId: string;
   }
   interface OauthToken {
     access_token: string;
@@ -27,10 +63,6 @@ declare global {
     refresh_token: string;
     refresh_token_expires_in: number;
     token_type: string;
-  }
-  interface ImageIds {
-    previewImageId: string;
-    fullImageId: string;
   }
   interface Alert {
     show: boolean;
@@ -58,10 +90,7 @@ declare global {
   type FilterSelect = {
     type: "select";
     selected: string;
-    data: {
-      name: string;
-      value: string;
-    }[];
+    data: ItemOption[];
   };
   type FilterDateRange = {
     type: "date-range";
@@ -76,17 +105,23 @@ declare global {
     coordinate?: Coordinate;
     details: {
       square: number;
-      owner?: string;
-      landType?: string;
-      contractingOrganization?: string;
-      workStatus?: string;
-      eliminationMethod?: string;
-      photos?: string[];
-      density?: Density;
+      owner: string;
+      landType: string;
+      contractingOrganization: string;
+      problemAreaType: ProblemAreaTypes;
+      workStage: string;
+      images: ImageObj[] | [];
+      comment: string;
+      eliminationMethod: string;
+      density: Density | null;
     };
     relatedTaskId?: string | null;
     coordinates?: Coordinate[];
     isTempCreatedBy?: string;
+  }
+  interface ZoneWithDensity {
+    density: Density | null;
+    coordinates: Coordinate[];
   }
   type Density = "default" | "low" | "medium" | "high";
   interface Tab {

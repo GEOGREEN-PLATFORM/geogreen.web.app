@@ -1,5 +1,5 @@
 <template>
-  <KTInput
+  <CInput
     type="text"
     :model-value="formattedDate"
     placeholder="01.01.2024"
@@ -21,19 +21,19 @@
             :range="range"
           >
             <div class="row items-center justify-end">
-              <GGButton
+              <CButton
                 v-close-popup
                 label="Закрыть"
                 size="small"
                 design-type="tertiary"
                 stretch="hug"
-              ></GGButton>
+              ></CButton>
             </div>
           </q-date>
         </q-popup-proxy>
       </q-icon>
     </template>
-  </KTInput>
+  </CInput>
 </template>
 
 <script lang="ts" setup>
@@ -41,7 +41,7 @@ import { mdiCalendarMonthOutline } from "@quasar/extras/mdi-v6";
 
 interface Props {
   modelValue: string | DateRange;
-  label: string;
+  label?: string;
   range?: boolean;
 }
 
