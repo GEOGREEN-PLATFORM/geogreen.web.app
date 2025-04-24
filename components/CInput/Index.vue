@@ -1,6 +1,6 @@
 <template>
   <div
-    class="kt-input-main"
+    class="c-input-main"
     :class="{
       required: required,
     }"
@@ -19,11 +19,13 @@
       :placeholder="placeholder"
       :name="name"
       @update:model-value="updateValue"
+      @blur="emits('blur')"
       :autogrow="autogrow"
       :autocomplete="autocomplete"
       :mask="maska"
       :hint="hint"
       :readonly="readonly"
+      :maxlength="maxLength"
     >
       <template #append>
         <slot name="append">
@@ -74,6 +76,7 @@ interface Props {
   height?: string;
   hint?: string;
   readonly?: boolean;
+  maxLength?: number;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -91,6 +94,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emits = defineEmits<{
   "update:modelValue": [string | number];
+  blur: [];
 }>();
 
 const showPassword = ref(false);
@@ -115,7 +119,8 @@ onMounted(() => {
     validationRules.value = [
       (val) => (val && val.length > 0) || "Поле не может быть пустым",
     ];
-  } else {
+  }
+  if (props.rules?.length > 0) {
     validationRules.value = props.rules;
   }
 });
@@ -128,7 +133,7 @@ watch(
 </script>
 
 <style lang="scss">
-.kt-input-main {
+.c-input-main {
   width: 100%;
   min-height: v-bind(height);
   .q-field--outlined.q-field--rounded .q-field__control {
@@ -224,7 +229,7 @@ watch(
     box-shadow: inset 0 0 20px 20px transparent;
   }
 }
-.kt-input-main.required {
+.c-input-main.required {
   .q-field__label {
     &::after {
       content: "*";

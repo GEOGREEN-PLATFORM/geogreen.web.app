@@ -1,21 +1,20 @@
 <template>
-  <main class="report-form">
-    <section class="report-form__header">
-      <h1 class="report-form__title gg-h1">Сообщите о проблеме</h1>
+  <main class="b-page">
+    <section class="b-header">
+      <h1 class="b-header__title gg-h1">Сообщите о проблеме</h1>
     </section>
-
-    <section class="report-form__content">
-      <q-form ref="formRef" novalidate greedy class="report-form__form" @submit="">
-        <fieldset class="report-form__fieldset">
-          <legend class="report-form__legend gg-h3 report-form__legend--required">Тип</legend>
-          <div class="report-form__types">
+    <section class="b-page__content">
+      <q-form ref="formRef" novalidate greedy class="b-form" @submit="">
+        <fieldset class="b-form__fieldset">
+          <legend class="b-form__legend gg-h3 b-form__legend--required">Тип</legend>
+          <div class="b-form__types">
             <button
-              v-for="type in types"
+              v-for="type in store.problemAreaTypes"
               :key="type"
               :class="[
-                'report-form__type-button',
+                'b-form__type-button',
                 {
-                  'report-form__type-button--active': userReport.details.problemAreaType === type,
+                  'b-form__type-button--active': userReport.details.problemAreaType === type,
                 },
               ]"
               type="button"
@@ -25,51 +24,51 @@
             </button>
           </div>
         </fieldset>
-        <fieldset class="report-form__fieldset">
-          <legend class="report-form__legend gg-h3 report-form__legend--required">Локация</legend>
-          <p class="report-form__sub-info">
+        <fieldset class="b-form__fieldset">
+          <legend class="b-form__legend gg-h3 b-form__legend--required">Локация</legend>
+          <p class="b-form__sub-info">
             Оставьте точку на карте, соответствующую расположению проблемы. Вы можете оставить
             только один очаг на карте.
           </p>
-          <article class="report-form__map-container">
-            <Map
+          <article class="b-form__map-container">
+            <CMap
               @add-marker="addUserHotbed"
               @delete-marker="deleteUserHotbed"
-              @forbiddenAddTry="handleForbiddenAddTry"
-              :dataStatusStyles="workStageStyles"
+              @forbiddenAddMarker="handleForbiddenAddTry"
+              :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
               :markers="existingHotbeds"
               :shortInfoKeys="shortMarkerInfoNameKeys"
-              :add-zone-enabled="false"
-              :forbidAddMarker="isAddMarker"
-            ></Map>
+              addZone="hide"
+              :addMarker="isAddMarker ? 'forbid' : 'enable'"
+            ></CMap>
           </article>
         </fieldset>
-        <fieldset class="report-form__fieldset">
-          <legend class="report-form__legend gg-h3">Комментарий</legend>
-          <KTInputTextarea
-            class="report-form__comment"
+        <fieldset class="b-form__fieldset">
+          <legend class="b-form__legend gg-h3">Комментарий</legend>
+          <CInputTextarea
+            class="b-form__comment"
             placeholder="Кратко опишите проблему"
             v-model="userReport.details.comment"
-          ></KTInputTextarea>
+          ></CInputTextarea>
         </fieldset>
-        <fieldset class="report-form__fieldset">
-          <legend class="report-form__legend gg-h3">Фотографии</legend>
-          <DragDrop
+        <fieldset class="b-form__fieldset">
+          <legend class="b-form__legend gg-h3">Фотографии</legend>
+          <CDragDrop
             @add="uploadFiles"
-            class="report-form__upload-file-container"
+            class="b-form__upload-file-container"
             :maxSize="FILES_MAX_SIZE"
-          ></DragDrop>
-          <section v-if="attachedFiles.length > 0" class="report-form__added-images">
-            <p class="report-form__block-caption gg-cap">Загруженные изображения</p>
-            <FileContainers v-model:files="attachedFiles" raw></FileContainers>
+          ></CDragDrop>
+          <section v-if="attachedFiles.length > 0" class="b-form__added-images">
+            <CFileContainers v-model:files="attachedFiles" raw></CFileContainers>
           </section>
         </fieldset>
-        <GGButton
-          class="report-form__submit-button"
+        <CButton
+          class="b-form__submit-button"
           label="Отправить"
           :disabled="!requiredFieldsFilled"
+          :loading="isFormSending"
           @click="sendReport"
-        ></GGButton>
+        ></CButton>
       </q-form>
     </section>
   </main>
@@ -81,18 +80,16 @@ import { useMainStore } from "~/store/main";
 interface UserReport {
   coordinate: Coordinate;
   details: {
-    images: string[];
+    images: ImageObj[];
     problemAreaType: ProblemAreaTypes | "";
+    userId: string;
     comment: string;
   };
-  userDetails?: {
-    userPhone: string;
-    userEmail: string;
-  };
 }
-const types: ProblemAreaTypes[] = ["Борщевик", "Свалка", "Пожар"]; //TODO: fetch from server
 const FILES_MAX_SIZE = 10_000_000;
 const attachedFiles = ref<File[]>([]);
+const { uploadPhoto } = useFiles();
+const isFormSending = shallowRef(false);
 const store = useMainStore();
 const existingHotbeds = ref<Marker[]>([]);
 const requiredFieldsFilled = computed(
@@ -103,11 +100,13 @@ const userReport = reactive<UserReport>({
   details: {
     images: [],
     problemAreaType: "",
+    userId: store.user?.id || "",
     comment: "",
   },
 });
 const isAddMarker = shallowRef(false);
-const shortMarkerInfoNameKeys = ref({
+const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
+const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
     type: "text",
@@ -133,24 +132,72 @@ const shortMarkerInfoNameKeys = ref({
     type: "text",
   },
 });
-const workStageStyles = {
-  Создано: "background-color: var(--app-blue-400)",
-  "В работе": "background-color: var(--app-green-400)",
-  Завершено: "background-color: var(--app-grey-400)",
-};
+function selectProblemType(type: ProblemAreaTypes) {
+  userReport.details.problemAreaType = type;
+  getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
+}
 async function getExistingHotbedsOfProblemsByType(
   problemAreaType: ProblemAreaTypes,
 ) {
   const data = await $fetch<Marker[]>(
     `${store.apiGeospatial}/geo/info/getAll/${problemAreaType}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+    },
   );
   existingHotbeds.value = data;
 }
-function handleForbiddenAddTry() {
-  useState<Alert>("showAlert").value = {
-    show: true,
-    text: "Вы уже добавили очаг на карту. Удалите его, чтобы добавить новый.",
-  };
+async function sendReport() {
+  isFormSending.value = true;
+  try {
+    for (const file of attachedFiles.value) {
+      const image = await uploadPhoto(file);
+      userReport.details.images.push(image);
+    }
+    // for (const image of userReport.details.images) {
+    //   const result = await analysePhotoOnHogweedPresence(image.fullImageId);
+    //   console.log("Анализ для", image, result);
+    // }
+    await $fetch(`${store.apiUserReport}/report`, {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: userReport,
+    });
+    attachedFiles.value = [];
+    userReport.details.images = [];
+    userReport.details.problemAreaType = "";
+    userReport.coordinate = [];
+    isAddMarker.value = false;
+    store.thanksForReport = true;
+    navigateTo("/report-problem/thanks");
+  } catch (err: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: `Невозможно отправить отчёт: ${err.message}`,
+    };
+  } finally {
+    isFormSending.value = false;
+  }
+}
+
+async function analysePhotoOnHogweedPresence(photoId: string) {
+  try {
+    return await $fetch(`${store.apiPhotoAnalyse}/analyse`, {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: { photoId },
+    });
+  } catch (err) {
+    throw new Error("Ошибка при анализе фото");
+  }
 }
 function addUserHotbed(coordinate: Coordinate) {
   if (userReport.details.problemAreaType) {
@@ -158,9 +205,9 @@ function addUserHotbed(coordinate: Coordinate) {
     existingHotbeds.value.push({
       id: "user-temp-created",
       coordinate: coordinate,
-      userTempCreated: true,
+      isTempCreatedBy: "user",
       details: {
-        square: 21879072,
+        square: 0,
         owner: "",
         landType: "",
         contractingOrganization: "",
@@ -182,12 +229,18 @@ function addUserHotbed(coordinate: Coordinate) {
     };
   }
 }
-function deleteUserHotbed(marker: Marker) {
+function deleteUserHotbed(id: string) {
   existingHotbeds.value = existingHotbeds.value.filter(
-    (m) => !m.userTempCreated,
+    (m) => !m.isTempCreatedBy,
   );
   isAddMarker.value = false;
   userReport.coordinate = [];
+}
+function handleForbiddenAddTry() {
+  useState<Alert>("showAlert").value = {
+    show: true,
+    text: "Вы уже добавили очаг на карту. Удалите его, чтобы добавить новый.",
+  };
 }
 async function uploadFiles(files: File[]) {
   const currentTotal = attachedFiles.value.reduce((sum, f) => sum + f.size, 0);
@@ -204,41 +257,6 @@ async function uploadFiles(files: File[]) {
     attachedFiles.value.push(file);
   });
 }
-function selectProblemType(type: ProblemAreaTypes) {
-  userReport.details.problemAreaType = type;
-  getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
-}
-async function sendReport() {
-  for (const f of attachedFiles.value) {
-    const formData = new FormData();
-    formData.append("file", f);
-
-    const uploadedPhoto = await $fetch(
-      `${store.apiFileServer}/file/image/upload`,
-      {
-        method: "POST",
-        body: formData,
-      },
-    );
-    const { fullImageId } = uploadedPhoto;
-    userReport.details.images.push(fullImageId);
-  }
-  // for (const fullImageId of userReport.details.images) {
-  //   const result = await analysePhotoOnHogweedPresence(fullImageId);
-  //   //дописать логику на проверку борщевика
-  // }
-  const data = await $fetch(`${store.apiUserReport}/report`, {
-    method: "POST",
-    body: userReport,
-  });
-}
-
-async function analysePhotoOnHogweedPresence(photoId: string) {
-  return await $fetch(`${store.apiPhotoAnalyse}/analyse`, {
-    method: "POST",
-    photoId: photoId,
-  });
-}
 onMounted(() => {
   if (userReport.details.problemAreaType) {
     getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
@@ -246,11 +264,11 @@ onMounted(() => {
 });
 </script>
 <style scoped lang="scss">
-.report-form {
-  $app-desktop: 1294px;
-  $app-laptop: 960px;
-  $app-mobile: 600px;
-  $app-narrow-mobile: 364px;
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
+.b-page {
   background-color: var(--app-white);
   max-width: 75vw;
   margin: 0 auto;
@@ -258,24 +276,21 @@ onMounted(() => {
   @media screen and (max-width: $app-mobile) {
     max-width: 100%;
   }
-  &__header {
-    display: flex;
-    flex-direction: column;
-    margin-top: 48px;
-    gap: 12px;
-    justify-content: center;
-    align-items: center;
-    padding: 0px 16px;
-    text-align: center;
-  }
-  &__sub-info {
-    font-size: 14px;
-    color: var(--app-green-700);
-    margin: 4px 0px;
-  }
   &__content {
     padding: 16px;
   }
+}
+.b-header {
+  display: flex;
+  flex-direction: column;
+  margin-top: 48px;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  padding: 0px 16px;
+  text-align: center;
+}
+.b-form {
   &__fieldset {
     margin-top: 16px;
     padding-bottom: 12px;
@@ -288,24 +303,23 @@ onMounted(() => {
       color: var(--app-red-500);
     }
   }
-
   &__types {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 12px;
-    .report-form__type-button {
+    .b-form__type-button {
       padding: 8px 16px;
       background: var(--app-green-050);
       border-radius: 12px;
       color: var(--app-grey-500);
       cursor: pointer;
     }
-    .report-form__type-button--active {
+    .b-form__type-button--active {
       background: var(--app-green-500);
       color: var(--app-white);
     }
-    .report-form__type-button--disabled {
+    .b-form__type-button--disabled {
       background: var(--app-grey-050);
       color: var(--app-white);
     }
@@ -336,18 +350,8 @@ onMounted(() => {
     max-width: 100%;
   }
   &__added-images {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 24px;
-    padding: 0px 8px;
-  }
-  &__block-caption {
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--app-grey-050);
     width: 100%;
+    margin-top: 24px;
   }
 }
 </style>

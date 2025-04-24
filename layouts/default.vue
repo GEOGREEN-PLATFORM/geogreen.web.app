@@ -7,10 +7,10 @@
       <div class="hr-line"></div>
     </q-header>
 
-    <q-page-container>
+    <q-page-container style="height: 100dvh">
       <NuxtPage></NuxtPage>
     </q-page-container>
-    <PhotoViewer />
+    <CPhotoViewer />
     <CAlert></CAlert>
   </q-layout>
 </template>
@@ -34,7 +34,7 @@ const pages: Page[] = [
   {
     key: "hotbeds",
     name: "Очаги",
-    disabled: true,
+    path: "/hotbeds",
   },
   {
     key: "report",
@@ -58,6 +58,12 @@ const pages: Page[] = [
         name: "Мероприятия",
         selected: false,
         path: "/events",
+      },
+      {
+        key: "applications",
+        name: "Заявки",
+        selected: false,
+        path: "/applications",
       },
     ],
   },

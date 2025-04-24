@@ -1,6 +1,6 @@
 <template>
   <div class="c-textarea">
-    <KTInput
+    <CInput
       ref="inputRef"
       v-model="inputValue"
       :rounded="rounded"
@@ -15,16 +15,18 @@
       :placeholder="placeholder"
       :name="name"
       @update:model-value="updateValue"
+      @blur="emits('blur')"
       height="96px"
       :required="false"
+      :maxLength="1000"
     >
-    </KTInput>
+    </CInput>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { ValidationRule } from "quasar";
-import { KTInput } from "#components";
+import { CInput } from "#components";
 
 interface Props {
   modelValue: string;
@@ -54,6 +56,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emits = defineEmits<{
   "update:modelValue": [string | number | null];
+  blur: [];
 }>();
 
 const inputValue = ref(props.modelValue);
@@ -70,7 +73,7 @@ function updateValue(value: string | number | null) {
 
 <style lang="scss">
 .c-textarea {
-  .kt-input-main .q-field__control {
+  .c-input-main .q-field__control {
     height: auto;
     min-height: 96px;
     background-color: var(--app-green-050);

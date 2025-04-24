@@ -1,5 +1,5 @@
 <template>
-  <KTInput
+  <CInput
     type="text"
     :model-value="formattedDate"
     placeholder="01.01.2024"
@@ -16,25 +16,24 @@
           <q-date
             mask="DD.MM.YYYY"
             :model-value="props.modelValue"
-            :locale="myLocale"
             color="green-500"
             @update:model-value="updateDate"
             :range="range"
           >
             <div class="row items-center justify-end">
-              <GGButton
+              <CButton
                 v-close-popup
                 label="Закрыть"
                 size="small"
                 design-type="tertiary"
                 stretch="hug"
-              ></GGButton>
+              ></CButton>
             </div>
           </q-date>
         </q-popup-proxy>
       </q-icon>
     </template>
-  </KTInput>
+  </CInput>
 </template>
 
 <script lang="ts" setup>
@@ -42,32 +41,21 @@ import { mdiCalendarMonthOutline } from "@quasar/extras/mdi-v6";
 
 interface Props {
   modelValue: string | DateRange;
-  label: string;
+  label?: string;
   range?: boolean;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits(["update:modelValue"]);
 
-const myLocale: object = {
-  days: "Воскресенье_Понедельник_Вторник_Среда_Четверг_Пятница_Суббота".split(
-    "_",
-  ),
-  daysShort: "Вс_Пн_Вт_Ср_Чт_Пт_Сб".split("_"),
-  months:
-    "Январь_Февраль_Март_Апрель_Май_Июнь_Июль_Август_Сентябрь_Октябрь_Ноябрь_Декабрь".split(
-      "_",
-    ),
-  monthsShort: "Янв_Фев_Мар_Апр_Май_Июн_Июл_Авг_Сен_Окт_Ноя_Дек".split("_"),
-  firstDayOfWeek: 1,
-  format24h: true,
-  pluralDay: "дня",
-};
-
 const formattedDate = computed(() => {
   if (!props.modelValue) return "";
   if (typeof props.modelValue === "string") return props.modelValue;
-  if (typeof props.modelValue === "object" && props.range) {
+  if (
+    typeof props.modelValue === "object" &&
+    props.range &&
+    props.modelValue.from
+  ) {
     return `${props.modelValue.from} - ${props.modelValue.to}`;
   }
   return "";

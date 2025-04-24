@@ -1,8 +1,8 @@
 <template>
-  <GGButton designType="secondary" stretch="hug" size="small" :icon="mdiDeleteOutline"></GGButton>
-  <KTInputTextarea></KTInputTextarea>
-  <DragDrop></DragDrop>
-  <LightDarkToggle></LightDarkToggle>
+  <CButton designType="secondary" stretch="hug" size="small" :icon="mdiDeleteOutline"></CButton>
+  <CInputTextarea></CInputTextarea>
+  <CDragDrop></CDragDrop>
+  <CThemeToggle></CThemeToggle>
 </template>
 
 <script setup lang="ts">

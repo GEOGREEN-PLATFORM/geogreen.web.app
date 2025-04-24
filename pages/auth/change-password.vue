@@ -1,5 +1,5 @@
 <template>
-  <AuthPageForm
+  <PagesAuthForm
     :button-options="pageState.buttonOpts"
     @main-button-click="handleMainAction(pageState.step + 1)"
     @sub-button-click="handleSubAction(pageState.step - 1)"
@@ -11,21 +11,27 @@
           <span>{{ pageState.hintText }}</span>
         </div>
         <div class="form-content__input-fields">
-          <KTInput v-if="pageState.step === 0" v-model="userData.email" label="Почта" />
-          <KTInputOTP
+          <CInput
+            v-if="pageState.step === 0"
+            v-model="userData.email"
+            label="Почта"
+            type="email"
+            name="email"
+          />
+          <CInputOTP
             v-if="pageState.step === 1"
             v-model:is-error="isWrongCode"
             v-model="userData.confirmationCode"
             @is-full="handleMainAction(pageState.step + 1)"
           />
-          <KTInput
+          <CInput
             v-if="pageState.step === 2"
             v-model="userData.password"
             type="password"
             label="Новый пароль"
             autocomplete="new-password"
           />
-          <KTInput
+          <CInput
             v-if="pageState.step === 2"
             v-model="userData.repeatedPassword"
             type="password"
@@ -39,19 +45,21 @@
       v-if="pageState.step === 1 && (isWrongCode || userData.confirmationCode.length < 4)"
       #main-button
     >
-      <GGButton design-type="secondary" :disabled="sendCodeTimer !== 0"
+      <CButton design-type="secondary" :disabled="sendCodeTimer !== 0"
         ><div class="button-timer-slot">
           {{ `Отправить код ${sendCodeTimer !== 0 ? "через" : ""}` }}
           <span v-show="sendCodeTimer !== 0" class="button-timer-slot__time">
             {{ formattedSendTimer }}
           </span>
         </div>
-      </GGButton>
+      </CButton>
     </template>
-  </AuthPageForm>
+  </PagesAuthForm>
 </template>
 
 <script setup lang="ts">
+import { useMainStore } from "~/store/main";
+
 definePageMeta({
   layout: "auth",
 });
@@ -59,6 +67,7 @@ definePageMeta({
 const INITIAL_STEP = 0;
 const CODE_SENDING_TIMEOUT = 59;
 
+const store = useMainStore();
 const defaultSubButton: ButtonOptions = {
   designType: "tertiary",
   label: "Назад",
@@ -100,7 +109,12 @@ const pageState = reactive({
   } as { main: ButtonOptions; sub: ButtonOptions },
 });
 
-function updatePageState(newStep: number) {
+async function updatePageState(newStep: number) {
+  if (newStep === 1) {
+    pageState.buttonOpts.main.loading = true;
+    await sendCodeToEmail();
+    pageState.buttonOpts.main.loading = false;
+  }
   pageState.step = newStep;
   if (newStep === 1) {
     codeSendingInterval.value = setInterval(() => {
@@ -140,7 +154,17 @@ function handleSubAction(pageStep: number) {
 function sendChangePassword() {
   // Логика отправки запроса на смену пароля
 }
-
+async function sendCodeToEmail() {
+  await $fetch(
+    `${store.apiAuth}/register/forgot-password/${userData.value.email}`,
+    {
+      headers: {
+        Authorization: useGetToken(),
+      },
+      method: "POST",
+    },
+  );
+}
 function goBack() {
   router.back();
 }

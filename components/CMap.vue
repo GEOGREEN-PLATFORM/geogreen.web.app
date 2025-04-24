@@ -20,19 +20,21 @@
       <ol-tile-layer>
         <ol-source-xyz :url="gGreenOlMap.url" />
       </ol-tile-layer>
-      <ol-control-bar ref="controlBar">
+      <ol-control-bar ref="controlBar" v-if="!hideControls">
         <ol-toggle-control
+          v-if="props.addMarker !== 'hide'"
           html="Добавить маркер"
           class-name="g-green-control-bar__item g-green-control-bar__marker"
           :on-toggle="toggleMarkerAdd"
         />
         <ol-toggle-control
-          v-if="props.addZoneEnabled"
+          v-if="props.addZone !== 'hide'"
           html="Добавить зону"
           class-name="g-green-control-bar__item g-green-control-bar__zone"
           :on-toggle="toggleZoneAdd"
         />
         <ol-toggle-control
+          v-if="props.toggleVisibility !== 'hide'"
           :key="isAllZonesVisible"
           :html="isAllZonesVisible ? 'Скрыть все зоны' : 'Показать все зоны'"
           :class-name="`g-green-control-bar__item g-green-control-bar__zones-visible ${isAllZonesVisible ? 'g-green-control-bar__zones-visible--off' : ''}`"
@@ -107,16 +109,22 @@
             @click="handleCloseMarkerPopup(id)"
           />
           <div
-            v-if="marker.userTempCreated"
+            v-if="marker.isTempCreatedBy"
             class="popup-marker__user-created text-center gg-t-base q-py-sm"
           >
-            Вы сообщаете об этом очаге
+            {{
+              marker.isTempCreatedBy === "user"
+                ? store.user?.role === "user"
+                  ? "Вы сообщаете об этом очаге"
+                  : "Пользователь сообщает об этом очаге"
+                : "Вы добавляете этот очаг"
+            }}
           </div>
           <ul v-if="marker.details" class="data-list">
             <li
               v-for="[name, value] in Object.entries(marker.details || {}).filter(
                 ([name, value]) =>
-                  marker.userTempCreated
+                  marker.isTempCreatedBy === 'user'
                     ? name === 'problemAreaType'
                       ? true
                       : false
@@ -126,20 +134,26 @@
               class="data-list__item"
             >
               <div class="data-list__name">{{ shortInfoKeys[name].name }}</div>
-              <div class="data-list__value">
-                <div v-if="shortInfoKeys[name].type === 'text'">{{ value || "Нет данных" }}</div>
+              <div v-if="value" class="data-list__value">
+                <div v-if="shortInfoKeys[name].type === 'text'">{{ value }}</div>
                 <div
                   v-else-if="shortInfoKeys[name].type === 'status' && typeof value === 'string'"
-                  :style="getStatusStyles(value)"
+                  :class="getStatusClasses(value)"
                   class="data-list__status-block"
                 >
-                  {{ value || "Нет данных" }}
+                  {{ value }}
                 </div>
               </div>
+              <div v-else class="data-list__value--empty">Не указано</div>
             </li>
           </ul>
           <div v-else class="popup-marker__no-data">Данные не найдены</div>
-          <div class="popup-marker__divider" />
+          <div
+            v-if="
+              store.user?.role !== 'user' || (marker.isTempCreatedBy && store.user?.role === 'user')
+            "
+            class="popup-marker__divider"
+          />
           <ul class="actions-label">
             <li class="actions-label__action" v-if="store.user?.role !== 'user'">
               <q-icon
@@ -147,44 +161,50 @@
                 :name="mdiInformation"
                 size="24px"
               >
-                <GGHint>
+                <CHint>
                   Выбранный маркер будет автоматически перемещён внутрь
-                  {{ marker.coordinates.length > 0 ? "измененной" : "добавленной" }} зоны
-                </GGHint>
+                  {{ marker.coordinates?.length ? "измененной" : "добавленной" }} зоны
+                </CHint>
               </q-icon>
               <span class="actions-label__text" @click="addZone(id)"
-                >{{ marker.coordinates.length > 0 ? "Изменить" : "Добавить" }} зону</span
+                >{{ marker.coordinates?.length ? "Изменить" : "Добавить" }} зону</span
               >
               <q-icon
                 class="actions-label__icon"
-                :name="marker.coordinates.length > 0 ? mdiPencil : mdiPlus"
+                :name="marker.coordinates?.length ? mdiPencil : mdiPlus"
               />
             </li>
             <li class="actions-label__action" v-if="store.user?.role !== 'user'">
               <span class="actions-label__text">Плотность:</span>
-              <GGOptions
+              <COptions
                 v-model="marker.details.density"
                 inline
                 :options="densityOptions"
                 @update:model-value="updateFeatures(id, marker)"
               />
             </li>
-            <li class="actions-label__action" v-if="!marker.userTempCreated">
-              <GGButton
+            <li class="actions-label__action" v-if="!marker.isTempCreatedBy">
+              <CButton
                 label="Подробнее"
                 size="small"
                 stretch="fill"
                 design-type="secondary"
-              ></GGButton>
+              ></CButton>
             </li>
-            <li class="actions-label__action" v-else>
-              <GGButton
+            <li
+              class="actions-label__action"
+              v-else-if="
+                (marker.isTempCreatedBy === 'employee' && store.user?.role !== 'user') ||
+                (marker.isTempCreatedBy === 'user' && store.user?.role === 'user')
+              "
+            >
+              <CButton
                 label="Удалить"
                 size="small"
                 stretch="fill"
                 bg-color="var(--app-red-500)"
                 @click="suggestDeleteMarker(marker.id)"
-              ></GGButton>
+              ></CButton>
             </li>
           </ul>
         </div>
@@ -192,7 +212,7 @@
       <ol-fullscreen-control />
       <ol-zoom-control :zoomInLabel="plusElem" :zoomOutLabel="minusElem" />
     </ol-map>
-    <GGDialogConfirm
+    <CDialogConfirm
       v-model="confirmationDialog.isOpened"
       :action-main-text="confirmationDialog.mainText"
       :action-button-confirm-text="confirmationDialog.buttonText"
@@ -231,30 +251,31 @@ import markerIconRedSrc from "/icons/map_marker_red.png";
 
 interface Props {
   markers: Marker[];
-  shortInfoKeys: {
-    [key: string]: {
-      name: string;
-      type: "images" | "text" | "status";
-    };
-  };
-  dataStatusStyles: {
+  shortInfoKeys: MapPopupShortInfoKeys;
+  dataStatusClasses: {
     [key: string]: string;
   };
-  addZoneEnabled?: boolean;
-  forbidAddMarker?: boolean;
+  addZone?: "hide" | "enable" | "forbid";
+  addMarker?: "hide" | "enable" | "forbid";
+  toggleVisibility?: "hide" | "enable" | "forbid";
+  hideControls?: boolean;
+  selectedMarker?: Marker | null;
+  editableMarkers?: "all" | string[];
 }
 const store = useMainStore();
 const mapRef = ref();
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
-  addZoneEnabled: true,
-  forbidAddMarker: false,
+  addZone: "enable",
+  addMarker: "enable",
+  toggleVisibility: "enable",
+  hideControls: false,
 });
 const emit = defineEmits<{
-  addMarker: [coordinate: Coordinate, zone?: unknown];
+  addMarker: [coordinate: Coordinate, zone?: ZoneWithDensity];
   deleteMarker: [id: string];
   editMarker: [id: string, marker: Marker];
-  forbiddenAddTry: [];
+  forbiddenAddMarker: [];
 }>();
 
 const confirmationDialog = reactive({
@@ -345,7 +366,7 @@ function convertZonesToFeatures(markers: Marker[]) {
     .map((marker) => ({
       type: "Feature",
       properties: { density: marker.details?.density || "default" },
-      geometry: { type: "Polygon", coordinates: [marker.coordinates] },
+      geometry: { type: "Polygon", coordinates: marker.coordinates },
       id: marker.id,
     }));
   const providerFeatureCollection = {
@@ -392,11 +413,11 @@ function deleteMarker() {
   closeMarkerPopup(gGreenCluster.currentSelectedMarkerId);
 }
 
-function addMakrer(coordinate: Coordinate, zone?: unknown) {
-  if (!props.forbidAddMarker) {
+function addMakrer(coordinate: Coordinate, zone?: ZoneWithDensity) {
+  if (props.addMarker === "enable") {
     emit("addMarker", coordinate, zone);
   } else {
-    emit("forbiddenAddTry");
+    emit("forbiddenAddMarker");
   }
 }
 
@@ -461,8 +482,8 @@ function getMarkerIconByDensity(
     src: markersSrcByDensity.value[density || "default"],
   });
 }
-function getStatusStyles(status: string) {
-  return props.dataStatusStyles[status];
+function getStatusClasses(status: string) {
+  return props.dataStatusClasses[status];
 }
 function updateFeatures(id: string, marker: Marker) {
   gGreenCluster.zonesFeatures = convertZonesToFeatures(
@@ -564,7 +585,8 @@ function getPolygonStyleByDensity(
 }
 
 function configureMap() {
-  const controlElement = controlBarRef.value.control.element;
+  const controlElement = controlBarRef.value?.control.element;
+  if (!controlElement) return;
   controlElement.classList.add("g-green-control-bar");
   const burgerButton = document.createElement("button");
   burgerButton.setAttribute("type", "button");
@@ -601,27 +623,32 @@ function createZone(event: DrawEvent) {
   } else if (event.feature) {
     const coordinate = getCenter(event.feature.getGeometry()!.getExtent());
     const zoneCoordinates = event.feature.getGeometry()!.getCoordinates();
-    const newMarker: Marker = {
-      coordinate,
+    addMakrer(coordinate, {
       coordinates: zoneCoordinates,
-      details: { square: 0, density: gGreenZone.density },
-    };
-    addMakrer(newMarker.coordinate, {
-      coordinates: newMarker.coordinates,
       density: gGreenZone.density,
     });
   }
   upKey.value++;
 }
-
-watch(
-  () => props.markers,
-  (newMarkers) => {
-    gGreenCluster.markersDict = convertMarkersToDictionary(newMarkers);
-    gGreenCluster.markerFeatures = convertMarkersToFeatures(newMarkers);
+onMounted(() => {
+  if (Array.isArray(props.markers)) {
+    gGreenCluster.markersDict = convertMarkersToDictionary(props.markers);
+    gGreenCluster.markerFeatures = convertMarkersToFeatures(props.markers);
     gGreenCluster.zonesFeatures = convertZonesToFeatures(
       Array.from(gGreenCluster.markersDict.values()),
     );
+  }
+});
+watch(
+  () => props.markers,
+  (newMarkers) => {
+    if (Array.isArray(newMarkers)) {
+      gGreenCluster.markersDict = convertMarkersToDictionary(newMarkers);
+      gGreenCluster.markerFeatures = convertMarkersToFeatures(newMarkers);
+      gGreenCluster.zonesFeatures = convertZonesToFeatures(
+        Array.from(gGreenCluster.markersDict.values()),
+      );
+    }
   },
   { deep: true },
 );
@@ -634,9 +661,24 @@ watch(
 
 //   mapElement.classList.toggle("is-active", clickedInside);
 // };
-// onMounted(() => {
-//   document.addEventListener("click", onMapClick);
-// });
+onMounted(() => {
+  if (props.markers?.length) {
+    gGreenCluster.markersDict = convertMarkersToDictionary(props.markers);
+    gGreenCluster.markerFeatures = convertMarkersToFeatures(props.markers);
+    gGreenCluster.zonesFeatures = convertZonesToFeatures(
+      Array.from(gGreenCluster.markersDict.values()),
+    );
+  }
+  if (props.selectedMarker?.id) {
+    gGreenCluster.currentSelectedMarkerId = props.selectedMarker.id;
+    openMarkerPopup(props.selectedMarker.id);
+    const marker = gGreenCluster.markersDict.get(props.selectedMarker.id);
+    if (marker) {
+      gGreenOlMap.center = marker.coordinate as Coordinate;
+      gGreenOlMap.resolution = 16;
+    }
+  }
+});
 
 // onBeforeUnmount(() => {
 //   document.removeEventListener("click", onMapClick);
@@ -716,6 +758,9 @@ watch(
           color: var(--app-white);
           border-radius: 12px;
           height: 24px;
+        }
+        &--empty {
+          color: var(--app-grey-200);
         }
       }
     }

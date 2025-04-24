@@ -2,7 +2,7 @@ import { setup } from "@nuxt/test-utils";
 import { mount } from "@vue/test-utils";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { nextTick } from "vue";
-import OTPInput from "../../components/KTInput/OTP.vue";
+import OTPInput from "../../components/CInput/OTP.vue";
 
 describe("oTPInput", () => {
   beforeAll(async () => {

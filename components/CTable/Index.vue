@@ -10,6 +10,9 @@
       table-class="c-table-container__table"
       :rows-per-page-options="[10, 20, 50, 0]"
       @row-click="onRowClick"
+      v-model:pagination="paginationCopy"
+      @request="updateTable"
+      :loading="loading"
     >
       <template v-for="slot in props.slots" v-slot:[`body-cell-${slot}`]="slotProps">
         <q-td :props="slotProps">
@@ -22,33 +25,48 @@
 
 <script setup lang="ts">
 interface Props {
-  columns: {
-    name: string;
-    label: string;
-    align?: "left" | "right" | "center" | undefined;
-    sortable?: boolean;
-    field: string | ((row: unknown) => unknown);
-  }[];
-  rows: {
-    name: string;
-    [fieldName: string]: string | number;
-  }[];
-  title: string;
+  columns: TableHeader[];
+  rows: TableRow[];
+  title?: string;
   rowKey?: string;
   slots?: string[];
+  pagination: TablePagination;
+  loading?: boolean;
 }
+
 const props = defineProps<Props>();
+const paginationCopy = ref();
 const emits = defineEmits<{
-  "click:row": [row: unknown];
+  "click:row": [row: TableRow];
+  "update:pagination": [TablePagination];
+  updateTable: [];
 }>();
-function onRowClick(evt: Event, row: unknown) {
+function onRowClick(evt: Event, row: TableRow) {
   emits("click:row", row);
 }
+function updateTable(request: {
+  pagination: TablePagination;
+  [key: string]: any;
+}) {
+  if (request.pagination.rowsPerPage === 0) {
+    paginationCopy.value.rowsPerPage = paginationCopy.value.rowsNumber;
+  } else {
+    paginationCopy.value.rowsPerPage = request.pagination.rowsPerPage;
+  }
+  paginationCopy.value.page = request.pagination.page;
+  emits("update:pagination", paginationCopy.value);
+  emits("updateTable");
+}
+onMounted(() => {
+  paginationCopy.value = props.pagination;
+});
 </script>
 
 <style lang="scss">
 .c-table-container {
   &__table {
+    height: 100%;
+    max-height: 600px;
     .q-table tbody td,
     .q-table thead th {
       font-size: 14px;
@@ -65,6 +83,18 @@ function onRowClick(evt: Event, row: unknown) {
       &--center {
         left: 12px;
       }
+    }
+    .q-table__top,
+    .q-table__bottom,
+    thead tr:first-child th {
+      background-color: var(--app-white);
+    }
+    thead tr th {
+      position: sticky;
+      z-index: 1;
+    }
+    thead tr:first-child th {
+      top: 0;
     }
   }
 }

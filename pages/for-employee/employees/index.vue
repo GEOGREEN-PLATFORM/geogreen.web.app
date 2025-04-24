@@ -1,54 +1,63 @@
 <template>
   <main class="b-page">
-    <header class="b-header q-my-lg">
+    <header class="b-header q-mb-lg">
       <div class="b-header__title-wrapper">
         <h1 class="b-header__title gg-h1">Сотрудники</h1>
         <div class="b-header__add-btn">
-          <GGButton @click="openEmployeeDialog" label="Добавить оператора" size="medium"></GGButton>
+          <CButton label="Добавить оператора" size="medium" @click="openEmployeeDialog"></CButton>
         </div>
         <div class="b-header__add-btn--mobile">
-          <GGButton
-            @click="openEmployeeDialog"
+          <CButton
             :icon="mdiPlus"
             iconColor="var(--app-white)"
             stretch="hug"
-          ></GGButton>
+            @click="openEmployeeDialog"
+          ></CButton>
         </div>
       </div>
       <div class="b-header__search">
-        <KTInput
-          v-model="searchEmployee"
+        <CInput
+          v-model="searchEmployeeStr"
           label="Поиск сотрудника"
           hideBottomSpace
           height="48px"
           :required="false"
+          @update:model-value="searchEmployee"
         >
           <template #append>
             <q-icon :name="mdiMagnify" />
           </template>
-        </KTInput>
+        </CInput>
       </div>
     </header>
     <section class="b-content">
       <div class="b-filter q-mb-lg">
-        <CFilter v-model="filters"></CFilter>
+        <CFilter
+          v-model="filters"
+          @apply-filters="getEmployees"
+          @reset-filters="getEmployees"
+        ></CFilter>
       </div>
       <div class="b-table">
         <CTable
           :columns="tableHeaders"
           :rows="tableRows"
+          v-model:pagination="pagination"
           row-key="name"
           :slots="['status']"
-          @click:row="(row: any) => goToEmployee(row.id)"
+          :loading="employeesLoading"
+          @click:row="(row: any) => goToEmployee(row.email)"
+          @updateTable="getEmployees"
         >
           <template v-slot:body-cell-status="slotProps">
             <div class="b-account-status">
               <div
                 class="b-account-status__item gg-t-small"
-                :class="{
-                  'b-account-status__item--active': slotProps.row.status === 'Активен',
-                  'b-account-status__item--blocked': slotProps.row.status === 'Заблокирован',
-                }"
+                :class="
+                  EMPLOYEE_ACCOUNT_STATUS_STYLES[
+                    slotProps.row.statusKey as keyof typeof EMPLOYEE_ACCOUNT_STATUS_STYLES
+                  ]
+                "
               >
                 {{ slotProps.row.status }}
               </div>
@@ -57,89 +66,88 @@
         </CTable>
       </div>
     </section>
-    <EmployeesPageAddDialog
-      v-model="isEmployeeDialogOpen"
-      @employeeCreated="handleEmployeeCreated"
-    />
+    <PagesEmployeesAdd v-model="isEmployeeDialogOpen" @employeeCreated="getEmployees" />
   </main>
 </template>
 
 <script setup lang="ts">
 import { mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
+import { date } from "quasar";
+import { useMainStore } from "~/store/main";
 
-const STATUS_OPTIONS = [
-  {
-    name: "Активен",
-    value: "active",
-  },
-  {
-    name: "Заблокирован",
-    value: "blocked",
-  },
-];
-const ROLE_OPTIONS = [
-  {
-    name: "Оператор",
-    value: "operator",
-  },
-  {
-    name: "Администратор",
-    value: "administrator",
-  },
-];
-const tableHeaders = [
+interface EmployeeRaw {
+  id: string;
+  firstName: string;
+  lastName: string;
+  patronymic: string;
+  role: string;
+  enabled: boolean;
+  creationDate: string;
+  email: string;
+}
+interface PagePaginationEmployee {
+  users: EmployeeRaw[];
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+const pagination = ref({
+  page: 1,
+  rowsPerPage: 10,
+  rowsNumber: 0,
+});
+const store = useMainStore();
+const debounce = useDebounce();
+const {
+  EMPLOYEE_ROLE_OPTIONS,
+  EMPLOYEE_ACCOUNT_STATUS_OPTIONS,
+  EMPLOYEE_ACCOUNT_STATUS_STYLES,
+} = useGetStatusOptions();
+const employees = ref<EmployeeRaw[]>([]);
+const tableHeaders: TableHeader[] = [
   {
     name: "initials",
     align: "left",
     label: "ФИО",
     field: "initials",
-    sortable: true,
+    sortable: false,
   },
   {
     name: "role",
     align: "center",
     label: "Роль",
     field: "role",
-    sortable: true,
+    sortable: false,
   },
   {
     name: "status",
     align: "center",
     label: "Статус аккаунта",
     field: "status",
-    sortable: true,
+    sortable: false,
   },
   {
     name: "dateCreated",
     align: "right",
     label: "Дата создания",
     field: "dateCreated",
-    sortable: true,
+    sortable: false,
   },
 ];
-const tableRows = [
-  {
-    initials: "Иванов Иван Иванович",
-    role: "Оператор",
-    status: "Активен",
-    dateCreated: "23.02.2025",
-    id: "213-de32-2312",
-  },
-];
-const filters = reactive<FilterItem[]>([
+const filters = ref<FilterItem[]>([
   {
     type: "select",
     key: "role",
     label: "Роль",
     selected: "",
-    data: ROLE_OPTIONS,
+    data: EMPLOYEE_ROLE_OPTIONS,
   },
   {
     type: "select",
     key: "status",
     selected: "",
     label: "Статус аккаунта",
-    data: STATUS_OPTIONS,
+    data: EMPLOYEE_ACCOUNT_STATUS_OPTIONS,
   },
   {
     type: "date-range",
@@ -148,20 +156,86 @@ const filters = reactive<FilterItem[]>([
     label: "Период создания",
   },
 ]);
-const searchEmployee = ref("");
+const searchEmployeeStr = ref("");
+const employeesLoading = ref(true);
 const isEmployeeDialogOpen = ref(false);
+const tableRows: ComputedRef<TableRow[]> = computed(() =>
+  employees.value.map((e) => ({
+    id: e.id,
+    email: e.email,
+    initials: `${e.lastName} ${e.firstName} ${e.patronymic}`,
+    role: EMPLOYEE_ROLE_OPTIONS.find((o) => o.value === e.role)?.name ?? e.role,
+    status: e.enabled ? "Активен" : "Заблокирован",
+    statusKey: e.enabled ? "active" : "blocked",
+    dateCreated: date.formatDate(new Date(e.creationDate), "DD.MM.YYYY"),
+  })),
+);
+function searchEmployee() {
+  debounce(getEmployees, 500, "searchEmployee");
+}
+async function getEmployees() {
+  employeesLoading.value = true;
+  let fromDateParam = "";
+  let toDateParam = "";
+  if (
+    filters.value[2].selected &&
+    typeof filters.value[2].selected === "string"
+  ) {
+    fromDateParam = filters.value[2].selected;
+    toDateParam = filters.value[2].selected;
+  } else {
+    const { from, to } = filters.value[2].selected as {
+      from: string | null;
+      to: string | null;
+    };
+    fromDateParam = from || "";
+    toDateParam = to || "";
+  }
+  const url = `${store.apiAuth}/user`;
+  try {
+    const response = await $fetch<PagePaginationEmployee>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+      params: {
+        search: searchEmployeeStr.value || undefined,
+        role: filters.value[0].selected || undefined,
+        status: filters.value[1].selected || undefined,
+        fromDate: fromDateParam
+          ? tempDateConverterWillBeRemoved(fromDateParam)
+          : undefined,
+        toDate: toDateParam
+          ? tempDateConverterWillBeRemoved(toDateParam)
+          : undefined,
+        page: pagination.value.page - 1,
+        size: pagination.value.rowsPerPage,
+      },
+    });
+    employees.value = response.users;
+    pagination.value.rowsNumber = response.totalItems;
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось загрузить сотрудников. Попробуйте ещё раз.",
+    };
+  } finally {
+    employeesLoading.value = false;
+  }
+}
 
+function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
+  const [day, month, year] = ddmmyyyy.split(".");
+  return `${year}-${month}-${day}`;
+}
 function openEmployeeDialog() {
   isEmployeeDialogOpen.value = true;
 }
-
-function handleEmployeeCreated(newEmployeeData: unknown) {
-  console.log("Создан сотрудник:", newEmployeeData);
-}
-
 function goToEmployee(id: string) {
   navigateTo(`/for-employee/employees/${id}`);
 }
+onMounted(() => {
+  getEmployees();
+});
 </script>
 
 <style scoped lang="scss">
@@ -170,7 +244,7 @@ function goToEmployee(id: string) {
   $app-laptop: 960px;
   $app-mobile: 600px;
   $app-narrow-mobile: 364px;
-  padding: 0px 32px;
+  padding: 24px 32px;
   .b-header {
     display: flex;
     justify-content: space-between;
@@ -226,12 +300,6 @@ function goToEmployee(id: string) {
       padding: 4px 16px;
       border-radius: 16px;
       color: var(--app-white);
-      &--active {
-        background-color: var(--app-green-300);
-      }
-      &--blocked {
-        background-color: var(--app-grey-300);
-      }
     }
   }
 }
