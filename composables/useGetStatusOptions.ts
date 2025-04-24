@@ -48,20 +48,41 @@ export default function useGetStatusOptions() {
     { name: "Средняя", value: "medium" },
     { name: "Высокая", value: "high" },
   ];
-  const PROBLEM_AREA_TYPE_OPTIONS = [
+
+  const EVENT_STATUS_OPTIONS: ItemOption[] = [
     {
-      name: "Борщевик",
-      value: "Борщевик",
+      name: "Создано",
+      value: "Создано",
     },
     {
-      name: "Свалка",
-      value: "Свалка",
+      name: "В работе",
+      value: "В работе",
     },
     {
-      name: "Пожар",
-      value: "Пожар",
+      name: "На проверке",
+      value: "На проверке",
+    },
+    {
+      name: "На паузе",
+      value: "На паузе",
+    },
+    {
+      name: "Отклонено",
+      value: "Отклонено",
+    },
+    {
+      name: "Выполнено",
+      value: "Выполнено",
     },
   ];
+  const EVENT_STATUS_STYLES = {
+    Создано: "event-status created",
+    "В работе": "event-status at-work",
+    "На проверке": "event-status on-review",
+    "На паузе": "event-status on-pause",
+    Отклонено: "event-status rejected",
+    Выполнено: "event-status completed",
+  };
   return {
     EMPLOYEE_ACCOUNT_STATUS_OPTIONS,
     EMPLOYEE_ACCOUNT_STATUS_STYLES,
@@ -69,6 +90,7 @@ export default function useGetStatusOptions() {
     HOTBED_WORK_STAGE_STYLES,
     HOTBED_WORK_STAGE_OPTIONS,
     HOTBED_DENSITIES_OPTIONS,
-    PROBLEM_AREA_TYPE_OPTIONS,
+    EVENT_STATUS_OPTIONS,
+    EVENT_STATUS_STYLES,
   };
 }

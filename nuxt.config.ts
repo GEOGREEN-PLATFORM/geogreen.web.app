@@ -9,6 +9,7 @@ export default defineNuxtConfig({
       PORTAL_API_FILE_SERVER: "",
       PORTAL_API_PHOTO_ANALYSE: "",
       PORTAL_API_USER_REPORT: "",
+      PORTAL_API_EVENT_MANAGER: "",
       PORTAL_API_AUTH: "",
       PORTAL_API_KEYCLOAK: "",
     },

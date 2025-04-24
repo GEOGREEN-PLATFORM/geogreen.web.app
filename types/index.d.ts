@@ -20,6 +20,22 @@ declare global {
   interface TableRow {
     [fieldName: string]: string | number | undefined | null;
   }
+  interface TaskEvent {
+    id: string;
+    geoPointId?: string;
+    startDate: string;
+    endDate: string;
+    lastUpdateDate: string;
+    statusCode: string;
+    eventType: string;
+    problemAreaType: ProblemAreaTypes;
+    description: string;
+    name: string;
+    operatorName: string;
+    operatorId: string;
+    authorName: string;
+    authorId: string;
+  }
   interface TablePagination {
     rowsPerPage: number;
     page: number;

@@ -48,7 +48,7 @@ const props = withDefaults(defineProps<Props>(), {
   required: false,
   rules: () => [],
   type: "text",
-  placeholder: "Введите текст",
+  placeholder: "",
   hideErrorIcon: true,
   hideBottomSpace: true,
   autogrow: true,
