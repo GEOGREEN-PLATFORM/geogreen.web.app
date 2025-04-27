@@ -1,57 +1,75 @@
 <template>
   <main class="b-page">
     <div v-if="pageLoaded && taskEvent" class="b-page__top-section">
-      <section class="b-main-editable-card">
-        <div class="b-main-editable-card__header">
-          <div class="b-name">
-            <input
-              type="text"
-              v-model="taskEvent.name"
-              placeholder="Введите название мероприятия"
-              class="b-name__input gg-h1"
-              @blur="saveChanges"
-            />
-            <span class="b-name__delete-icon" @click="openDeleteDialog">
-              <q-icon :name="mdiDeleteOutline" color="red-500" size="24px"></q-icon>
-            </span>
-          </div>
-        </div>
-        <div v-if="pageLoaded && taskEvent" class="b-main-editable-card__content">
-          <div class="b-main-editable-card__fields">
-            <CInputTextarea
-              class="b-main-editable-card__comment"
-              label="Описание мероприятия"
-              v-model="taskEvent.description"
-              bg-color="transparent"
-              @blur="saveChanges"
-            ></CInputTextarea>
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Ответственный:</div>
-              <CInputSelect
-                v-model="taskEvent.responsibleEmployeeOption"
-                use-input
-                @filter="filterEmployees"
-                @update:model-value="saveChanges"
-                :options="responsibleEmployeesOptions"
-                returnObj
-                height="40px"
-                class="b-labeled-field__input"
-              ></CInputSelect>
+      <div class="b-page__top-left">
+        <section class="b-main-editable-card">
+          <div class="b-main-editable-card__header">
+            <div class="b-name">
+              <input
+                type="text"
+                v-model="taskEvent.name"
+                placeholder="Введите название мероприятия"
+                class="b-name__input gg-h1"
+                @blur="saveChanges"
+              />
+              <span class="b-name__delete-icon" @click="openDeleteDialog">
+                <q-icon :name="mdiDeleteOutline" color="red-500" size="24px"></q-icon>
+              </span>
             </div>
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Статус:</div>
-              <CInputSelect
-                v-model="taskEvent.statusCode"
-                @update:model-value="saveChanges"
-                :options="TASK_EVENT_STATUS_OPTIONS"
-                height="40px"
-                class="b-labeled-field__input"
-              ></CInputSelect>
-            </div>
-            <div class="b-main-editable-card__actions"></div>
           </div>
-        </div>
-      </section>
+          <div v-if="pageLoaded && taskEvent" class="b-main-editable-card__content">
+            <div class="b-main-editable-card__fields">
+              <CInputTextarea
+                class="b-main-editable-card__comment"
+                label="Описание мероприятия"
+                v-model="taskEvent.description"
+                bg-color="transparent"
+                @blur="saveChanges"
+              ></CInputTextarea>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Ответственный:</div>
+                <CInputSelect
+                  v-model="taskEvent.responsibleEmployeeOption"
+                  use-input
+                  @filter="filterEmployees"
+                  @update:model-value="saveChanges"
+                  :options="responsibleEmployeesOptions"
+                  returnObj
+                  height="40px"
+                  class="b-labeled-field__input"
+                ></CInputSelect>
+              </div>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Статус:</div>
+                <CInputSelect
+                  v-model="taskEvent.statusCode"
+                  @update:model-value="saveChanges"
+                  :options="TASK_EVENT_STATUS_OPTIONS"
+                  height="40px"
+                  class="b-labeled-field__input"
+                ></CInputSelect>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="b-page__history-container">
+          <div class="b-history-form">
+            <CInputEditor
+              class="b-history-form__editor"
+              v-model="currentHistory"
+              :files="currentHistoryFiles"
+              @update:files="loadFilesForHistory"
+            ></CInputEditor>
+            <CButton
+              @click="sendHistory"
+              class="b-history-form__send-button"
+              :icon="mdiSend"
+              stretch="hug"
+            ></CButton>
+          </div>
+        </section>
+      </div>
+
       <section class="b-page__data-card">
         <CCardData
           :list="hotdebCardList"
@@ -71,7 +89,15 @@
         ></CCardData>
       </section>
     </div>
-    <section class="b-page__map-section"></section>
+    <section class="b-page__bottom-section">
+      <h2 class="gg-h2">История</h2>
+      <PagesTaskEventsHistoryItem
+        v-for="item in taskEventHistory"
+        class="history-item"
+        :key="item.id"
+        :history="item"
+      ></PagesTaskEventsHistoryItem>
+    </section>
     <CDialogConfirm
       v-model="showDeleteDialog"
       actionMainText="удалить мероприятие"
@@ -83,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { mdiDeleteOutline } from "@quasar/extras/mdi-v6";
+import { mdiDeleteOutline, mdiSend } from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
 import { ref } from "vue";
 import { useMainStore } from "~/store/main";
@@ -105,6 +131,23 @@ interface TaskEvent {
   statusCode: string;
   responsibleEmployeeOption: ItemOption;
 }
+interface TaskEventsHistoryPagination {
+  content: TaskEventHistory[];
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+interface TaskEventHistory {
+  id: string;
+  eventId: string;
+  recordDate: string;
+  recordType: string;
+  description: string;
+  photos: ImageObj[];
+  operatorName: string;
+  operatorId: string;
+  createDate: string;
+}
 const editMode = ref(false);
 const showDeleteDialog = ref(false);
 const store = useMainStore();
@@ -114,7 +157,11 @@ const {
   TASK_EVENT_STATUS_OPTIONS,
   TASK_EVENT_STATUS_STYLES,
 } = useGetStatusOptions();
+const { uploadPhoto } = useFiles();
 const taskEvent = ref<TaskEvent>();
+const currentHistoryFiles = ref<(File | ImageObj)[]>([]);
+const currentHistory = ref("");
+const taskEventHistory = ref<TaskEventHistory[]>([]);
 const relatedHotbed = ref<Marker>();
 const hotdebCardList = ref<CardItem[]>([]);
 const linksByLabel = computed(() => ({
@@ -187,6 +234,62 @@ async function getHotbeds() {
   });
   existingHotbeds.value = response;
   isHotbedsLoading.value = false;
+}
+async function loadFilesForHistory(files: (File | ImageObj)[]) {
+  const localFiles = files;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    if (file instanceof File) {
+      localFiles[i] = await uploadPhoto(file);
+    }
+  }
+  currentHistoryFiles.value = localFiles;
+}
+async function sendHistory() {
+  try {
+    await $fetch(`${store.apiEventManager}/events/${route.params.id}/history`, {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: {
+        recordType: "Наблюдение",
+        recordDate: new Date().toISOString(),
+        description: currentHistory.value,
+        photos: currentHistoryFiles.value,
+        operatorId: store.user?.id,
+      },
+    });
+    currentHistory.value = "";
+    currentHistoryFiles.value = [];
+    getHistory();
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Нe удалось отправить комментарии",
+    };
+  }
+}
+async function getHistory() {
+  try {
+    const response = await $fetch<TaskEventsHistoryPagination>(
+      `${store.apiEventManager}/events/${route.params.id}/history`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    taskEventHistory.value = response.content;
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Нe удалось получить комментарии",
+    };
+  }
 }
 async function getRelatedHotbed() {
   const response = await $fetch<Marker>(
@@ -338,6 +441,7 @@ onMounted(() => {
   getTaskEvent();
   getHotbeds();
   getEmployees();
+  getHistory();
 });
 </script>
 
@@ -358,17 +462,49 @@ onMounted(() => {
   }
   &__top-section {
     display: flex;
-    gap: 24px;
+    gap: 48px;
     justify-content: space-between;
     margin-bottom: 24px;
     @media screen and (max-width: $app-laptop) {
       flex-direction: column;
     }
   }
+  &__top-left {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
   &__card-map-container {
     height: 220px;
     border-radius: 12px !important;
     overflow: hidden;
+  }
+  &__history-container {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    width: 100%;
+    max-width: 900px;
+  }
+  .b-history-form {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+    &__editor {
+      width: calc(100% - 50px - 24px);
+      max-width: calc(100% - 50px - 24px);
+    }
+    &__send-button {
+      min-width: max-content;
+    }
+  }
+  &__bottom-section {
+    .history-item {
+      margin: 32px 0px 48px 0px;
+    }
   }
   .b-main-editable-card {
     background-color: var(--app-white);
@@ -401,11 +537,6 @@ onMounted(() => {
       display: flex;
       flex-direction: column;
       gap: 8px;
-    }
-    &__actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
     }
     .b-labeled-field {
       display: flex;
