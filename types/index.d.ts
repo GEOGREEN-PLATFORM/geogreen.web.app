@@ -117,7 +117,7 @@ declare global {
     to: string;
   };
   interface Marker {
-    id?: string;
+    id: string;
     coordinate?: Coordinate;
     details: {
       square: number;

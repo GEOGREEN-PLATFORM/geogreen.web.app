@@ -22,17 +22,21 @@
       :option-label="optionLabel"
       :disable="disabled"
       :hint="hint"
-      emit-value
-      map-options
+      :use-input="useInput"
+      input-debounce="300"
+      @filter="filterList"
+      :emit-value="!returnObj"
+      :map-options="!returnObj"
+      clearable
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { ValidationRule } from "quasar";
+import type { QSelect, ValidationRule } from "quasar";
 
 interface Props {
-  modelValue: string;
+  modelValue: string | ItemOption | null;
   rounded?: boolean;
   outlined?: boolean;
   label?: string;
@@ -48,6 +52,8 @@ interface Props {
   optionLabel?: string;
   hint?: string;
   disabled?: boolean;
+  useInput?: boolean;
+  returnObj?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -56,25 +62,33 @@ const props = withDefaults(defineProps<Props>(), {
   required: true,
   disabled: false,
   rules: () => [],
-  placeholder: "Введите текст",
+  placeholder: "",
   hideErrorIcon: true,
   hideBottomSpace: false,
   height: "56px",
   optionValue: "value",
   optionLabel: "name",
+  useInput: false,
 });
 const emits = defineEmits<{
   "update:modelValue": [string];
+  filter: [string];
 }>();
 const validationRules = ref<ValidationRule[]>([]);
 function selectValue(value: string) {
   emits("update:modelValue", value);
 }
+function filterList(
+  val: string,
+  update: (callbackFn: () => void, afterFn?: (ref: QSelect) => void) => void,
+) {
+  update(() => {
+    emits("filter", val);
+  });
+}
 onMounted(() => {
   if (props.required) {
-    validationRules.value = [
-      (val) => (val && val.length > 0) || "Поле не может быть пустым",
-    ];
+    validationRules.value = [(val) => val || "Поле не может быть пустым"];
   } else {
     validationRules.value = props.rules;
   }
@@ -184,5 +198,8 @@ onMounted(() => {
       color: var(--app-red-500);
     }
   }
+}
+.q-menu {
+  max-height: 400px;
 }
 </style>

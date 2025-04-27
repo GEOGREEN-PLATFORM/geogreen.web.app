@@ -57,7 +57,7 @@ const pages: Page[] = [
         key: "events",
         name: "Мероприятия",
         selected: false,
-        path: "/events",
+        path: "/task-events",
       },
       {
         key: "applications",

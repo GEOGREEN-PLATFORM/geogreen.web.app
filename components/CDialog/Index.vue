@@ -1,11 +1,12 @@
 <template>
-  <div class="gg-dialog">
+  <div class="c-dialog-container">
     <q-dialog
       :model-value="modelValue"
       @update:model-value="toggleOpenState"
       @show="emits('show')"
       :auto-close="false"
       backdrop-filter="blur(4px)"
+      class="c-dialog__content"
     >
       <slot />
     </q-dialog>
@@ -27,7 +28,4 @@ function toggleOpenState(newState: boolean) {
 onMounted(() => {});
 </script>
 
-<style lang="scss">
-.gg-dialog {
-}
-</style>
+<style lang="scss"></style>

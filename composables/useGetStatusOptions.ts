@@ -49,7 +49,7 @@ export default function useGetStatusOptions() {
     { name: "Высокая", value: "high" },
   ];
 
-  const EVENT_STATUS_OPTIONS: ItemOption[] = [
+  const TASK_EVENT_STATUS_OPTIONS: ItemOption[] = [
     {
       name: "Создано",
       value: "Создано",
@@ -75,7 +75,7 @@ export default function useGetStatusOptions() {
       value: "Выполнено",
     },
   ];
-  const EVENT_STATUS_STYLES = {
+  const TASK_EVENT_STATUS_STYLES = {
     Создано: "event-status created",
     "В работе": "event-status at-work",
     "На проверке": "event-status on-review",
@@ -90,7 +90,7 @@ export default function useGetStatusOptions() {
     HOTBED_WORK_STAGE_STYLES,
     HOTBED_WORK_STAGE_OPTIONS,
     HOTBED_DENSITIES_OPTIONS,
-    EVENT_STATUS_OPTIONS,
-    EVENT_STATUS_STYLES,
+    TASK_EVENT_STATUS_OPTIONS,
+    TASK_EVENT_STATUS_STYLES,
   };
 }

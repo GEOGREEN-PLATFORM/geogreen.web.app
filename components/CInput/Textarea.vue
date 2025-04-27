@@ -40,6 +40,7 @@ interface Props {
   placeholder?: string;
   name?: string;
   autogrow?: boolean;
+  bgColor?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -52,6 +53,7 @@ const props = withDefaults(defineProps<Props>(), {
   hideErrorIcon: true,
   hideBottomSpace: true,
   autogrow: true,
+  bgColor: "var(--app-green-050)",
 });
 
 const emits = defineEmits<{
@@ -76,7 +78,7 @@ function updateValue(value: string | number | null) {
   .c-input-main .q-field__control {
     height: auto;
     min-height: 96px;
-    background-color: var(--app-green-050);
+    background-color: v-bind(bgColor);
   }
 }
 </style>

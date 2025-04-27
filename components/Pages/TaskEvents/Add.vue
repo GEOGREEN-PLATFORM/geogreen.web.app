@@ -3,119 +3,91 @@
     <q-card class="b-card" :class="`b-card--step-${currentStep}`">
       <header class="b-card__header">
         <h2 class="b-card__title gg-h2">Создание мероприятия</h2>
-        <p v-if="subTitle" class="b-card__subtitle">{{ subTitle }}</p>
+        <p
+          v-if="subTitle"
+          class="b-card__subtitle"
+          :class="{
+            'b-card__subtitle--required': currentStep === 3,
+          }"
+        >
+          {{ subTitle }}
+        </p>
       </header>
       <q-form ref="formRef" novalidate greedy class="b-form" @submit="onSubmit">
         <template v-if="currentStep === 3">
           <section class="b-form__section b-form__map">
+            <p class="b-form__hint gg-t-small">
+              Выберите существующий на карте очаг со статусом “Создан”, чтобы добавить его в
+              мероприятие
+            </p>
             <CMap
-              @add-marker="addTempHotbed"
-              @edit-marker="editTempHotbed"
-              @delete-marker="deleteTempHotbed"
-              @forbiddenAddMarker="handleForbiddenAddTry"
               :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
-              :addMarker="isAddMarker ? 'forbid' : 'enable'"
+              addMarker="hide"
+              addZone="hide"
               :markers="existingHotbeds"
               :shortInfoKeys="shortMarkerInfoNameKeys"
-              :selectedMarker="addedHotbed"
+              :selectedMarker="currentSelectedHotbed"
+              editable-markers="none"
+              selectable-markers="all"
+              @select-marker="handleHotbedSelected"
+              @cancel-marker-selection="handleHotbedDeselected"
             ></CMap>
           </section>
         </template>
         <template v-else-if="currentStep === 1">
           <section class="b-form__section">
             <div class="b-form__section-content">
-              <CInputSelect
-                v-model="hotbedData.problemAreaType"
-                @update:model-value="getEliminationMethodsByArea"
-                :options="store.formattedProblemAreaTypes"
-                label="Название"
-              ></CInputSelect>
+              <CInput v-model="taskEventData.name" @update:model-value="" label="Название"></CInput>
               <CInputTextarea
                 class="b-form__comment"
                 label="Описание"
-                v-model="hotbedData.problemAreaType"
+                v-model="taskEventData.description"
+                bgColor="transparent"
               ></CInputTextarea>
-              <CInputSelect
-                v-model="hotbedData.eliminationMethod"
-                :options="hotbedEliminationMethods"
-                :disabled="!hotbedData.problemAreaType"
-                :hint="!hotbedData.problemAreaType ? 'Выберите тип проблемы' : ''"
-                label="Метод по устранению"
-              ></CInputSelect>
-              <CInputSelect
-                v-model="hotbedData.density"
-                @update:model-value="changeHotdedsDensity"
-                :options="HOTBED_DENSITIES_OPTIONS"
-                label="Плотность распространения"
-              ></CInputSelect>
-              <CInput v-model="hotbedData.owner" label="Владелец" class="b-form__field" />
-              <CInput
-                v-model="hotbedData.contractingOrganization"
-                label="Подрядная организация"
+              <CInputDate
+                v-model="taskEventData.expectedDateEnd"
+                label="Ожидаемая дата завершения"
                 class="b-form__field"
               />
+              <CInputSelect
+                v-model="taskEventData.responsibleEmployee"
+                use-input
+                @filter="filterEmployees"
+                :options="employeesOptions"
+                returnObj
+                label="Ответственный"
+              ></CInputSelect>
             </div>
           </section>
         </template>
         <template v-else-if="currentStep === 2">
           <section class="b-form__section">
             <div class="b-form__info-row gg-t-base">
-              <span class="b-form__info-label">Тип проблемы:</span>
-              <span class="b-form__info-value">{{ hotbedData.problemAreaType }}</span>
+              <span class="b-form__info-label">Название:</span>
+              <span class="b-form__info-value">{{ taskEventData.name }}</span>
             </div>
             <div class="b-form__info-row gg-t-base">
-              <span class="b-form__info-label">Тип земель:</span>
-              <span class="b-form__info-value">{{ hotbedData.landType }}</span>
+              <span class="b-form__info-label">Описание:</span>
+              <span class="b-form__info-value">{{ taskEventData.description }}</span>
             </div>
             <div class="b-form__info-row gg-t-base">
-              <span class="b-form__info-label">Метод по устранению:</span>
-              <span class="b-form__info-value">{{ hotbedData.eliminationMethod }}</span>
+              <span class="b-form__info-label">Ожидаемая дата завершения:</span>
+              <span class="b-form__info-value">{{ taskEventData.expectedDateEnd }}</span>
             </div>
             <div class="b-form__info-row gg-t-base">
-              <span class="b-form__info-label">Плотность распространения:</span>
-              <span class="b-form__info-value">{{
-                HOTBED_DENSITIES_OPTIONS.find((d) => d.value === hotbedData.density)?.name
-              }}</span>
-            </div>
-            <div class="b-form__info-row gg-t-base">
-              <span class="b-form__info-label">Владелец:</span>
-              <span class="b-form__info-value">{{ hotbedData.owner }}</span>
-            </div>
-            <div class="b-form__info-row gg-t-base">
-              <span class="b-form__info-label">Подрядная организация:</span>
-              <span class="b-form__info-value">{{ hotbedData.contractingOrganization }}</span>
+              <span class="b-form__info-label">Ответственный:</span>
+              <span class="b-form__info-value">{{ taskEventData.responsibleEmployee?.name }}</span>
             </div>
           </section>
         </template>
-        <template v-else-if="currentStep === 4">
-          <section class="b-form__section">
-            <fieldset class="b-form__fieldset q-mb-md">
-              <legend class="b-form__legend gg-h3 q-mb-sm">Комментарий</legend>
-              <CInputTextarea
-                class="b-form__comment"
-                placeholder="Кратко опишите проблему"
-                v-model="hotbedData.comment"
-              ></CInputTextarea>
-            </fieldset>
-            <fieldset class="b-form__fieldset">
-              <legend class="b-form__legend gg-h3 q-mb-sm">Фотографии</legend>
-              <CDragDrop
-                @add="uploadFiles"
-                class="b-form__upload-file-container"
-                :maxSize="FILES_MAX_SIZE"
-              ></CDragDrop>
-              <section v-if="attachedFiles.length > 0" class="b-form__added-images">
-                <CFileContainers v-model:files="attachedFiles" raw></CFileContainers>
-              </section>
-            </fieldset>
-          </section>
-        </template>
-
         <footer class="b-form__footer">
           <CButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
           <CButton
             :label="applyLabel"
-            :disabled="(currentStep === 2 && formHasError) || !isAddMarker"
+            :disabled="
+              (currentStep === 2 && formHasError) ||
+              (currentStep === 3 && !taskEventData.relatedHotbedId)
+            "
             type="submit"
           />
         </footer>
@@ -130,45 +102,37 @@ import { useMainStore } from "~/store/main";
 interface Props {
   modelValue: boolean;
   hotbeds: Marker[];
+  employeesOptions: ItemOption[];
 }
-interface HotbedData {
-  problemAreaType: string;
-  landType: string;
-  eliminationMethod: string;
-  owner: string;
-  contractingOrganization: string;
-  comment: string;
-  images: ImageObj[];
-  density: Density;
-  coordinate: Coordinate | null;
-  coordinates: Coordinate[];
+interface TaskEventData {
+  name: string;
+  description: string;
+  expectedDateEnd: string;
+  responsibleEmployee: ItemOption | null;
+  relatedHotbedId: string;
 }
 const props = defineProps<Props>();
-const emit = defineEmits(["update:modelValue", "hotbedCreated"]);
+const emit = defineEmits([
+  "update:modelValue",
+  "taskEventCreated",
+  "filterEmployees",
+]);
 const store = useMainStore();
 const dialogVisible = ref(props.modelValue);
 const { formRef, formBindValidation, formHasError } = useFormValidation();
 const existingHotbeds = ref<Marker[]>([]);
-const hotbedEliminationMethods = ref<ItemOption[]>([]);
-const { HOTBED_WORK_STAGE_STYLES, HOTBED_DENSITIES_OPTIONS } =
-  useGetStatusOptions();
-const FILES_MAX_SIZE = 10_000_000;
-const attachedFiles = ref<File[]>([]);
+const currentSelectedHotbed = ref<Marker | null>(null);
+const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
 const subTitle = ref("");
 const currentStep = ref(1);
-const hotbedData = ref<HotbedData>({
-  problemAreaType: "",
-  landType: "",
-  eliminationMethod: "",
-  owner: "",
-  contractingOrganization: "",
-  comment: "",
-  images: [],
-  density: "default",
-  coordinate: null,
-  coordinates: [],
+const taskEventData = ref<TaskEventData>({
+  name: "",
+  description: "",
+  expectedDateEnd: "",
+  responsibleEmployee: null,
+  relatedHotbedId: "",
 });
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
@@ -196,21 +160,6 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
     type: "text",
   },
 });
-async function uploadFiles(files: File[]) {
-  const currentTotal = attachedFiles.value.reduce((sum, f) => sum + f.size, 0);
-  const newFilesTotal = files.reduce((sum, f) => sum + f.size, 0);
-  if (newFilesTotal + currentTotal > FILES_MAX_SIZE) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: `Добавляемые файлы превышают ${FILES_MAX_SIZE / 1e6} MB`,
-    };
-    return;
-  }
-  files.forEach((file) => {
-    attachedFiles.value.push(file);
-  });
-}
 function onSubmit() {
   formRef.value?.validate().then((success) => {
     if (success) {
@@ -218,45 +167,6 @@ function onSubmit() {
     }
   });
 }
-const addedHotbed = computed(() => {
-  return existingHotbeds.value[existingHotbeds.value.length - 1]
-    ?.isTempCreatedBy === "employee"
-    ? existingHotbeds.value[existingHotbeds.value.length - 1]
-    : null;
-});
-function addTempHotbed(coordinate: Coordinate, zone?: ZoneWithDensity) {
-  hotbedData.value.coordinate = coordinate;
-  hotbedData.value.coordinates = zone?.coordinates || [];
-  existingHotbeds.value.push({
-    id: "user-temp-created",
-    coordinate: coordinate,
-    isTempCreatedBy: "employee",
-    details: {
-      square: 0,
-      owner: "",
-      landType: "",
-      contractingOrganization: "",
-      workStage: "",
-      eliminationMethod: "",
-      images: [],
-      problemAreaType: undefined,
-      comment: "",
-      density: zone?.density,
-    },
-    relatedTaskId: null,
-    coordinates: zone?.coordinates || [],
-  });
-  isAddMarker.value = true;
-}
-function editTempHotbed(hotbedId: string, marker: Marker) {
-  const hotbedIndex = existingHotbeds.value.findIndex((m) => m.id === hotbedId);
-  existingHotbeds.value[hotbedIndex] = marker;
-  if (marker.details.density) {
-    hotbedData.value.density = marker.details.density;
-  }
-  hotbedData.value.coordinates = marker?.coordinates || [];
-}
-const isAddMarker = shallowRef(false);
 function onBack() {
   if (currentStep.value === 1) {
     resetForm();
@@ -266,67 +176,21 @@ function onBack() {
     updateLabels();
   }
 }
-async function getEliminationMethodsByArea(area: string) {
-  hotbedData.value.eliminationMethod = "";
-  hotbedEliminationMethods.value = (
-    await $fetch<string[]>(
-      `${store.apiGeospatial}/geo/dict/elimination-methods/${area}`,
-      {
-        method: "GET",
-        headers: { Authorization: useGetToken() },
-      },
-    )
-  ).map((elem) => ({
-    name: elem,
-    value: elem,
-  }));
-}
-function deleteTempHotbed(id: string) {
-  existingHotbeds.value = existingHotbeds.value.filter(
-    (hotbed) => !hotbed.isTempCreatedBy,
-  );
-  isAddMarker.value = false;
-}
-function handleForbiddenAddTry() {
-  useState<Alert>("showAlert").value = {
-    show: true,
-    text: "Вы уже добавили очаг на карту. Удалите его, чтобы добавить новый.",
-  };
-}
-function changeHotdedsDensity() {
-  if (hotbedData.value.density) {
-    const hotbedIndex = existingHotbeds.value.findIndex(
-      (m) => m.isTempCreatedBy === "employee",
-    );
-    if (hotbedIndex === -1) return;
-    existingHotbeds.value[hotbedIndex].details.density = hotbedData.value
-      .density as Density;
-  }
-}
-async function createHotbed() {
-  for (const file of attachedFiles.value) {
-    const image = await uploadPhoto(file);
-    hotbedData.value.images.push(image);
-  }
-  emit("hotbedCreated", hotbedData.value);
+async function createTaskEvent() {
   dialogVisible.value = false;
   resetForm();
+  emit("taskEventCreated", taskEventData.value);
 }
-async function uploadPhoto(file: File) {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await $fetch<{
-      previewImageId: string;
-      fullImageId: string;
-    }>(`${store.apiFileServer}/file/image/upload`, {
-      method: "POST",
-      body: formData,
-    });
-    return response;
-  } catch (err) {
-    throw new Error("Ошибка при загрузке фото");
-  }
+function handleHotbedSelected(hotbedId: string, hotbed: Marker) {
+  taskEventData.value.relatedHotbedId = hotbedId;
+  currentSelectedHotbed.value = hotbed;
+}
+function handleHotbedDeselected(hotbedId: string) {
+  taskEventData.value.relatedHotbedId = "";
+  currentSelectedHotbed.value = null;
+}
+function filterEmployees(val: string) {
+  emit("filterEmployees", val);
 }
 function nextStep() {
   if (currentStep.value === 1) {
@@ -339,10 +203,7 @@ function nextStep() {
     currentStep.value++;
     updateLabels();
   } else if (currentStep.value === 3) {
-    currentStep.value++;
-    updateLabels();
-  } else if (currentStep.value === 4) {
-    createHotbed();
+    createTaskEvent();
   }
 }
 
@@ -354,15 +215,12 @@ function updateLabels() {
   } else if (currentStep.value === 2) {
     cancelLabel.value = "Назад";
     applyLabel.value = "Далее";
-    subTitle.value = "Заполните данные по добавляемому очагу";
+    subTitle.value = "Проверьте корректность введённых данных";
   } else if (currentStep.value === 3) {
     cancelLabel.value = "Назад";
-    applyLabel.value = "Далее";
-    subTitle.value = "Проверьте корректность введённых данных";
-  } else if (currentStep.value === 4) {
-    cancelLabel.value = "Назад";
     applyLabel.value = "Создать";
-    subTitle.value = "Добавьте комментарий и изображения создаваемого очага";
+    subTitle.value =
+      "Выберите существующий очаг проблемы для создания связи с задачей";
   }
 }
 
@@ -371,18 +229,6 @@ function resetForm() {
   subTitle.value = "";
   cancelLabel.value = "Отмена";
   applyLabel.value = "Далее";
-  hotbedData.value = {
-    problemAreaType: "",
-    landType: "",
-    eliminationMethod: "",
-    owner: "",
-    contractingOrganization: "",
-    comment: "",
-    images: [],
-    density: "default",
-    coordinate: null,
-    coordinates: [],
-  };
 }
 watch(
   () => props.hotbeds,
@@ -390,22 +236,6 @@ watch(
     existingHotbeds.value = newVal;
   },
 );
-watch(
-  () => hotbedData.value,
-  (newData) => {
-    const details = addedHotbed.value?.details;
-    if (details) {
-      Object.keys(newData).forEach((key) => {
-        if (Object.hasOwn(newData, key) && Object.hasOwn(details, key)) {
-          // @ts-expect-error динамическое присвоение
-          details[key] = newData[key];
-        }
-      });
-    }
-  },
-  { deep: true },
-);
-
 watch(
   () => props.modelValue,
   (newVal) => {
@@ -459,19 +289,8 @@ $app-narrow-mobile: 364px;
     flex: 1;
     max-width: 100%;
   }
-  &__added-images {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 24px;
-    padding: 0px 8px;
-  }
-  &__block-caption {
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--app-grey-050);
-    width: 100%;
+  &__comment {
+    margin-bottom: 20px;
   }
   &__info-row {
     display: flex;
@@ -503,8 +322,8 @@ $app-narrow-mobile: 364px;
     width: 100%;
   }
   &--step-1 {
-    width: 80%;
-    max-width: 80%;
+    width: 50%;
+    max-width: 50%;
   }
   &--step-3 {
     .b-form {
@@ -525,6 +344,12 @@ $app-narrow-mobile: 364px;
     margin-top: 10px;
     font-size: 18px;
     color: var(--app-grey-300);
+    &--required {
+      &::after {
+        content: "*";
+        color: var(--app-red-500);
+      }
+    }
   }
 }
 @keyframes pop {

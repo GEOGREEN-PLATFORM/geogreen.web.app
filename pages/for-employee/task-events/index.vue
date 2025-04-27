@@ -48,21 +48,21 @@
           :rows="tableRows"
           v-model:pagination="pagination"
           row-key="name"
-          :slots="['workStage']"
+          :slots="['statusCode']"
           @click:row="(row: any) => goToTaskEvent(row.id)"
           @updateTable="getTaskEvents"
           :loading="taskEventsLoading"
         >
-          <template v-slot:body-cell-workStage="slotProps">
+          <template v-slot:body-cell-statusCode="slotProps">
             <div
               class="b-status-coniainter gg-t-small"
               :class="
-                taskEvent_WORK_STAGE_STYLES[
-                  slotProps.row.workStage as keyof typeof taskEvent_WORK_STAGE_STYLES
+                TASK_EVENT_STATUS_STYLES[
+                  slotProps.row.statusCode as keyof typeof TASK_EVENT_STATUS_STYLES
                 ]
               "
             >
-              {{ slotProps.row.workStage }}
+              {{ slotProps.row.statusCode }}
             </div>
           </template>
         </CTable>
@@ -71,7 +71,9 @@
     <PagesTaskEventsAdd
       v-model="isTaskEventDialogOpen"
       :hotbeds="existingHotbeds"
+      :employeesOptions="addDialogEmployeesOptions"
       @taskEventCreated="handleTaskEventCreated"
+      @filterEmployees="searchEmployeesByName"
     />
   </main>
 </template>
@@ -88,6 +90,29 @@ interface TaskEventPageRequest {
   totalPages: number;
   content: TaskEvent[];
 }
+interface EmployeeRaw {
+  id: string;
+  firstName: string;
+  lastName: string;
+  patronymic: string;
+  role: string;
+  enabled: boolean;
+  creationDate: string;
+  email: string;
+}
+interface PagePaginationEmployee {
+  users: EmployeeRaw[];
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+interface TaskEventData {
+  name: string;
+  description: string;
+  expectedDateEnd: string;
+  responsibleEmployee: ItemOption | null;
+  relatedHotbedId: string;
+}
 const pagination = ref({
   page: 1,
   rowsPerPage: 10,
@@ -95,8 +120,11 @@ const pagination = ref({
 });
 const store = useMainStore();
 const existingHotbeds = ref<Marker[]>([]);
+const filterEmployeesOptions = ref<ItemOption[]>([]);
+const addDialogEmployeesOptions = ref<ItemOption[]>([]);
 const debounce = useDebounce();
-const { EVENT_STATUS_OPTIONS, EVENT_STATUS_STYLES } = useGetStatusOptions();
+const { TASK_EVENT_STATUS_OPTIONS, TASK_EVENT_STATUS_STYLES } =
+  useGetStatusOptions();
 const tableHeaders: TableHeader[] = [
   {
     name: "name",
@@ -106,7 +134,7 @@ const tableHeaders: TableHeader[] = [
   },
   {
     name: "description",
-    align: "center",
+    align: "left",
     label: "Описание",
     field: "description",
   },
@@ -145,13 +173,14 @@ const taskEvents = ref<TaskEvent[]>([]);
 const tableRows: ComputedRef<TableRow[]> = computed(() =>
   taskEvents.value.map((e) => ({
     id: e.id,
-    problemAreaType: e.details?.problemAreaType,
-    workStage: e.details?.workStage,
-    landType: e.details?.landType,
-    owner: e.details?.owner,
-    eliminationMethod: e.details?.eliminationMethod,
-    // dateCreated: date.formatDate(e.details?.dateCreated, "DD.MM.YYYY"),
-    // dateUpdated: date.formatDate(e.details?.dateUpdated, "DD.MM.YYYY"),
+    name: e.name,
+    description: e.description,
+    statusCode: TASK_EVENT_STATUS_OPTIONS.find((o) => o.value === e.statusCode)
+      ?.name,
+    operatorName: e.operatorName,
+    startDate: date.formatDate(new Date(e.startDate), "DD.MM.YYYY"),
+    lastUpdateDate: date.formatDate(new Date(e.lastUpdateDate), "DD.MM.YYYY"),
+    endDate: date.formatDate(new Date(e.endDate), "DD.MM.YYYY"),
   })),
 );
 const filters = ref<FilterItem[]>([
@@ -160,7 +189,7 @@ const filters = ref<FilterItem[]>([
     key: "status",
     label: "Статус",
     selected: "",
-    data: EVENT_STATUS_OPTIONS,
+    data: TASK_EVENT_STATUS_OPTIONS,
   },
   {
     type: "select",
@@ -193,25 +222,21 @@ const taskEventsLoading = ref(true);
 const isTaskEventDialogOpen = ref(false);
 async function handleTaskEventCreated(newTaskEvent: TaskEventData) {
   try {
-    await $fetch(`${store.apiGeospatial}/geo/info`, {
+    await $fetch(`${store.apiEventManager}/events`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
       },
       body: {
-        coordinate: newTaskEvent.coordinate,
-        details: {
-          owner: newTaskEvent.owner,
-          landType: newTaskEvent.landType,
-          contractingOrganization: newTaskEvent.contractingOrganization,
-          eliminationMethod: newTaskEvent.eliminationMethod,
-          images: newTaskEvent.images,
-          workStage: "Создано",
-          problemAreaType: newTaskEvent.problemAreaType,
-          comment: newTaskEvent.comment,
-          density: newTaskEvent.density,
-        },
-        coordinates: newTaskEvent.coordinates[0] || [],
+        geoPointId: newTaskEvent.relatedHotbedId,
+        name: newTaskEvent.name,
+        description: newTaskEvent.description,
+        endDate: new Date().toISOString(),
+        operatorId: newTaskEvent.responsibleEmployee?.value,
+        authorId: store.user?.id,
+        eventType: "Наблюдение",
+        problemAreaType: "Борщевик",
+        startDate: new Date().toISOString(),
       },
     });
     getTaskEvents();
@@ -219,9 +244,50 @@ async function handleTaskEventCreated(newTaskEvent: TaskEventData) {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Ну удалось создать очаг",
+      text: "Не удалось создать мероприятие",
     };
   }
+}
+async function getEmployees(
+  reqSource?: "filter" | "addDialog",
+  search?: string,
+) {
+  try {
+    const res = await $fetch<PagePaginationEmployee>(`${store.apiAuth}/user`, {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+      params: {
+        page: 0,
+        size: 1000,
+        role: "operator",
+        search: search,
+      },
+    });
+    if (reqSource === "filter") {
+      filterEmployeesOptions.value = formatEmployeesToOptions(res.users || []);
+    } else if (reqSource === "addDialog") {
+      addDialogEmployeesOptions.value = formatEmployeesToOptions(
+        res.users || [],
+      );
+    }
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Нe удалось получить сотрудников",
+    };
+  }
+}
+function formatEmployeesToOptions(employees: EmployeeRaw[]): ItemOption[] {
+  return employees.map((e) => ({
+    name: `${e.lastName} ${e.firstName} ${e.patronymic}`,
+    value: e.id,
+  }));
+}
+function searchEmployeesByName(name: string) {
+  getEmployees("addDialog", name);
 }
 async function getTaskEvents() {
   taskEventsLoading.value = true;
@@ -281,10 +347,12 @@ function openTaskEventDialog() {
   isTaskEventDialogOpen.value = true;
 }
 function goToTaskEvent(id: string) {
-  navigateTo(`/taskEvents/${id}`);
+  navigateTo(`/for-employee/task-events/${id}`);
 }
 onMounted(() => {
   getTaskEvents();
+  getEmployees();
+  getHotbeds();
 });
 </script>
 
