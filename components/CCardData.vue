@@ -24,6 +24,7 @@
         </q-item-section>
       </q-item>
     </q-list>
+    <slot name="card-footer"></slot>
   </q-card>
 </template>
 
@@ -47,13 +48,14 @@ const props = withDefaults(defineProps<Props>(), {
   background-color: var(--app-green-050);
   border-radius: 12px;
   padding: 12px;
+  min-width: 422px;
   .c-card-items {
     &__section {
       flex-direction: row;
       justify-content: flex-start;
       align-items: center;
       flex-wrap: nowrap;
-      gap: 12px;
+      gap: 32px;
     }
     &__item {
       display: flex;

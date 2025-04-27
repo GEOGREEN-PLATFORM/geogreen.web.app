@@ -88,7 +88,7 @@ function filterList(
 }
 onMounted(() => {
   if (props.required) {
-    validationRules.value = [(val) => val || "Поле не может быть пустым"];
+    validationRules.value = [(val) => !!val || "Поле не может быть пустым"];
   } else {
     validationRules.value = props.rules;
   }
@@ -161,15 +161,24 @@ onMounted(() => {
   .q-field__input {
     color: var(--app-grey-500);
     caret-color: var(--app-green-500);
+    flex-wrap: nowrap;
   }
   .q-field--labeled .q-field__native {
     line-height: 20px;
   }
   .q-field__control {
     height: v-bind(height);
+    min-height: v-bind(height);
   }
   .q-field__marginal {
     height: v-bind(height);
+    min-height: v-bind(height);
+  }
+  &:not(:has(.q-field--labeled)) {
+    .q-field__native {
+      height: v-bind(height);
+      min-height: v-bind(height);
+    }
   }
   input[type="password"]:not(:placeholder-shown) {
     font-family: Verdana;

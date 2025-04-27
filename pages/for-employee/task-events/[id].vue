@@ -1,10 +1,16 @@
 <template>
   <main class="b-page">
-    <div class="b-page__top-section">
+    <div v-if="pageLoaded && taskEvent" class="b-page__top-section">
       <section class="b-main-editable-card">
         <div class="b-main-editable-card__header">
           <div class="b-name">
-            <div class="gg-h1">{{ taskEvent?.name }}</div>
+            <input
+              type="text"
+              v-model="taskEvent.name"
+              placeholder="Введите название мероприятия"
+              class="b-name__input gg-h1"
+              @blur="saveChanges"
+            />
             <span class="b-name__delete-icon" @click="openDeleteDialog">
               <q-icon :name="mdiDeleteOutline" color="red-500" size="24px"></q-icon>
             </span>
@@ -16,17 +22,19 @@
               class="b-main-editable-card__comment"
               label="Описание мероприятия"
               v-model="taskEvent.description"
+              bg-color="transparent"
               @blur="saveChanges"
             ></CInputTextarea>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Ответственный:</div>
               <CInputSelect
-                v-model="taskEvent.operatorId"
+                v-model="taskEvent.responsibleEmployeeOption"
                 use-input
                 @filter="filterEmployees"
-                :options="employeesOptions"
+                @update:model-value="saveChanges"
+                :options="responsibleEmployeesOptions"
                 returnObj
-                label="Ответственный"
+                height="40px"
                 class="b-labeled-field__input"
               ></CInputSelect>
             </div>
@@ -35,19 +43,12 @@
               <CInputSelect
                 v-model="taskEvent.statusCode"
                 @update:model-value="saveChanges"
-                :options="HOTBED_WORK_STAGE_OPTIONS"
+                :options="TASK_EVENT_STATUS_OPTIONS"
+                height="40px"
                 class="b-labeled-field__input"
               ></CInputSelect>
             </div>
-            <div class="b-main-editable-card__actions">
-              <CButton
-                @click="toggleEditMode"
-                size="medium"
-                class="b-main-editable-card__button b-main-editable-card__button--more"
-              >
-                Еще
-              </CButton>
-            </div>
+            <div class="b-main-editable-card__actions"></div>
           </div>
         </div>
       </section>
@@ -55,7 +56,18 @@
         <CCardData
           :list="hotdebCardList"
           :linksByLabel="linksByLabel"
-          :statusClassesByValue="HOTBED_WORK_STAGE_STYLES"
+          :statusClassesByValue="TASK_EVENT_STATUS_STYLES"
+        >
+          <template #card-footer>
+            <div class="b-page__card-map-container q-mt-sm">
+              <CMap
+                v-if="!isHotbedsLoading"
+                :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
+                :markers="existingHotbeds"
+                :selectedMarker="relatedHotbed"
+                :shortInfoKeys="shortMarkerInfoNameKeys"
+                hide-controls
+              ></CMap></div></template
         ></CCardData>
       </section>
     </div>
@@ -67,24 +79,49 @@
       @cancel="cancelDeleteAction"
       @confirm="confirmDeleteAction"
     />
-    <!-- <PagesHotbedsEdit v-model="editMode" :taskEvent="taskEvent" @taskEvent-updated="editHotbed" /> -->
   </main>
 </template>
 
 <script setup lang="ts">
 import { mdiDeleteOutline } from "@quasar/extras/mdi-v6";
+import { date } from "quasar";
 import { ref } from "vue";
 import { useMainStore } from "~/store/main";
 
+interface TaskEvent {
+  authorId: string;
+  authorName: string;
+  description: string;
+  endDate: string;
+  eventType: string;
+  geoPointId: string;
+  id: string;
+  lastUpdateDate: string;
+  name: string;
+  operatorId: string;
+  operatorName: string;
+  problemAreaType: string;
+  startDate: string;
+  statusCode: string;
+  responsibleEmployeeOption: ItemOption;
+}
 const editMode = ref(false);
 const showDeleteDialog = ref(false);
 const store = useMainStore();
 const route = useRoute();
-const { HOTBED_WORK_STAGE_OPTIONS, HOTBED_WORK_STAGE_STYLES } =
-  useGetStatusOptions();
-const taskEvent = ref<Marker>();
+const {
+  HOTBED_WORK_STAGE_STYLES,
+  TASK_EVENT_STATUS_OPTIONS,
+  TASK_EVENT_STATUS_STYLES,
+} = useGetStatusOptions();
+const taskEvent = ref<TaskEvent>();
+const relatedHotbed = ref<Marker>();
 const hotdebCardList = ref<CardItem[]>([]);
-const linksByLabel = ref({});
+const linksByLabel = computed(() => ({
+  Ответственный: `/for-employee/employees/${taskEvent.value?.responsibleEmployeeOption?.value}`,
+  "Автор мероприятия": `/for-employee/employees/${taskEvent.value?.authorId}`,
+  Очаг: `/hotbeds/${taskEvent.value?.geoPointId}`,
+}));
 const existingHotbeds = ref<Marker[]>([]);
 const responsibleEmployeesOptions = ref<ItemOption[]>([]);
 const isHotbedsLoading = ref(true);
@@ -128,8 +165,8 @@ async function getEmployees(search?: string) {
         search: search,
       },
     });
-    responsibleEmployeesOptions.value = res.users.map((user) => ({
-      name: `${user.lastName} ${user.firstName} ${user.middleName}`,
+    responsibleEmployeesOptions.value = res.users.map((user: User) => ({
+      name: `${user.lastName} ${user.firstName} ${user.patronymic}`,
       value: user.id,
     }));
   } catch (error: any) {
@@ -141,9 +178,6 @@ async function getEmployees(search?: string) {
   }
 }
 const pageLoaded = ref(false);
-function toggleEditMode() {
-  editMode.value = !editMode.value;
-}
 async function getHotbeds() {
   isHotbedsLoading.value = true;
   const url = `${store.apiGeospatial}/geo/info/getAll`;
@@ -154,25 +188,49 @@ async function getHotbeds() {
   existingHotbeds.value = response;
   isHotbedsLoading.value = false;
 }
-async function saveChanges(fullEditHotbed?: Marker) {
+async function getRelatedHotbed() {
+  const response = await $fetch<Marker>(
+    `${store.apiGeospatial}/geo/info/${taskEvent.value?.geoPointId}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+    },
+  );
+  relatedHotbed.value = response;
+}
+async function saveChanges() {
   try {
-    const response = await $fetch<Marker>(
-      `${store.apiGeospatial}/geo/info/${route.params.id}`,
+    const response = await $fetch<TaskEvent>(
+      `${store.apiEventManager}/events/${route.params.id}`,
       {
         method: "PATCH",
         headers: {
           authorization: useGetToken(),
         },
-        body: fullEditHotbed || taskEvent.value,
+        body: {
+          statusCode: taskEvent.value?.statusCode,
+          name: taskEvent.value?.name,
+          endDate: taskEvent.value?.endDate,
+          description: taskEvent.value?.description,
+          operatorId: taskEvent.value?.responsibleEmployeeOption?.value,
+        },
       },
     );
-    taskEvent.value = response;
+    taskEvent.value = {
+      ...response,
+      responsibleEmployeeOption: {
+        name: response.operatorName,
+        value: response.operatorId,
+      },
+    };
     updateTaskEventCardList();
   } catch (error: any) {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Не удалось изменить данные очага",
+      text: "Не удалось изменить данные мероприятия",
     };
   }
   editMode.value = false;
@@ -187,11 +245,11 @@ function cancelDeleteAction() {
 }
 
 async function confirmDeleteAction() {
-  await deleteHotbed();
+  await deleteTaskEvent();
   showDeleteDialog.value = false;
 }
-async function deleteHotbed() {
-  await $fetch(`${store.apiGeospatial}/geo/info/${route.params.id}`, {
+async function deleteTaskEvent() {
+  await $fetch(`${store.apiEventManager}/events/${route.params.id}`, {
     method: "DELETE",
     headers: {
       authorization: useGetToken(),
@@ -200,12 +258,15 @@ async function deleteHotbed() {
   useState<Alert>("showAlert").value = {
     show: true,
     type: "success",
-    text: "Очаг успешно удален",
+    text: "Мероприятие успешно удалено",
   };
-  navigateTo("/hotbeds");
+  navigateTo("/for-employee/task-events");
+}
+function filterEmployees(search: string) {
+  getEmployees(search);
 }
 async function getTaskEvent() {
-  const response = await $fetch<Marker>(
+  const response = await $fetch<TaskEvent>(
     `${store.apiEventManager}/events/${route.params.id}`,
     {
       method: "GET",
@@ -214,13 +275,16 @@ async function getTaskEvent() {
       },
     },
   );
-  taskEvent.value = response;
+  taskEvent.value = {
+    ...response,
+    responsibleEmployeeOption: {
+      name: response.operatorName,
+      value: response.operatorId,
+    },
+  };
   updateTaskEventCardList();
+  await getRelatedHotbed();
   pageLoaded.value = true;
-}
-async function editHotbed(hotbedData: Marker) {
-  saveChanges(hotbedData);
-  editMode.value = false;
 }
 function updateTaskEventCardList() {
   hotdebCardList.value = [
@@ -232,6 +296,40 @@ function updateTaskEventCardList() {
     {
       label: "Ответственный",
       value: taskEvent.value?.operatorId ? taskEvent.value.operatorName : "",
+      type: "link",
+    },
+    {
+      label: "Автор мероприятия",
+      value: taskEvent.value?.authorId ? taskEvent.value.authorName : "",
+      type: "link",
+    },
+    {
+      label: "Дата создания",
+      value: taskEvent.value?.startDate
+        ? date.formatDate(new Date(taskEvent.value.startDate), "DD.MM.YYYY")
+        : "",
+      type: "text",
+    },
+    {
+      label: "Ожидаемая дата завершения",
+      value: taskEvent.value?.endDate
+        ? date.formatDate(new Date(taskEvent.value.endDate), "DD.MM.YYYY")
+        : "",
+      type: "text",
+    },
+    {
+      label: "Дата изменения",
+      value: taskEvent.value?.lastUpdateDate
+        ? date.formatDate(
+            new Date(taskEvent.value.lastUpdateDate),
+            "DD.MM.YYYY",
+          )
+        : "",
+      type: "text",
+    },
+    {
+      label: "Очаг",
+      value: taskEvent.value?.geoPointId ? "Подробнее" : "",
       type: "link",
     },
   ];
@@ -266,6 +364,11 @@ onMounted(() => {
     @media screen and (max-width: $app-laptop) {
       flex-direction: column;
     }
+  }
+  &__card-map-container {
+    height: 220px;
+    border-radius: 12px !important;
+    overflow: hidden;
   }
   .b-main-editable-card {
     background-color: var(--app-white);
@@ -327,6 +430,7 @@ onMounted(() => {
       &__input {
         margin-left: -12px;
         margin-top: 20px;
+        max-width: calc(100% - 196px);
       }
     }
     &__edit-button {
@@ -337,6 +441,26 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 8px;
+    width: 100%;
+    &__input {
+      background: transparent;
+      border: none;
+      padding: 4px 0;
+      outline: none;
+      width: 100%;
+      border-bottom: 1px solid var(--app-grey-300);
+      color: var(--app-grey-500);
+      transition: border-color 0.3s ease;
+      &:hover {
+        border-bottom: 1px solid var(--app-green-300);
+      }
+      &:focus {
+        border-bottom: 1px solid var(--app-green-500);
+      }
+      &[readonly] {
+        cursor: default;
+      }
+    }
     &__delete-icon {
       cursor: pointer;
     }

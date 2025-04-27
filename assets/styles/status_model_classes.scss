@@ -25,7 +25,7 @@
   color: var(--app-white);
 }
 .event-status.created {
-  background-color: var(--app-grey-200);
+  background-color: var(--app-grey-300);
 }
 .event-status.at-work {
   background-color: var(--app-orange-300);
@@ -34,7 +34,7 @@
   background-color: var(--app-blue-300);
 }
 .event-status.on-pause {
-  background-color: var(--app-grey-050);
+  background-color: var(--app-grey-100);
   color: var(--app-grey-500);
 }
 .event-status.rejected {
