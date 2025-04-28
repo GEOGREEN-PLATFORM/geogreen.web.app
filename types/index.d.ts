@@ -31,10 +31,19 @@ declare global {
     problemAreaType: ProblemAreaTypes;
     description: string;
     name: string;
-    operatorName: string;
-    operatorId: string;
-    authorName: string;
-    authorId: string;
+    operator: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      patronymic: string;
+    };
+    author: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      patronymic: string;
+    };
+    responsibleEmployeeOption?: ItemOption;
   }
   interface TablePagination {
     rowsPerPage: number;
@@ -129,17 +138,19 @@ declare global {
       images: ImageObj[] | [];
       comment: string;
       eliminationMethod: string;
-      density: Density | null;
+      density: Density;
+      creationDate?: string;
+      updateDate?: string;
     };
     relatedTaskId?: string | null;
-    coordinates?: Coordinate[];
+    coordinates?: Coordinate[] | null;
     isTempCreatedBy?: string;
   }
   interface ZoneWithDensity {
-    density: Density | null;
+    density: Density;
     coordinates: Coordinate[];
   }
-  type Density = "default" | "low" | "medium" | "high";
+  type Density = null | "default" | "LOW" | "MIDDLE" | "HIGH";
   interface Tab {
     key: string;
     name: string;

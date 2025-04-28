@@ -18,6 +18,7 @@
               :markers="existingHotbeds"
               :shortInfoKeys="shortMarkerInfoNameKeys"
               :selectedMarker="addedHotbed"
+              :editableMarkers="[addedHotbed?.id || '']"
             ></CMap>
           </section>
         </template>
@@ -141,7 +142,7 @@ interface HotbedData {
   images: ImageObj[];
   density: Density;
   coordinate: Coordinate | null;
-  coordinates: Coordinate[];
+  coordinates: Coordinate[] | null;
 }
 const props = defineProps<Props>();
 const emit = defineEmits(["update:modelValue", "hotbedCreated"]);
@@ -168,7 +169,7 @@ const hotbedData = ref<HotbedData>({
   images: [],
   density: "default",
   coordinate: null,
-  coordinates: [],
+  coordinates: null,
 });
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
@@ -220,13 +221,13 @@ function onSubmit() {
 }
 const addedHotbed = computed(() => {
   return existingHotbeds.value[existingHotbeds.value.length - 1]
-    .isTempCreatedBy === "employee"
+    ?.isTempCreatedBy === "employee"
     ? existingHotbeds.value[existingHotbeds.value.length - 1]
     : null;
 });
 function addTempHotbed(coordinate: Coordinate, zone?: ZoneWithDensity) {
   hotbedData.value.coordinate = coordinate;
-  hotbedData.value.coordinates = zone?.coordinates || [];
+  hotbedData.value.coordinates = zone?.coordinates || null;
   existingHotbeds.value.push({
     id: "user-temp-created",
     coordinate: coordinate,
@@ -239,12 +240,12 @@ function addTempHotbed(coordinate: Coordinate, zone?: ZoneWithDensity) {
       workStage: "",
       eliminationMethod: "",
       images: [],
-      problemAreaType: undefined,
+      problemAreaType: null,
       comment: "",
-      density: zone?.density,
+      density: zone?.density || null,
     },
     relatedTaskId: null,
-    coordinates: zone?.coordinates || [],
+    coordinates: zone?.coordinates || null,
   });
   isAddMarker.value = true;
 }
@@ -254,7 +255,7 @@ function editTempHotbed(hotbedId: string, marker: Marker) {
   if (marker.details.density) {
     hotbedData.value.density = marker.details.density;
   }
-  hotbedData.value.coordinates = marker?.coordinates || [];
+  hotbedData.value.coordinates = marker?.coordinates || null;
 }
 const isAddMarker = shallowRef(false);
 function onBack() {
@@ -379,15 +380,18 @@ function resetForm() {
     contractingOrganization: "",
     comment: "",
     images: [],
-    density: "default",
+    density: null,
     coordinate: null,
-    coordinates: [],
+    coordinates: null,
   };
+  existingHotbeds.value = [];
+  attachedFiles.value = [];
+  isAddMarker.value = false;
 }
 watch(
   () => props.hotbeds,
   (newVal) => {
-    existingHotbeds.value = newVal;
+    existingHotbeds.value = [...newVal];
   },
 );
 watch(
@@ -419,7 +423,7 @@ watch(
   },
 );
 onMounted(() => {
-  existingHotbeds.value = props.hotbeds;
+  existingHotbeds.value = [...props.hotbeds];
 });
 </script>
 

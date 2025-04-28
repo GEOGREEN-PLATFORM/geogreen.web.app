@@ -178,8 +178,8 @@ function onBack() {
 }
 async function createTaskEvent() {
   dialogVisible.value = false;
-  resetForm();
   emit("taskEventCreated", taskEventData.value);
+  resetForm();
 }
 function handleHotbedSelected(hotbedId: string, hotbed: Marker) {
   taskEventData.value.relatedHotbedId = hotbedId;
@@ -229,6 +229,13 @@ function resetForm() {
   subTitle.value = "";
   cancelLabel.value = "Отмена";
   applyLabel.value = "Далее";
+  taskEventData.value = {
+    name: "",
+    description: "",
+    expectedDateEnd: "",
+    responsibleEmployee: null,
+    relatedHotbedId: "",
+  };
 }
 watch(
   () => props.hotbeds,

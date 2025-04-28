@@ -327,24 +327,24 @@ const minusElem = ref<HTMLElement>();
 
 const markersSrcByDensity = ref({
   default: markerIconDefaultSrc,
-  low: markerIconGreenSrc,
-  medium: markerIconOrangeSrc,
-  high: markerIconRedSrc,
+  LOW: markerIconGreenSrc,
+  MIDDLE: markerIconOrangeSrc,
+  HIGH: markerIconRedSrc,
 });
 
 const densityOptions = [
   {
-    value: "low",
+    value: "LOW",
     color: "green-500",
     keepColor: true,
   },
   {
-    value: "medium",
+    value: "MIDDLE",
     color: "orange-500",
     keepColor: true,
   },
   {
-    value: "high",
+    value: "HIGH",
     color: "red-500",
     keepColor: true,
   },
@@ -521,7 +521,7 @@ function overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
 }
 
 function getMarkerIconByDensity(
-  density?: "default" | "low" | "medium" | "high",
+  density?: "default" | "LOW" | "MIDDLE" | "HIGH",
 ) {
   return new Icon({
     src: markersSrcByDensity.value[density || "default"],
@@ -590,18 +590,16 @@ function handleMapClick(event: MapBrowserEvent<UIEvent>) {
   }
 }
 
-function getPolygonStyleByDensity(
-  density: "default" | "low" | "medium" | "high",
-) {
+function getPolygonStyleByDensity(density: Density) {
   let fillColor = "";
   switch (density) {
-    case "low":
+    case "LOW":
       fillColor = "rgba(177, 212, 160, 0.8)";
       break;
-    case "medium":
+    case "MIDDLE":
       fillColor = "rgba(255, 198, 138, 0.8)";
       break;
-    case "high":
+    case "HIGH":
       fillColor = "rgba(255, 138, 153, 0.8)";
       break;
     default:

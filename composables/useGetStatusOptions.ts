@@ -44,9 +44,9 @@ export default function useGetStatusOptions() {
   };
   const HOTBED_DENSITIES_OPTIONS: ItemOption[] = [
     { name: "Не известна", value: "default" },
-    { name: "Низкая", value: "low" },
-    { name: "Средняя", value: "medium" },
-    { name: "Высокая", value: "high" },
+    { name: "Низкая", value: "LOW" },
+    { name: "Средняя", value: "MIDDLE" },
+    { name: "Высокая", value: "HIGH" },
   ];
 
   const TASK_EVENT_STATUS_OPTIONS: ItemOption[] = [

@@ -28,6 +28,8 @@
       :emit-value="!returnObj"
       :map-options="!returnObj"
       clearable
+      :popup-content-style="listStyles"
+      @popup-show="updateListWidth"
     />
   </div>
 </template>
@@ -75,6 +77,7 @@ const emits = defineEmits<{
   filter: [string];
 }>();
 const validationRules = ref<ValidationRule[]>([]);
+const qInputRef = ref();
 function selectValue(value: string) {
   emits("update:modelValue", value);
 }
@@ -85,6 +88,18 @@ function filterList(
   update(() => {
     emits("filter", val);
   });
+}
+const listStyles = ref({});
+async function updateListWidth() {
+  await nextTick();
+  const el = qInputRef.value?.$el as HTMLElement;
+  if (el) {
+    const control = el.querySelector<HTMLElement>(".q-field__control");
+    if (control) {
+      const w = control.getBoundingClientRect().width;
+      listStyles.value = { width: `${w}px` };
+    }
+  }
 }
 onMounted(() => {
   if (props.required) {

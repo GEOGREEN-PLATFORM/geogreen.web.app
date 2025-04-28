@@ -27,6 +27,8 @@
                 :options="item.data"
                 :label="item.label"
                 :required="false"
+                :useInput="!!item.useInput"
+                @filter="(val: string) => updateDataForItem(item.key, val)"
               ></CInputSelect>
             </div>
             <div class="filter-items__date-range" v-if="item.type === 'date-range'">
@@ -65,7 +67,9 @@ const emits = defineEmits<{
   "update:modelValue": [FilterItem[]];
   applyFilters: [];
   resetFilters: [];
+  updateDataForItem: [string, string];
 }>();
+
 function toggleContentShow() {
   showContent.value = !showContent.value;
 }
@@ -82,6 +86,9 @@ function resetFilters() {
   calculateActiveFiltersCount();
   emits("update:modelValue", filterItems.value);
   emits("resetFilters");
+}
+function updateDataForItem(key: string, value: string) {
+  emits("updateDataForItem", key, value);
 }
 function calculateActiveFiltersCount() {
   let count = 0;

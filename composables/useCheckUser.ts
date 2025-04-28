@@ -21,7 +21,7 @@ export default function useCheckUser() {
           headers: { Authorization: useGetToken() },
         });
         if (user) {
-          store.user = { ...user, role: "admin" };
+          store.user = user;
           return true;
         }
       }

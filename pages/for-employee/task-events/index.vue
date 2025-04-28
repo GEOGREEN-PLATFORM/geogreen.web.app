@@ -40,6 +40,7 @@
           v-model="filters"
           @apply-filters="getTaskEvents"
           @reset-filters="getTaskEvents"
+          @update-data-for-item="updateDataForFilterItem"
         ></CFilter>
       </div>
       <div class="b-table">
@@ -177,7 +178,7 @@ const tableRows: ComputedRef<TableRow[]> = computed(() =>
     description: e.description,
     statusCode: TASK_EVENT_STATUS_OPTIONS.find((o) => o.value === e.statusCode)
       ?.name,
-    operatorName: e.operatorName,
+    operatorName: `${e.operator?.lastName} ${e.operator?.firstName} ${e.operator?.patronymic}`,
     startDate: date.formatDate(new Date(e.startDate), "DD.MM.YYYY"),
     lastUpdateDate: date.formatDate(new Date(e.lastUpdateDate), "DD.MM.YYYY"),
     endDate: date.formatDate(new Date(e.endDate), "DD.MM.YYYY"),
@@ -196,6 +197,7 @@ const filters = ref<FilterItem[]>([
     key: "operatorId",
     selected: "",
     label: "Ответственный",
+    useInput: true,
     data: [],
   },
   {
@@ -231,7 +233,7 @@ async function handleTaskEventCreated(newTaskEvent: TaskEventData) {
         geoPointId: newTaskEvent.relatedHotbedId,
         name: newTaskEvent.name,
         description: newTaskEvent.description,
-        endDate: new Date().toISOString(),
+        endDate: newTaskEvent.expectedDateEnd,
         operatorId: newTaskEvent.responsibleEmployee?.value,
         authorId: store.user?.id,
         eventType: "Наблюдение",
@@ -267,6 +269,7 @@ async function getEmployees(
     });
     if (reqSource === "filter") {
       filterEmployeesOptions.value = formatEmployeesToOptions(res.users || []);
+      filters.value[1].data = formatEmployeesToOptions(res.users || []);
     } else if (reqSource === "addDialog") {
       addDialogEmployeesOptions.value = formatEmployeesToOptions(
         res.users || [],
@@ -289,34 +292,77 @@ function formatEmployeesToOptions(employees: EmployeeRaw[]): ItemOption[] {
 function searchEmployeesByName(name: string) {
   getEmployees("addDialog", name);
 }
+function updateDataForFilterItem(key: string, value: string) {
+  if (key === "operatorId") {
+    getEmployees("filter", value);
+  }
+}
 async function getTaskEvents() {
   taskEventsLoading.value = true;
   const params = new URLSearchParams();
-  // if (searchTaskEventStr.value) {
-  //   params.append("search", searchTaskEventStr.value);
-  // }
-  // if (filters.value[0].selected) {
-  //   params.append("role", filters.value[0].selected as string);
-  // }
-  // if (filters.value[1].selected) {
-  //   params.append("status", filters.value[1].selected as string);
-  // }
-  // if (filters.value[2].selected && typeof filters.value[2].selected === "string") {
-  //   params.append("fromDate", tempDateConverterWillBeRemoved(filters.value[2].selected));
-  //   params.append("toDate", tempDateConverterWillBeRemoved(filters.value[2].selected));
-  // } else {
-  //   const { from, to } = filters.value[2].selected as {
-  //     from: string | null;
-  //     to: string | null;
-  //   };
-  //   if (from) {
-  //     params.append("fromDate", tempDateConverterWillBeRemoved(from));
-  //   }
-  //   if (to) {
-  //     params.append("toDate", tempDateConverterWillBeRemoved(to));
-  //   }
-  // }
-
+  if (searchTaskEventStr.value) {
+    params.append("search", searchTaskEventStr.value);
+  }
+  if (filters.value[0].selected) {
+    params.append("status", filters.value[0].selected as string);
+  }
+  if (filters.value[1].selected) {
+    params.append("operatorId", filters.value[1].selected as string);
+  }
+  if (
+    filters.value[2].selected &&
+    typeof filters.value[2].selected === "string"
+  ) {
+    params.append("startFirstDate", filters.value[2].selected);
+    params.append("startSecondDate", filters.value[2].selected);
+  } else {
+    const { from, to } = filters.value[2].selected as {
+      from: string | null;
+      to: string | null;
+    };
+    if (from) {
+      params.append("startFirstDate", from);
+    }
+    if (to) {
+      params.append("startSecondDate", to);
+    }
+  }
+  if (
+    filters.value[4].selected &&
+    typeof filters.value[4].selected === "string"
+  ) {
+    params.append("endFirstDate", filters.value[4].selected);
+    params.append("endSecondDate", filters.value[4].selected);
+  } else {
+    const { from, to } = filters.value[4].selected as {
+      from: string | null;
+      to: string | null;
+    };
+    if (from) {
+      params.append("endFirstDate", from);
+    }
+    if (to) {
+      params.append("endSecondDate", to);
+    }
+  }
+  if (
+    filters.value[3].selected &&
+    typeof filters.value[3].selected === "string"
+  ) {
+    params.append("updateFirstDate", filters.value[3].selected);
+    params.append("updateSecondDate", filters.value[3].selected);
+  } else {
+    const { from, to } = filters.value[3].selected as {
+      from: string | null;
+      to: string | null;
+    };
+    if (from) {
+      params.append("updateFirstDate", from);
+    }
+    if (to) {
+      params.append("updateSecondDate", to);
+    }
+  }
   params.append("page", String(pagination.value.page - 1));
   params.append("size", String(pagination.value.rowsPerPage));
   const url = `${store.apiEventManager}/events/getAll?${params.toString()}`;
@@ -335,10 +381,6 @@ async function getHotbeds() {
     headers: { Authorization: useGetToken() },
   });
   existingHotbeds.value = response;
-}
-function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
-  const [day, month, year] = ddmmyyyy.split(".");
-  return `${year}-${month}-${day}`;
 }
 function searchTaskEvent() {
   debounce(getTaskEvents, 500, "searchTaskEvent");

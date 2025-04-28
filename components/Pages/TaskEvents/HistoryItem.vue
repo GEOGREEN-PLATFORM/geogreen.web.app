@@ -4,10 +4,19 @@
       <CAvatar></CAvatar>
       <div class="c-history-item__content">
         <div class="c-history-item__info">
-          <div class="c-history-item__authorName gg-t-base">{{ props.history.operatorName }}</div>
-          <div class="c-history-item__date gg-cap">{{ props.history.recordDate }}</div>
+          <div class="c-history-item__authorName gg-t-base">
+            {{
+              `${props.history.operator.lastName} ${props.history.operator.firstName} ${props.history.operator.patronymic} `
+            }}
+          </div>
+          <div class="c-history-item__date gg-cap">
+            {{ timeConverter(props.history.recordDate) }}
+          </div>
         </div>
-        <div class="c-history-item__description gg-t-small">{{ props.history.description }}</div>
+        <div
+          class="c-history-item__description gg-t-small"
+          v-html="props.history.description"
+        ></div>
       </div>
     </section>
     <CFileContainers :files="history.photos" :clearable="false"></CFileContainers>
@@ -22,14 +31,19 @@ interface TaskEventHistory {
   recordType: string;
   description: string;
   photos: ImageObj[];
-  operatorName: string;
-  operatorId: string;
+  operator: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    patronymic: string;
+  };
   createDate: string;
 }
 
 const props = defineProps<{
   history: TaskEventHistory;
 }>();
+const { timeConverter } = useFormatters();
 </script>
 
 <style scoped lang="scss">

@@ -200,12 +200,8 @@ async function getEmployees() {
         search: searchEmployeeStr.value || undefined,
         role: filters.value[0].selected || undefined,
         status: filters.value[1].selected || undefined,
-        fromDate: fromDateParam
-          ? tempDateConverterWillBeRemoved(fromDateParam)
-          : undefined,
-        toDate: toDateParam
-          ? tempDateConverterWillBeRemoved(toDateParam)
-          : undefined,
+        fromDate: fromDateParam ? fromDateParam : undefined,
+        toDate: toDateParam ? toDateParam : undefined,
         page: pagination.value.page - 1,
         size: pagination.value.rowsPerPage,
       },
@@ -221,11 +217,6 @@ async function getEmployees() {
   } finally {
     employeesLoading.value = false;
   }
-}
-
-function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
-  const [day, month, year] = ddmmyyyy.split(".");
-  return `${year}-${month}-${day}`;
 }
 function openEmployeeDialog() {
   isEmployeeDialogOpen.value = true;

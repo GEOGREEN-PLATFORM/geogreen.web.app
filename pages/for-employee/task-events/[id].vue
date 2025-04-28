@@ -29,7 +29,7 @@
               <div class="b-labeled-field">
                 <div class="b-labeled-field__label gg-t-big">Ответственный:</div>
                 <CInputSelect
-                  v-model="taskEvent.responsibleEmployeeOption"
+                  v-model="taskEvent.responsibleEmployeeOption!"
                   use-input
                   @filter="filterEmployees"
                   @update:model-value="saveChanges"
@@ -111,26 +111,7 @@
 <script setup lang="ts">
 import { mdiDeleteOutline, mdiSend } from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
-import { ref } from "vue";
 import { useMainStore } from "~/store/main";
-
-interface TaskEvent {
-  authorId: string;
-  authorName: string;
-  description: string;
-  endDate: string;
-  eventType: string;
-  geoPointId: string;
-  id: string;
-  lastUpdateDate: string;
-  name: string;
-  operatorId: string;
-  operatorName: string;
-  problemAreaType: string;
-  startDate: string;
-  statusCode: string;
-  responsibleEmployeeOption: ItemOption;
-}
 interface TaskEventsHistoryPagination {
   content: TaskEventHistory[];
   currentPage: number;
@@ -166,7 +147,7 @@ const relatedHotbed = ref<Marker>();
 const hotdebCardList = ref<CardItem[]>([]);
 const linksByLabel = computed(() => ({
   Ответственный: `/for-employee/employees/${taskEvent.value?.responsibleEmployeeOption?.value}`,
-  "Автор мероприятия": `/for-employee/employees/${taskEvent.value?.authorId}`,
+  "Автор мероприятия": `/for-employee/employees/${taskEvent.value?.author?.id}`,
   Очаг: `/hotbeds/${taskEvent.value?.geoPointId}`,
 }));
 const existingHotbeds = ref<Marker[]>([]);
@@ -324,8 +305,8 @@ async function saveChanges() {
     taskEvent.value = {
       ...response,
       responsibleEmployeeOption: {
-        name: response.operatorName,
-        value: response.operatorId,
+        name: `${response.operator?.lastName} ${response.operator?.firstName} ${response.operator?.patronymic}`,
+        value: response.operator?.id,
       },
     };
     updateTaskEventCardList();
@@ -381,8 +362,8 @@ async function getTaskEvent() {
   taskEvent.value = {
     ...response,
     responsibleEmployeeOption: {
-      name: response.operatorName,
-      value: response.operatorId,
+      name: `${response.operator?.lastName} ${response.operator?.firstName} ${response.operator?.patronymic}`,
+      value: response.operator?.id,
     },
   };
   updateTaskEventCardList();
@@ -398,12 +379,16 @@ function updateTaskEventCardList() {
     },
     {
       label: "Ответственный",
-      value: taskEvent.value?.operatorId ? taskEvent.value.operatorName : "",
+      value: taskEvent.value?.operator?.id
+        ? `${taskEvent.value.operator?.lastName} ${taskEvent.value.operator?.firstName} ${taskEvent.value.operator?.patronymic}`
+        : "",
       type: "link",
     },
     {
       label: "Автор мероприятия",
-      value: taskEvent.value?.authorId ? taskEvent.value.authorName : "",
+      value: taskEvent.value?.author?.id
+        ? `${taskEvent.value.author?.lastName} ${taskEvent.value.author?.firstName} ${taskEvent.value.author?.patronymic}`
+        : "",
       type: "link",
     },
     {
