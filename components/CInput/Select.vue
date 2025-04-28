@@ -22,17 +22,23 @@
       :option-label="optionLabel"
       :disable="disabled"
       :hint="hint"
-      emit-value
-      map-options
+      :use-input="useInput"
+      input-debounce="300"
+      @filter="filterList"
+      :emit-value="!returnObj"
+      :map-options="!returnObj"
+      clearable
+      :popup-content-style="listStyles"
+      @popup-show="updateListWidth"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { ValidationRule } from "quasar";
+import type { QSelect, ValidationRule } from "quasar";
 
 interface Props {
-  modelValue: string;
+  modelValue: string | ItemOption | null;
   rounded?: boolean;
   outlined?: boolean;
   label?: string;
@@ -48,6 +54,8 @@ interface Props {
   optionLabel?: string;
   hint?: string;
   disabled?: boolean;
+  useInput?: boolean;
+  returnObj?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",
@@ -56,25 +64,46 @@ const props = withDefaults(defineProps<Props>(), {
   required: true,
   disabled: false,
   rules: () => [],
-  placeholder: "Введите текст",
+  placeholder: "",
   hideErrorIcon: true,
   hideBottomSpace: false,
   height: "56px",
   optionValue: "value",
   optionLabel: "name",
+  useInput: false,
 });
 const emits = defineEmits<{
   "update:modelValue": [string];
+  filter: [string];
 }>();
 const validationRules = ref<ValidationRule[]>([]);
+const qInputRef = ref();
 function selectValue(value: string) {
   emits("update:modelValue", value);
 }
+function filterList(
+  val: string,
+  update: (callbackFn: () => void, afterFn?: (ref: QSelect) => void) => void,
+) {
+  update(() => {
+    emits("filter", val);
+  });
+}
+const listStyles = ref({});
+async function updateListWidth() {
+  await nextTick();
+  const el = qInputRef.value?.$el as HTMLElement;
+  if (el) {
+    const control = el.querySelector<HTMLElement>(".q-field__control");
+    if (control) {
+      const w = control.getBoundingClientRect().width;
+      listStyles.value = { width: `${w}px` };
+    }
+  }
+}
 onMounted(() => {
   if (props.required) {
-    validationRules.value = [
-      (val) => (val && val.length > 0) || "Поле не может быть пустым",
-    ];
+    validationRules.value = [(val) => !!val || "Поле не может быть пустым"];
   } else {
     validationRules.value = props.rules;
   }
@@ -147,15 +176,24 @@ onMounted(() => {
   .q-field__input {
     color: var(--app-grey-500);
     caret-color: var(--app-green-500);
+    flex-wrap: nowrap;
   }
   .q-field--labeled .q-field__native {
     line-height: 20px;
   }
   .q-field__control {
     height: v-bind(height);
+    min-height: v-bind(height);
   }
   .q-field__marginal {
     height: v-bind(height);
+    min-height: v-bind(height);
+  }
+  &:not(:has(.q-field--labeled)) {
+    .q-field__native {
+      height: v-bind(height);
+      min-height: v-bind(height);
+    }
   }
   input[type="password"]:not(:placeholder-shown) {
     font-family: Verdana;
@@ -184,5 +222,8 @@ onMounted(() => {
       color: var(--app-red-500);
     }
   }
+}
+.q-menu {
+  max-height: 400px;
 }
 </style>

@@ -16,7 +16,7 @@
               class="b-main-editable-card__comment"
               placeholder="Оставьте комментарий по очагу"
               v-model="hotbed.details.comment"
-              @blur="saveChanges"
+              @blur="saveChanges()"
             ></CInputTextarea>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Мероприятие:</div>
@@ -30,7 +30,7 @@
               <div class="b-labeled-field__label gg-t-big">Статус работы:</div>
               <CInputSelect
                 v-model="hotbed.details.workStage"
-                @update:model-value="saveChanges"
+                @update:model-value="saveChanges()"
                 :options="HOTBED_WORK_STAGE_OPTIONS"
                 class="b-labeled-field__input"
               ></CInputSelect>
@@ -72,12 +72,18 @@
       @cancel="cancelDeleteAction"
       @confirm="confirmDeleteAction"
     />
-    <PagesHotbedsEdit v-model="editMode" :hotbed="hotbed" @hotbed-updated="editHotbed" />
+    <PagesHotbedsEdit
+      v-if="hotbed"
+      v-model="editMode"
+      :hotbed="hotbed"
+      @hotbed-updated="editHotbed"
+    />
   </main>
 </template>
 
 <script setup lang="ts">
 import { mdiDeleteOutline } from "@quasar/extras/mdi-v6";
+import { date } from "quasar";
 import { ref } from "vue";
 import { useMainStore } from "~/store/main";
 
@@ -229,12 +235,12 @@ function updateHotdedCardList() {
     },
     {
       label: "Дата создания",
-      value: "",
+      value: date.formatDate(hotbed.value?.details?.creationDate, "DD.MM.YYYY"),
       type: "text",
     },
     {
       label: "Дата изменения",
-      value: "",
+      value: date.formatDate(hotbed.value?.details?.creationDate, "DD.MM.YYYY"),
       type: "text",
     },
   ];

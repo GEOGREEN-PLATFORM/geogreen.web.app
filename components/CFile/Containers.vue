@@ -1,6 +1,8 @@
 <template>
   <section class="file-container">
-    <p class="file-container__block-caption gg-cap">Загруженные изображения</p>
+    <p v-if="filesCopy?.length" class="file-container__block-caption gg-cap">
+      Загруженные изображения
+    </p>
     <ul class="file-container__list">
       <li v-for="(file, index) in filesCopy" :key="getKey(file)">
         <CFile
@@ -76,7 +78,6 @@ function removeRemote(index: number, imageId: string) {
   justify-content: center;
   width: 100%;
   gap: 12px;
-  padding: 0px 8px;
   &__block-caption {
     padding-bottom: 4px;
     border-bottom: 1px solid var(--app-grey-050);

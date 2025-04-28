@@ -221,7 +221,7 @@ async function saveChanges() {
         patronymic: userData.value.fullName.split(" ")[2],
         email: userData.value.email,
         number: userData.value.phone,
-        birthdate: tempDateConverterWillBeRemoved(userData.value.birthDate),
+        birthdate: userData.value.birthDate,
         image: userData.value.image,
       },
     });
@@ -249,7 +249,7 @@ async function getUser() {
     role: response.role === "operator" ? "Оператор" : "Администратор",
     email: response.email,
     phone: response.number || "",
-    birthDate: convertFromServerTempWillBeRemoved(response.birthdate),
+    birthDate: response.birthdate,
     fullName: `${response.lastName} ${response.firstName} ${response.patronymic}`,
     image: response.image || null,
   };
@@ -312,14 +312,6 @@ async function onFileSelected(event: Event) {
   } finally {
     isAvatarUploading.value = false;
   }
-}
-function convertFromServerTempWillBeRemoved(date: string | null) {
-  if (!date) return "";
-  return `${date.split(" ")?.[0].split("-")[0]}.${date.split(" ")?.[0].split("-")[1]}.${date.split(" ")?.[0].split("-")[2]}`;
-}
-function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
-  const [day, month, year] = ddmmyyyy.split(".");
-  return `${year}-${month}-${day}`;
 }
 function triggerFileUpload() {
   fileInput.value?.click();

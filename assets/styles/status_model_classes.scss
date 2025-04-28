@@ -20,3 +20,26 @@
 .account-state.blocked {
   background-color: var(--app-grey-300);
 }
+
+.event-status {
+  color: var(--app-white);
+}
+.event-status.created {
+  background-color: var(--app-grey-300);
+}
+.event-status.at-work {
+  background-color: var(--app-orange-300);
+}
+.event-status.on-review {
+  background-color: var(--app-blue-300);
+}
+.event-status.on-pause {
+  background-color: var(--app-grey-100);
+  color: var(--app-grey-500);
+}
+.event-status.rejected {
+  background-color: var(--app-red-400);
+}
+.event-status.completed {
+  background-color: var(--app-green-400);
+}

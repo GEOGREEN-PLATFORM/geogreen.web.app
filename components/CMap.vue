@@ -155,7 +155,13 @@
             class="popup-marker__divider"
           />
           <ul class="actions-label">
-            <li class="actions-label__action" v-if="store.user?.role !== 'user'">
+            <li
+              class="actions-label__action"
+              v-if="
+                props.editableMarkers === 'all' ||
+                (Array.isArray(props.editableMarkers) && props.editableMarkers?.includes(marker.id))
+              "
+            >
               <q-icon
                 class="actions-label__icon actions-label__icon--blue"
                 :name="mdiInformation"
@@ -174,7 +180,13 @@
                 :name="marker.coordinates?.length ? mdiPencil : mdiPlus"
               />
             </li>
-            <li class="actions-label__action" v-if="store.user?.role !== 'user'">
+            <li
+              class="actions-label__action"
+              v-if="
+                props.editableMarkers === 'all' ||
+                (Array.isArray(props.editableMarkers) && props.editableMarkers?.includes(marker.id))
+              "
+            >
               <span class="actions-label__text">Плотность:</span>
               <COptions
                 v-model="marker.details.density"
@@ -189,6 +201,30 @@
                 size="small"
                 stretch="fill"
                 design-type="secondary"
+              ></CButton>
+            </li>
+            <li
+              class="actions-label__action"
+              v-if="
+                props.selectableMarkers === 'all' ||
+                (typeof Array.isArray(props.selectableMarkers) &&
+                  props.selectableMarkers?.includes(marker.id))
+              "
+            >
+              <CButton
+                v-if="marker.id !== props.selectedMarker?.id"
+                @click="externalSelectMarker(marker)"
+                label="Выбрать"
+                size="small"
+                stretch="fill"
+              ></CButton>
+              <CButton
+                v-else
+                @click="externalCancelMarkerSelection(marker)"
+                label="Отменить выбор"
+                size="small"
+                stretch="fill"
+                design-type="tertiary"
               ></CButton>
             </li>
             <li
@@ -260,7 +296,8 @@ interface Props {
   toggleVisibility?: "hide" | "enable" | "forbid";
   hideControls?: boolean;
   selectedMarker?: Marker | null;
-  editableMarkers?: "all" | string[];
+  editableMarkers?: "all" | "none" | string[];
+  selectableMarkers?: "all" | "none" | string[];
 }
 const store = useMainStore();
 const mapRef = ref();
@@ -275,6 +312,8 @@ const emit = defineEmits<{
   addMarker: [coordinate: Coordinate, zone?: ZoneWithDensity];
   deleteMarker: [id: string];
   editMarker: [id: string, marker: Marker];
+  selectMarker: [id: string, marker: Marker];
+  cancelMarkerSelection: [id: string];
   forbiddenAddMarker: [];
 }>();
 
@@ -288,24 +327,24 @@ const minusElem = ref<HTMLElement>();
 
 const markersSrcByDensity = ref({
   default: markerIconDefaultSrc,
-  low: markerIconGreenSrc,
-  medium: markerIconOrangeSrc,
-  high: markerIconRedSrc,
+  LOW: markerIconGreenSrc,
+  MIDDLE: markerIconOrangeSrc,
+  HIGH: markerIconRedSrc,
 });
 
 const densityOptions = [
   {
-    value: "low",
+    value: "LOW",
     color: "green-500",
     keepColor: true,
   },
   {
-    value: "medium",
+    value: "MIDDLE",
     color: "orange-500",
     keepColor: true,
   },
   {
-    value: "high",
+    value: "HIGH",
     color: "red-500",
     keepColor: true,
   },
@@ -431,6 +470,12 @@ function openMarkerPopup(markerId: string) {
 function closeMarkerPopup(markerId: string) {
   gGreenCluster.markersPopupOpened.delete(markerId);
 }
+function externalSelectMarker(marker: Marker) {
+  emit("selectMarker", marker.id, marker);
+}
+function externalCancelMarkerSelection(marker: Marker) {
+  emit("cancelMarkerSelection", marker.id);
+}
 
 function addZone(markerId: string) {
   gGreenOlMap.interactionType = "zone_add";
@@ -476,7 +521,7 @@ function overrideMarkerStyleFunction(feature: FeatureLike, style: Style) {
 }
 
 function getMarkerIconByDensity(
-  density?: "default" | "low" | "medium" | "high",
+  density?: "default" | "LOW" | "MIDDLE" | "HIGH",
 ) {
   return new Icon({
     src: markersSrcByDensity.value[density || "default"],
@@ -545,18 +590,16 @@ function handleMapClick(event: MapBrowserEvent<UIEvent>) {
   }
 }
 
-function getPolygonStyleByDensity(
-  density: "default" | "low" | "medium" | "high",
-) {
+function getPolygonStyleByDensity(density: Density) {
   let fillColor = "";
   switch (density) {
-    case "low":
+    case "LOW":
       fillColor = "rgba(177, 212, 160, 0.8)";
       break;
-    case "medium":
+    case "MIDDLE":
       fillColor = "rgba(255, 198, 138, 0.8)";
       break;
-    case "high":
+    case "HIGH":
       fillColor = "rgba(255, 138, 153, 0.8)";
       break;
     default:
@@ -805,6 +848,7 @@ onMounted(() => {
     left: 0;
     top: 50%;
     transform: translateY(-50%);
+    box-shadow: 2px 1px 2px rgb(0, 0, 0, 0.2);
     width: 44px;
     height: fit-content;
     padding: 48px 0px 8px 0px;

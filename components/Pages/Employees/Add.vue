@@ -218,9 +218,7 @@ async function addEmployee(newEmployee: EmployeeData) {
         email: newEmployee.contacts.email,
         password: newEmployee.password,
         number: newEmployee.contacts.phoneNumber,
-        birthdate: tempDateConverterWillBeRemoved(
-          newEmployee.personalData.dateOfBirth,
-        ),
+        birthdate: newEmployee.personalData.dateOfBirth,
       },
     });
     dialogVisible.value = false;
@@ -234,10 +232,6 @@ async function addEmployee(newEmployee: EmployeeData) {
   } finally {
     isAddLoading.value = false;
   }
-}
-function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
-  const [day, month, year] = ddmmyyyy.split(".");
-  return `${year}-${month}-${day}`;
 }
 function resetForm() {
   currentStep.value = 1;

@@ -54,10 +54,10 @@ const pages: Page[] = [
         path: "/employees",
       },
       {
-        key: "tasks",
-        name: "Задачи",
+        key: "events",
+        name: "Мероприятия",
         selected: false,
-        path: "/tasks",
+        path: "/task-events",
       },
       {
         key: "applications",

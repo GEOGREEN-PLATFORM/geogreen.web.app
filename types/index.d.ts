@@ -20,6 +20,31 @@ declare global {
   interface TableRow {
     [fieldName: string]: string | number | undefined | null;
   }
+  interface TaskEvent {
+    id: string;
+    geoPointId?: string;
+    startDate: string;
+    endDate: string;
+    lastUpdateDate: string;
+    statusCode: string;
+    eventType: string;
+    problemAreaType: ProblemAreaTypes;
+    description: string;
+    name: string;
+    operator: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      patronymic: string;
+    };
+    author: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      patronymic: string;
+    };
+    responsibleEmployeeOption?: ItemOption;
+  }
   interface TablePagination {
     rowsPerPage: number;
     page: number;
@@ -101,7 +126,7 @@ declare global {
     to: string;
   };
   interface Marker {
-    id?: string;
+    id: string;
     coordinate?: Coordinate;
     details: {
       square: number;
@@ -113,17 +138,19 @@ declare global {
       images: ImageObj[] | [];
       comment: string;
       eliminationMethod: string;
-      density: Density | null;
+      density: Density;
+      creationDate?: string;
+      updateDate?: string;
     };
     relatedTaskId?: string | null;
-    coordinates?: Coordinate[];
+    coordinates?: Coordinate[] | null;
     isTempCreatedBy?: string;
   }
   interface ZoneWithDensity {
-    density: Density | null;
+    density: Density;
     coordinates: Coordinate[];
   }
-  type Density = "default" | "low" | "medium" | "high";
+  type Density = null | "default" | "LOW" | "MIDDLE" | "HIGH";
   interface Tab {
     key: string;
     name: string;

@@ -112,8 +112,7 @@ interface ApplicationPageRequest {
 }
 const store = useMainStore();
 const { timeConverter } = useFormatters();
-const { PROBLEM_AREA_TYPE_OPTIONS, HOTBED_WORK_STAGE_STYLES } =
-  useGetStatusOptions();
+const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
@@ -149,7 +148,7 @@ const filters = reactive<FilterItem[]>([
     key: "problemAreaType",
     label: "Тип проблемы",
     selected: "",
-    data: PROBLEM_AREA_TYPE_OPTIONS,
+    data: store.formattedProblemAreaTypes,
   },
   {
     type: "date-range",

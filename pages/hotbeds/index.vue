@@ -151,8 +151,8 @@ const tableRows: ComputedRef<TableRow[]> = computed(() =>
     landType: e.details?.landType,
     owner: e.details?.owner,
     eliminationMethod: e.details?.eliminationMethod,
-    // dateCreated: date.formatDate(e.details?.dateCreated, "DD.MM.YYYY"),
-    // dateUpdated: date.formatDate(e.details?.dateUpdated, "DD.MM.YYYY"),
+    dateCreated: date.formatDate(e.details?.creationDate, "DD.MM.YYYY"),
+    dateUpdated: date.formatDate(e.details?.updateDate, "DD.MM.YYYY"),
   })),
 );
 const filters = ref<FilterItem[]>([
@@ -213,7 +213,7 @@ async function handleHotbedCreated(newHotbed: HotbedData) {
           comment: newHotbed.comment,
           density: newHotbed.density,
         },
-        coordinates: newHotbed.coordinates[0] || [],
+        coordinates: newHotbed.coordinates?.[0] || null,
       },
     });
     getHotbeds();
@@ -221,7 +221,7 @@ async function handleHotbedCreated(newHotbed: HotbedData) {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Ну удалось создать очаг",
+      text: "Не удалось добавить очаг",
     };
   }
 }
@@ -241,24 +241,18 @@ async function getHotbeds() {
     filters.value[2].selected &&
     typeof filters.value[2].selected === "string"
   ) {
-    params.append(
-      "fromDate",
-      tempDateConverterWillBeRemoved(filters.value[2].selected),
-    );
-    params.append(
-      "toDate",
-      tempDateConverterWillBeRemoved(filters.value[2].selected),
-    );
+    params.append("fromDate", filters.value[2].selected);
+    params.append("toDate", filters.value[2].selected);
   } else {
     const { from, to } = filters.value[2].selected as {
       from: string | null;
       to: string | null;
     };
     if (from) {
-      params.append("fromDate", tempDateConverterWillBeRemoved(from));
+      params.append("fromDate", from);
     }
     if (to) {
-      params.append("toDate", tempDateConverterWillBeRemoved(to));
+      params.append("toDate", to);
     }
   }
 
@@ -272,10 +266,6 @@ async function getHotbeds() {
   hotbeds.value = response;
   // pagination.value.rowsNumber = response.totalItems;
   hotbedsLoading.value = false;
-}
-function tempDateConverterWillBeRemoved(ddmmyyyy: string): string {
-  const [day, month, year] = ddmmyyyy.split(".");
-  return `${year}-${month}-${day}`;
 }
 function searchHotbed() {
   debounce(getHotbeds, 500, "searchHotbed");

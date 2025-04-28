@@ -185,6 +185,23 @@ watch(
       max-width 0.324s cubic-bezier(0.4, 0, 0.2, 1),
       color 0.3s ease;
   }
+  .q-textarea.q-field--labeled .q-field__native {
+    min-height: 100%;
+    max-height: 180px;
+    overflow: auto;
+  }
+  &:has(textarea) {
+    .q-field__label {
+      top: 26px;
+    }
+    .q-field--float .q-field__label {
+      transform: translateY(-80%) scale(0.85);
+    }
+    .q-field__native:-webkit-autofill + .q-field__label,
+    .q-field__input:-webkit-autofill + .q-field__label {
+      transform: translateY(-80%) scale(0.85);
+    }
+  }
   .q-field--highlighted .q-field__label {
     color: currentColor;
   }

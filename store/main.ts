@@ -7,6 +7,7 @@ interface MainState {
   portalApiUserReport: string;
   portalApiAuth: string;
   portalApiKeycloak: string;
+  portalApiEventManager: string;
   protocol: string;
   protocolWS: string;
   user: User | null;
@@ -41,6 +42,9 @@ export const useMainStore = defineStore("main", {
     protocolWS:
       process.env?.PORTAL_SOCKETS_PROTOCOL ||
       (useRuntimeConfig().public.PORTAL_SOCKETS_PROTOCOL as string),
+    portalApiEventManager:
+      process.env?.PORTAL_API_EVENT_MANAGER ||
+      (useRuntimeConfig().public.PORTAL_API_EVENT_MANAGER as string),
     user: null,
     problemAreaTypes: [],
     landTypes: [],
@@ -55,6 +59,9 @@ export const useMainStore = defineStore("main", {
     },
     apiPhotoAnalyse: (state) => {
       return `${state.protocol}://${state.portalApiFileServer}`;
+    },
+    apiEventManager: (state) => {
+      return `${state.protocol}://${state.portalApiEventManager}`;
     },
     apiUserReport: (state) => {
       return `${state.protocol}://${state.portalApiUserReport}`;

@@ -15,7 +15,7 @@
         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
           <q-date
             mask="DD.MM.YYYY"
-            :model-value="props.modelValue"
+            :model-value="formattedDate"
             color="green-500"
             @update:model-value="updateDate"
             :range="range"
@@ -38,6 +38,7 @@
 
 <script lang="ts" setup>
 import { mdiCalendarMonthOutline } from "@quasar/extras/mdi-v6";
+import { date } from "quasar";
 
 interface Props {
   modelValue: string | DateRange;
@@ -50,13 +51,14 @@ const emit = defineEmits(["update:modelValue"]);
 
 const formattedDate = computed(() => {
   if (!props.modelValue) return "";
-  if (typeof props.modelValue === "string") return props.modelValue;
+  if (typeof props.modelValue === "string")
+    return date.formatDate(props.modelValue, "DD.MM.YYYY");
   if (
     typeof props.modelValue === "object" &&
     props.range &&
     props.modelValue.from
   ) {
-    return `${props.modelValue.from} - ${props.modelValue.to}`;
+    return `${date.formatDate(props.modelValue.from, "DD.MM.YYYY")} - ${date.formatDate(props.modelValue.to, "DD.MM.YYYY")}`;
   }
   return "";
 });
@@ -72,16 +74,27 @@ function isValidDate(dateStr: string): boolean {
     date.getDate() === day
   );
 }
-
 const dateRules = [
   (val: string) => {
     if (!val || val.length < 10) return true;
     return isValidDate(val) || "Используйте формат ДД.ММ.ГГГГ";
   },
 ];
-
-function updateDate(val: string | number | DateRange) {
-  emit("update:modelValue", val);
+function getISOFromFormattedDate(val: string) {
+  const [day, month, year] = val.split(".").map(Number);
+  return new Date(year, month - 1, day).toISOString();
+}
+function updateDate(val: number | string | DateRange) {
+  if (typeof val === "string") {
+    if (isValidDate(val)) {
+      emit("update:modelValue", getISOFromFormattedDate(val));
+    }
+  } else if (typeof val === "object" && props.range && val.from) {
+    emit("update:modelValue", {
+      from: getISOFromFormattedDate(val.from),
+      to: getISOFromFormattedDate(val.to),
+    });
+  }
 }
 </script>
 
