@@ -72,7 +72,9 @@
             </div>
             <div class="b-form__info-row gg-t-base">
               <span class="b-form__info-label">Ожидаемая дата завершения:</span>
-              <span class="b-form__info-value">{{ taskEventData.expectedDateEnd }}</span>
+              <span class="b-form__info-value">{{
+                date.formatDate(taskEventData.expectedDateEnd, "DD.MM.YYYY")
+              }}</span>
             </div>
             <div class="b-form__info-row gg-t-base">
               <span class="b-form__info-label">Ответственный:</span>
@@ -97,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Coordinate } from "ol/coordinate";
+import { date } from "quasar";
 import { useMainStore } from "~/store/main";
 interface Props {
   modelValue: boolean;
@@ -302,12 +304,25 @@ $app-narrow-mobile: 364px;
   &__info-row {
     display: flex;
     gap: 4px;
+    margin-bottom: 8px;
+    @media screen and (max-width: $app-mobile) {
+      display: block;
+      .b-form__info-label {
+        display: block;
+        margin-bottom: 4px;
+      }
+    }
   }
   &__info-label {
-    color: var(--app-grey-500);
+    color: var(--app-grey-300);
+    width: 162px;
+    min-width: 162px;
   }
   &__info-value {
-    color: var(--app-grey-300);
+    color: var(--app-grey-500);
+    display: flex;
+    align-items: center;
+    overflow-wrap: anywhere;
   }
   &__footer {
     display: flex;

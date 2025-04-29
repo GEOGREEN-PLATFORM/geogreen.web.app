@@ -40,6 +40,7 @@
               :shortInfoKeys="shortMarkerInfoNameKeys"
               addZone="hide"
               :addMarker="isAddMarker ? 'forbid' : 'enable'"
+              defaultInteractionType="marker_add"
             ></CMap>
           </article>
         </fieldset>
@@ -133,8 +134,12 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   },
 });
 function selectProblemType(type: ProblemAreaTypes) {
-  userReport.details.problemAreaType = type;
-  getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
+  if (userReport.details.problemAreaType !== type) {
+    userReport.details.problemAreaType = type;
+    existingHotbeds.value = [];
+    isAddMarker.value = false;
+    getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
+  }
 }
 async function getExistingHotbedsOfProblemsByType(
   problemAreaType: ProblemAreaTypes,

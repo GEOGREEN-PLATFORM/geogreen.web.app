@@ -64,7 +64,9 @@
             </div>
             <div class="b-form__info-row gg-t-base">
               <span class="b-form__info-label">Дата рождения:</span>
-              <span class="b-form__info-value">{{ employeeData.personalData.dateOfBirth }}</span>
+              <span class="b-form__info-value">{{
+                date.formatDate(employeeData.personalData.dateOfBirth, "DD.MM.YYYY")
+              }}</span>
             </div>
           </section>
           <section class="b-form__section">
@@ -109,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { create } from "ol/transform";
+import { date } from "quasar";
 import { useMainStore } from "~/store/main";
 
 interface Props {
@@ -333,12 +335,25 @@ $app-narrow-mobile: 364px;
   &__info-row {
     display: flex;
     gap: 4px;
+    margin-bottom: 8px;
+    @media screen and (max-width: $app-mobile) {
+      display: block;
+      .b-form__info-label {
+        display: block;
+        margin-bottom: 4px;
+      }
+    }
   }
   &__info-label {
     color: var(--app-grey-300);
+    min-width: 152px;
+    width: 152px;
   }
   &__info-value {
     color: var(--app-grey-500);
+    display: flex;
+    align-items: center;
+    overflow-wrap: anywhere;
   }
   &__footer {
     display: flex;

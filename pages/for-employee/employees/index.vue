@@ -282,6 +282,7 @@ onMounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
+    margin: 0 auto;
     &__item {
       display: flex;
       align-items: center;

@@ -298,6 +298,8 @@ interface Props {
   selectedMarker?: Marker | null;
   editableMarkers?: "all" | "none" | string[];
   selectableMarkers?: "all" | "none" | string[];
+  dataLoading?: boolean;
+  defaultInteractionType?: "zone_add" | "marker_add" | "none";
 }
 const store = useMainStore();
 const mapRef = ref();
@@ -466,7 +468,9 @@ function openMarkerPopup(markerId: string) {
     gGreenCluster.markersPopupOpened.set(markerId, marker);
   }
 }
-
+function closeAllMarkerPopup() {
+  gGreenCluster.markersPopupOpened.clear();
+}
 function closeMarkerPopup(markerId: string) {
   gGreenCluster.markersPopupOpened.delete(markerId);
 }
@@ -681,6 +685,19 @@ onMounted(() => {
       Array.from(gGreenCluster.markersDict.values()),
     );
   }
+  if (props.defaultInteractionType) {
+    nextTick(() => {
+      switch (props.defaultInteractionType) {
+        case "marker_add":
+          (
+            document.querySelector(
+              ".g-green-control-bar__marker button",
+            ) as HTMLButtonElement
+          )?.click();
+          break;
+      }
+    });
+  }
 });
 watch(
   () => props.markers,
@@ -691,6 +708,12 @@ watch(
       gGreenCluster.zonesFeatures = convertZonesToFeatures(
         Array.from(gGreenCluster.markersDict.values()),
       );
+      if (newMarkers.length === 0) {
+        if (gGreenCluster.markersPopupOpened.size) {
+          closeAllMarkerPopup();
+          deselectFeatures();
+        }
+      }
     }
   },
   { deep: true },

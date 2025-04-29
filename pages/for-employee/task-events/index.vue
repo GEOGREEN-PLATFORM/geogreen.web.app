@@ -452,6 +452,7 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     width: max-content;
+    margin: 0 auto;
     height: 32px;
     padding: 4px 16px;
     border-radius: 16px;

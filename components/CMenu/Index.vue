@@ -20,7 +20,7 @@
         returnObj
         @update:model-value="goToPage"
         @select-nested="selectNestedPage"
-        :tabs="pages"
+        :tabs="visiblePages"
         shrink
       ></CTabs>
       <div v-if="!store.user" class="login-buttons">
@@ -69,7 +69,7 @@
             returnObj
             @update:model-value="goToPage"
             @select-nested="selectNestedPage"
-            :tabs="pages"
+            :tabs="visiblePages"
             shrink
             vertical
           ></CTabs>
@@ -95,10 +95,13 @@
 </template>
 
 <script setup lang="ts">
+import { useMainStore } from "@/store/main";
 import { mdiAccountOutline, mdiCog } from "@quasar/extras/mdi-v6";
-import { useMainStore } from "~/store/main";
+
 interface Page extends Tab {
   path?: string;
+  visible?: boolean;
+  hasNested?: boolean;
   nestedItems?: {
     path?: string;
     name: string;
@@ -106,61 +109,82 @@ interface Page extends Tab {
     selected: boolean;
   }[];
 }
-interface Props {
-  pages: Page[];
-}
+
+const props = defineProps<{ pages: Page[] }>();
 const store = useMainStore();
 const route = useRoute();
-const props = defineProps<Props>();
+
 const currentPage = shallowRef<Page>();
 const isMobileMenuOpened = shallowRef(false);
+
 function toggleMenu() {
   isMobileMenuOpened.value = !isMobileMenuOpened.value;
 }
-function goToPage(page: Page) {
-  if (!page.hasNested) {
-    props.pages.forEach((page) => {
-      if (page.hasNested) {
-        page.nestedItems?.forEach((nested) => {
-          nested.selected = false;
-        });
+
+function syncTabsWithRoute() {
+  props.pages.forEach((p) =>
+    p.nestedItems?.forEach((n) => {
+      n.selected = false;
+    }),
+  );
+  for (const page of props.pages) {
+    if (page.hasNested) {
+      const hit = page.nestedItems?.find(
+        (n) => route.path === `${page.path}${n.path}`,
+      );
+      if (hit) {
+        currentPage.value = page;
+        hit.selected = true;
+        return;
       }
-    });
-    navigateTo(page.path);
-    if (isMobileMenuOpened.value) {
-      toggleMenu();
+    } else if (page.path === route.path) {
+      currentPage.value = page;
+      return;
     }
   }
 }
-function selectNestedPage(page: Page, nestedKey: string) {
-  const nestedPage = page.nestedItems?.find((item) => item.key === nestedKey);
-  if (nestedPage) {
-    nestedPage.selected = true;
-    navigateTo(`${page.path}${nestedPage.path}`);
+
+onMounted(syncTabsWithRoute);
+watch(
+  () => route.path,
+  () => {
+    syncTabsWithRoute();
     if (isMobileMenuOpened.value) {
-      toggleMenu();
+      isMobileMenuOpened.value = false;
     }
+  },
+);
+
+async function goToPage(page: Page) {
+  if (!page.hasNested && page.path) {
+    props.pages.forEach((p) =>
+      p.nestedItems?.forEach((n) => {
+        n.selected = false;
+      }),
+    );
+    await navigateTo(page.path);
   }
 }
+
+async function selectNestedPage(page: Page, nestedKey: string) {
+  const nested = page.nestedItems?.find((n) => {
+    n.key === nestedKey;
+  });
+  if (!nested) return;
+  props.pages.forEach((p) =>
+    p.nestedItems?.forEach((n) => {
+      n.selected = false;
+    }),
+  );
+  nested.selected = true;
+  await navigateTo(`${page.path}${nested.path}`);
+}
+
+const visiblePages = computed(() => props.pages.filter((p) => p.visible));
+
 function handleAccountClick() {
   navigateTo("/auth/register");
 }
-onMounted(() => {
-  props.pages.forEach((page) => {
-    if (page.hasNested) {
-      page.nestedItems?.forEach((nested) => {
-        if (route.path.includes(`${page.path}${nested.path}`)) {
-          currentPage.value = page;
-          nested.selected = true;
-        }
-      });
-    } else {
-      if (page.path === route.path) {
-        currentPage.value = page;
-      }
-    }
-  });
-});
 </script>
 
 <style scoped lang="scss">

@@ -70,6 +70,8 @@ async function sendLogin() {
       saveUserEmail(userData.value.email);
       await getUserDataByEmail(userData.value.email);
       goToMainPage();
+    } else {
+      buttonOptions.value.main.loading = false;
     }
   } catch (error) {
     useState<Alert>("showAlert").value = {
@@ -77,7 +79,6 @@ async function sendLogin() {
       type: "error",
       text: "Возникла ошибка во время авторизации",
     };
-  } finally {
     buttonOptions.value.main.loading = false;
   }
 }
