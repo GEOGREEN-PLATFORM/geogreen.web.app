@@ -3,10 +3,10 @@
     <header class="b-header q-mb-lg">
       <div class="b-header__title-wrapper">
         <h1 class="b-header__title gg-h1">Сотрудники</h1>
-        <div class="b-header__add-btn">
+        <div v-if="store.user?.role === 'admin'" class="b-header__add-btn">
           <CButton label="Добавить оператора" size="medium" @click="openEmployeeDialog"></CButton>
         </div>
-        <div class="b-header__add-btn--mobile">
+        <div v-if="store.user?.role === 'admin'" class="b-header__add-btn--mobile">
           <CButton
             :icon="mdiPlus"
             iconColor="var(--app-white)"
@@ -282,6 +282,7 @@ onMounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
+    margin: 0 auto;
     &__item {
       display: flex;
       align-items: center;

@@ -480,12 +480,25 @@ $app-narrow-mobile: 364px;
   &__info-row {
     display: flex;
     gap: 4px;
+    margin-bottom: 8px;
+    @media screen and (max-width: $app-mobile) {
+      display: block;
+      .b-form__info-label {
+        display: block;
+        margin-bottom: 4px;
+      }
+    }
   }
   &__info-label {
-    color: var(--app-grey-500);
+    color: var(--app-grey-300);
+    width: 222px;
+    min-width: 222px;
   }
   &__info-value {
-    color: var(--app-grey-300);
+    color: var(--app-grey-500);
+    display: flex;
+    align-items: center;
+    overflow-wrap: anywhere;
   }
   &__footer {
     display: flex;

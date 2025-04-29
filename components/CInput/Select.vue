@@ -30,6 +30,7 @@
       clearable
       :popup-content-style="listStyles"
       @popup-show="updateListWidth"
+      :readonly="readonly"
     />
   </div>
 </template>
@@ -56,6 +57,7 @@ interface Props {
   disabled?: boolean;
   useInput?: boolean;
   returnObj?: boolean;
+  readonly?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",

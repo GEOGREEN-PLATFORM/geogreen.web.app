@@ -13,6 +13,7 @@
       :no-error-icon="hideErrorIcon"
       :hide-bottom-space="hideBottomSpace"
       :placeholder="placeholder"
+      :readonly="readonly"
       :name="name"
       @update:model-value="updateValue"
       @blur="emits('blur')"
@@ -41,6 +42,7 @@ interface Props {
   name?: string;
   autogrow?: boolean;
   bgColor?: string;
+  readonly?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   modelValue: "",

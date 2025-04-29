@@ -16,6 +16,8 @@
 </template>
 
 <script setup lang="ts">
+import { useMainStore } from "~/store/main";
+
 interface Page extends Tab {
   path?: string;
   nestedItems?: {
@@ -24,28 +26,34 @@ interface Page extends Tab {
     key: string;
     selected: boolean;
   }[];
+  visible: boolean;
 }
+const store = useMainStore();
 const pages: Page[] = [
   {
     key: "main",
-    name: "Главная",
+    name: !store.user || store.user?.role === "user" ? "Главная" : "Карта",
     disabled: true,
+    visible: true,
   },
   {
     key: "hotbeds",
     name: "Очаги",
     path: "/hotbeds",
+    visible: true,
   },
   {
     key: "report",
     name: "Сообщить",
     path: "/report-problem",
+    visible: store.user?.role === "user",
   },
   {
     key: "for-employee",
     name: "Сотруднику",
     path: "/for-employee",
     hasNested: true,
+    visible: store.user?.role !== "user",
     nestedItems: [
       {
         key: "employees",

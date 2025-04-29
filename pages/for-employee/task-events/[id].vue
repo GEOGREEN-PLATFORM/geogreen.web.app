@@ -10,9 +10,18 @@
                 v-model="taskEvent.name"
                 placeholder="Введите название мероприятия"
                 class="b-name__input gg-h1"
-                @blur="saveChanges"
+                @blur="
+                  () => {
+                    store.user?.role === 'admin' && saveChanges();
+                  }
+                "
+                :readonly="store.user?.role !== 'admin'"
               />
-              <span class="b-name__delete-icon" @click="openDeleteDialog">
+              <span
+                v-if="store.user?.role === 'admin'"
+                class="b-name__delete-icon"
+                @click="openDeleteDialog"
+              >
                 <q-icon :name="mdiDeleteOutline" color="red-500" size="24px"></q-icon>
               </span>
             </div>
@@ -25,6 +34,7 @@
                 v-model="taskEvent.description"
                 bg-color="transparent"
                 @blur="saveChanges"
+                :readonly="store.user?.role !== 'admin'"
               ></CInputTextarea>
               <div class="b-labeled-field">
                 <div class="b-labeled-field__label gg-t-big">Ответственный:</div>
@@ -37,6 +47,7 @@
                   returnObj
                   height="40px"
                   class="b-labeled-field__input"
+                  :readonly="store.user?.role !== 'admin'"
                 ></CInputSelect>
               </div>
               <div class="b-labeled-field">

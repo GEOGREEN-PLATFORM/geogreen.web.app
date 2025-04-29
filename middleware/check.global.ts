@@ -4,17 +4,39 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const store = useMainStore();
   const { getUserDataByEmail, getUserEmail } = useCheckUser();
   const { refreshToken } = useFetchTokens();
-  const noAuthAllowedPaths = [
-    "/auth/login",
-    "/auth/register",
-    "/auth/change-password",
-  ];
-  if (
-    !noAuthAllowedPaths.includes(to.path) &&
-    !(await getUserDataByEmail(getUserEmail()))
-  ) {
+  if (!(await getUserDataByEmail(getUserEmail()))) {
     if (!(await refreshToken())) {
       return navigateTo("/auth/login");
     }
+  }
+  const noAuthAllowedPathNames = [
+    "auth-login",
+    "auth-register",
+    "auth-change-password",
+  ];
+  const userAllowedPathNames = [
+    ...noAuthAllowedPathNames,
+    "hotbeds",
+    "hotbeds-id",
+    "report-problem",
+    "report-problem-thanks",
+    "index",
+  ];
+  const employeeAllowedPathNames = [
+    ...userAllowedPathNames,
+    "for-employee-employees",
+    "for-employee-employees-id",
+    "for-employee-applications",
+    "for-employee-applications-id",
+    "for-employee-task-events",
+    "for-employee-task-events-id",
+  ];
+  const currentRoleAllowedPathNames = store.user
+    ? store.user.role === "user"
+      ? userAllowedPathNames
+      : employeeAllowedPathNames
+    : noAuthAllowedPathNames;
+  if (!currentRoleAllowedPathNames.includes(to.name as string)) {
+    return navigateTo("/auth/login");
   }
 });

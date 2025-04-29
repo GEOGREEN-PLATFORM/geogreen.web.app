@@ -84,6 +84,12 @@ onMounted(() => {
         left: 12px;
       }
     }
+    .q-table thead th,
+    .q-table tbody td {
+      max-width: 300px;
+      overflow-wrap: break-word;
+      white-space: normal;
+    }
     .q-table__top,
     .q-table__bottom,
     thead tr:first-child th {

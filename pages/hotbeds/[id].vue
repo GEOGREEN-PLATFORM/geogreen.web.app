@@ -16,6 +16,7 @@
               class="b-main-editable-card__comment"
               placeholder="Оставьте комментарий по очагу"
               v-model="hotbed.details.comment"
+              bg-color="transparent"
               @blur="saveChanges()"
             ></CInputTextarea>
             <div class="b-labeled-field">
@@ -23,6 +24,7 @@
               <CInputSelect
                 v-model="hotbed.relatedTaskId"
                 disabled
+                height="40px"
                 class="b-labeled-field__input"
               ></CInputSelect>
             </div>
@@ -31,6 +33,7 @@
               <CInputSelect
                 v-model="hotbed.details.workStage"
                 @update:model-value="saveChanges()"
+                height="40px"
                 :options="HOTBED_WORK_STAGE_OPTIONS"
                 class="b-labeled-field__input"
               ></CInputSelect>
