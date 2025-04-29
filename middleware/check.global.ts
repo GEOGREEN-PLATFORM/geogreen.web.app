@@ -5,7 +5,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const { getUserDataByEmail, getUserEmail } = useCheckUser();
   const { refreshToken } = useFetchTokens();
   if (!(await getUserDataByEmail(getUserEmail()))) {
-    await refreshToken();
+    if (!(await refreshToken())) {
+      return navigateTo("/auth/login");
+    }
   }
   const noAuthAllowedPathNames = [
     "auth-login",
@@ -15,7 +17,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const userAllowedPathNames = [
     ...noAuthAllowedPathNames,
     "hotbeds",
+    "hotbeds-id",
     "report-problem",
+    "report-problem-thanks",
     "index",
   ];
   const employeeAllowedPathNames = [

@@ -3,14 +3,14 @@
     <header class="b-header q-mb-lg">
       <div class="b-header__title-wrapper">
         <h1 class="b-header__title gg-h1">Мероприятия</h1>
-        <div class="b-header__add-btn">
+        <div v-if="store.user?.role === 'admin'" class="b-header__add-btn">
           <CButton
             @click="openTaskEventDialog"
             label="Добавить мероприятие"
             size="medium"
           ></CButton>
         </div>
-        <div class="b-header__add-btn--mobile">
+        <div v-if="store.user?.role === 'admin'" class="b-header__add-btn--mobile">
           <CButton
             @click="openTaskEventDialog"
             :icon="mdiPlus"

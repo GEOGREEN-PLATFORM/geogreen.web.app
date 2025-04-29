@@ -40,7 +40,11 @@
               :class="{ 'b-name__input--edit': editMode }"
               :readonly="!editMode"
             />
-            <span v-if="!editMode" class="b-name__block-icon" @click="openBlockDialog">
+            <span
+              v-if="!editMode && store.user?.role === 'admin'"
+              class="b-name__block-icon"
+              @click="openBlockDialog"
+            >
               <q-icon :name="mdiCancel" color="red-500" size="24px"></q-icon>
             </span>
           </div>
@@ -139,6 +143,7 @@
               </div>
             </div>
             <CButton
+              v-if="store.user?.role === 'admin'"
               @click="toggleEditMode"
               size="medium"
               stretch="fill"
@@ -147,6 +152,7 @@
               Редактировать
             </CButton>
             <CButton
+              v-if="store.user?.role === 'admin'"
               @click="openBlockDialog"
               size="medium"
               stretch="fill"
@@ -511,6 +517,7 @@ $app-narrow-mobile: 364px;
       justify-content: center;
       background-color: var(--app-grey-100);
       color: var(--app-grey-500);
+      cursor: default;
     }
   }
 

@@ -129,15 +129,15 @@ function syncTabsWithRoute() {
   );
   for (const page of props.pages) {
     if (page.hasNested) {
-      const hit = page.nestedItems?.find(
-        (n) => route.path === `${page.path}${n.path}`,
+      const hit = page.nestedItems?.find((n) =>
+        route.path.startsWith(`${page.path}${n.path}`),
       );
       if (hit) {
         currentPage.value = page;
         hit.selected = true;
         return;
       }
-    } else if (page.path === route.path) {
+    } else if (page.path && route.path.startsWith(page.path)) {
       currentPage.value = page;
       return;
     }
@@ -167,9 +167,7 @@ async function goToPage(page: Page) {
 }
 
 async function selectNestedPage(page: Page, nestedKey: string) {
-  const nested = page.nestedItems?.find((n) => {
-    n.key === nestedKey;
-  });
+  const nested = page.nestedItems?.find((n) => n.key === nestedKey);
   if (!nested) return;
   props.pages.forEach((p) =>
     p.nestedItems?.forEach((n) => {
