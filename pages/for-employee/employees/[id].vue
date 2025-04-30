@@ -217,7 +217,7 @@ const userData = ref({ ...initialUserData.value });
 async function saveChanges() {
   try {
     await $fetch(`${store.apiAuth}/user/${route.params.id}`, {
-      method: "PUT",
+      method: "PATCH",
       headers: {
         authorization: useGetToken(),
       },
@@ -243,7 +243,7 @@ async function saveChanges() {
 }
 async function getUser() {
   const response = await $fetch<User>(
-    `${store.apiAuth}/user/${route.params.id}`,
+    `${store.apiAuth}/user/by-email/${route.params.id}`,
     {
       method: "GET",
       headers: {

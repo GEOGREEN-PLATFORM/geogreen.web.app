@@ -4,11 +4,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   const store = useMainStore();
   const { getUserDataByEmail, getUserEmail } = useCheckUser();
   const { refreshToken } = useFetchTokens();
-  if (!(await getUserDataByEmail(getUserEmail()))) {
-    if (!(await refreshToken())) {
-      return navigateTo("/auth/login");
-    }
-  }
   const noAuthAllowedPathNames = [
     "auth-login",
     "auth-register",
@@ -36,6 +31,14 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       ? userAllowedPathNames
       : employeeAllowedPathNames
     : noAuthAllowedPathNames;
+  if (
+    !noAuthAllowedPathNames.includes(to.name as string) &&
+    !(await getUserDataByEmail(getUserEmail()))
+  ) {
+    if (!(await refreshToken())) {
+      return navigateTo("/auth/login");
+    }
+  }
   if (!currentRoleAllowedPathNames.includes(to.name as string)) {
     return navigateTo("/auth/login");
   }

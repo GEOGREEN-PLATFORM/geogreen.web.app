@@ -16,10 +16,13 @@ export default function useCheckUser() {
   async function getUserDataByEmail(email: string) {
     try {
       if (email) {
-        const user = await $fetch<User>(`${store.apiAuth}/user/${email}`, {
-          method: "GET",
-          headers: { Authorization: useGetToken() },
-        });
+        const user = await $fetch<User>(
+          `${store.apiAuth}/user/by-email/${email}`,
+          {
+            method: "GET",
+            headers: { Authorization: useGetToken() },
+          },
+        );
         if (user) {
           store.user = user;
           return true;
