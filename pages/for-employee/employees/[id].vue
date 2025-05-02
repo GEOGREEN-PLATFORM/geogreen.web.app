@@ -270,7 +270,7 @@ async function confirmBlockAction() {
 }
 async function blockUser() {
   await $fetch(
-    `${store.apiAuth}/user//register/${route.params.id}/enabled/${false}`,
+    `${store.apiAuth}/user/register/${route.params.id}/enabled/${false}`,
     {
       method: "POST",
       headers: {
