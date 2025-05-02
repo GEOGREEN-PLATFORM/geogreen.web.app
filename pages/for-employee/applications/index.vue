@@ -104,11 +104,8 @@ interface ApplicationData {
   operatorId: string | null;
   problemAreaType: string;
 }
-interface ApplicationPageRequest {
+interface ApplicationsRequest extends ServerPagination {
   content: ApplicationData[];
-  totalElements: number;
-  totalPages: number;
-  numberOfElements: number;
 }
 const store = useMainStore();
 const { timeConverter } = useFormatters();
@@ -153,7 +150,7 @@ const filters = reactive<FilterItem[]>([
   {
     type: "date-range",
     key: "periodCreated",
-    selected: "",
+    selected: { from: "", to: "" },
     label: "Период создания",
   },
 ]);
@@ -161,13 +158,12 @@ const filters = reactive<FilterItem[]>([
 const requests = ref<ApplicationData[]>([]);
 const pagination = reactive({
   page: 0,
-  size: 3,
+  size: 5,
   totalElements: 0,
   totalPages: 0,
-  numberOfElements: 0,
 });
 async function getUserRequests() {
-  const response = await $fetch<ApplicationPageRequest>(
+  const response = await $fetch<ApplicationsRequest>(
     `${store.apiUserReport}/user-marker/getAll`,
     {
       method: "GET",
@@ -177,13 +173,15 @@ async function getUserRequests() {
       params: {
         page: pagination.page,
         size: pagination.size,
+        problemType: filters[0].selected || undefined,
+        startDate: (filters[1].selected as DateRange)?.from || undefined,
+        endDate: (filters[1].selected as DateRange)?.to || undefined,
       },
     },
   );
   requests.value = [...requests.value, ...response.content];
-  pagination.totalElements = response.totalElements;
+  pagination.totalElements = response.totalItems;
   pagination.totalPages = response.totalPages;
-  pagination.numberOfElements = response.numberOfElements;
 }
 function loadMore(entry: IntersectionObserverEntry) {
   if (pagination.page < pagination.totalPages) {

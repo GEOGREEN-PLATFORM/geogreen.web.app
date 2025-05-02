@@ -43,9 +43,13 @@
             <span
               v-if="!editMode && store.user?.role === 'admin'"
               class="b-name__block-icon"
-              @click="openBlockDialog"
+              @click="openToggleBlockDialog"
             >
-              <q-icon :name="mdiCancel" color="red-500" size="24px"></q-icon>
+              <q-icon
+                :name="isEmployeeBlocked ? mdiLockOutline : mdiLockOpenOutline"
+                :color="isEmployeeBlocked ? 'red-500' : 'green-500'"
+                size="24px"
+              ></q-icon>
             </span>
           </div>
         </div>
@@ -153,11 +157,11 @@
             </CButton>
             <CButton
               v-if="store.user?.role === 'admin'"
-              @click="openBlockDialog"
+              @click="openToggleBlockDialog"
               size="medium"
               stretch="fill"
-              bg-color="var(--app-red-500)"
-              class="b-profile-card__block-button"
+              :bg-color="isEmployeeBlocked ? 'var(--app-red-500)' : 'var(--app-green-500)'"
+              class="b-profile-card__toggle-block-button"
             >
               Заблокировать
             </CButton>
@@ -173,16 +177,22 @@
     </section>
     <CDialogConfirm
       v-model="showBlockDialog"
-      actionMainText="заблокировать сотрудника"
-      actionButtonConfirmText="Заблокировать"
-      @cancel="cancelBlockAction"
-      @confirm="confirmBlockAction"
+      :actionMainText="isEmployeeBlocked ? 'разблокировать сотрудника' : 'заблокировать сотрудника'"
+      :actionButtonConfirmText="isEmployeeBlocked ? 'Разблокировать' : 'Заблокировать'"
+      :negative="!isEmployeeBlocked"
+      @cancel="cancelToggleBlockAction"
+      @confirm="confirmToggleBlockAction"
     />
   </main>
 </template>
 
 <script setup lang="ts">
-import { mdiAccountOutline, mdiCancel, mdiUpload } from "@quasar/extras/mdi-v6";
+import {
+  mdiAccountOutline,
+  mdiLockOpenOutline,
+  mdiLockOutline,
+  mdiUpload,
+} from "@quasar/extras/mdi-v6";
 import { ref } from "vue";
 import { useMainStore } from "~/store/main";
 
@@ -200,6 +210,7 @@ const store = useMainStore();
 const isAvatarUploading = shallowRef(false);
 const avatarSrc = ref("");
 const route = useRoute();
+const isEmployeeBlocked = ref(false);
 const fileInput = ref<HTMLInputElement>();
 const { openPhoto } = usePhotoViewer();
 const { formRef, formBindValidation, formHasError } = useFormValidation();
@@ -216,21 +227,24 @@ const initialUserData = ref<UserData>({
 const userData = ref({ ...initialUserData.value });
 async function saveChanges() {
   try {
-    await $fetch(`${store.apiAuth}/user/search/${route.params.id}`, {
-      method: "PATCH",
-      headers: {
-        authorization: useGetToken(),
+    await $fetch(
+      `${store.apiAuth}/user/search/${initialUserData.value.email}`,
+      {
+        method: "PATCH",
+        headers: {
+          authorization: useGetToken(),
+        },
+        body: {
+          firstName: userData.value.fullName.split(" ")[1],
+          lastName: userData.value.fullName.split(" ")[0],
+          patronymic: userData.value.fullName.split(" ")[2],
+          email: userData.value.email,
+          number: userData.value.phone,
+          birthdate: userData.value.birthDate,
+          image: userData.value.image,
+        },
       },
-      body: {
-        firstName: userData.value.fullName.split(" ")[1],
-        lastName: userData.value.fullName.split(" ")[0],
-        patronymic: userData.value.fullName.split(" ")[2],
-        email: userData.value.email,
-        number: userData.value.phone,
-        birthdate: userData.value.birthDate,
-        image: userData.value.image,
-      },
-    });
+    );
     getUser();
   } catch (error: any) {
     useState<Alert>("showAlert").value = {
@@ -263,14 +277,15 @@ async function getUser() {
     ? getImageUrl(userData.value.image.fullImageId)
     : "";
   initialUserData.value = { ...userData.value };
+  isEmployeeBlocked.value = !response.enabled;
 }
-async function confirmBlockAction() {
-  await blockUser();
+async function confirmToggleBlockAction() {
+  await toggleBlockUser();
   showBlockDialog.value = false;
 }
-async function blockUser() {
+async function toggleBlockUser() {
   await $fetch(
-    `${store.apiAuth}/user/register/${route.params.id}/enabled/${false}`,
+    `${store.apiAuth}/user/register/${initialUserData.value.email}/enabled/${!isEmployeeBlocked.value}`,
     {
       method: "POST",
       headers: {
@@ -278,10 +293,11 @@ async function blockUser() {
       },
     },
   );
+  isEmployeeBlocked.value = !isEmployeeBlocked.value;
   useState<Alert>("showAlert").value = {
     show: true,
     type: "success",
-    text: "Учетная запись сотрудника заблокирована",
+    text: `Учетная запись сотрудника ${isEmployeeBlocked.value ? "заблокирована" : "разблокирована"}`,
   };
 }
 function toggleEditMode() {
@@ -322,11 +338,11 @@ async function onFileSelected(event: Event) {
 function triggerFileUpload() {
   fileInput.value?.click();
 }
-function openBlockDialog() {
+function openToggleBlockDialog() {
   showBlockDialog.value = true;
 }
 
-function cancelBlockAction() {
+function cancelToggleBlockAction() {
   showBlockDialog.value = false;
 }
 onMounted(() => {
@@ -435,7 +451,7 @@ $app-narrow-mobile: 364px;
   &__edit-button {
     margin-top: 24px;
   }
-  &__block-button {
+  &__toggle-block-button {
     display: none;
     margin-top: 12px;
     @media screen and (max-width: $app-mobile) {

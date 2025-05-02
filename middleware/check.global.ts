@@ -26,11 +26,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     "for-employee-task-events",
     "for-employee-task-events-id",
   ];
-  const currentRoleAllowedPathNames = store.user
-    ? store.user.role === "user"
-      ? userAllowedPathNames
-      : employeeAllowedPathNames
-    : noAuthAllowedPathNames;
   if (
     !noAuthAllowedPathNames.includes(to.name as string) &&
     !(await getUserDataByEmail(getUserEmail()))
@@ -39,6 +34,11 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       return navigateTo("/auth/login");
     }
   }
+  const currentRoleAllowedPathNames = store.user
+    ? store.user.role === "user"
+      ? userAllowedPathNames
+      : employeeAllowedPathNames
+    : noAuthAllowedPathNames;
   if (!currentRoleAllowedPathNames.includes(to.name as string)) {
     return navigateTo("/auth/login");
   }

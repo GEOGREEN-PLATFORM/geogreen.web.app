@@ -8,18 +8,12 @@
         <span>Вы действительно хотите {{ actionMainText }}?</span>
       </q-card-section>
       <q-card-actions align="right" class="confirm-dialog__actions">
-        <CButton
-          v-close-popup
-          label="Отмена"
-          design-type="tertiary"
-          textColor="var(--app-blue-500)"
-          @click="cancelAction"
-        />
+        <CButton v-close-popup label="Отмена" design-type="tertiary" @click="cancelAction" />
         <CButton
           v-close-popup
           :label="actionButtonConfirmText"
           design-type="primary"
-          bgColor="var(--app-red-500)"
+          :bgColor="props.negative ? 'var(--app-red-500)' : 'var(--app-green-500)'"
           textColor="var(--app-white)"
           @click="confirmAction"
         />
@@ -33,11 +27,13 @@ interface Props {
   modelValue: boolean;
   actionMainText?: string;
   actionButtonConfirmText?: string;
+  negative?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   actionMainText: "подтвердить действие",
   actionButtonConfirmText: "Подтвердить",
+  negative: true,
 });
 
 const emit = defineEmits<{
