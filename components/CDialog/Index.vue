@@ -1,16 +1,15 @@
 <template>
-  <div class="c-dialog-container">
-    <q-dialog
-      :model-value="modelValue"
-      @update:model-value="toggleOpenState"
-      @show="emits('show')"
-      :auto-close="false"
-      backdrop-filter="blur(4px)"
-      class="c-dialog__content"
-    >
-      <slot />
-    </q-dialog>
-  </div>
+  <q-dialog
+    :model-value="modelValue"
+    @update:model-value="toggleOpenState"
+    @show="emits('show')"
+    :auto-close="false"
+    no-refocus
+    backdrop-filter="blur(4px)"
+    class="c-dialog__content"
+  >
+    <slot />
+  </q-dialog>
 </template>
 
 <script setup lang="ts">

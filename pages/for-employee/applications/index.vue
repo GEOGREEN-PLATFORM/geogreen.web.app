@@ -7,64 +7,69 @@
     </header>
     <section class="b-page__content">
       <div class="b-filter q-mb-lg">
-        <CFilter v-model="filters"></CFilter>
+        <CFilter
+          v-model="filters"
+          @apply-filters="applyFilters"
+          @reset-filters="applyFilters"
+        ></CFilter>
       </div>
       <q-scroll-area class="b-page__requests-container">
-        <section class="b-page__requests">
-          <q-card v-for="(request, index) in requests" :key="request.id" class="b-request-card">
-            <header class="b-request-card__header">
-              <div class="b-request-card__title-wrapper">
-                <h2 class="b-request-card__title gg-h2">{{ request.problemAreaType }}</h2>
-                <div class="b-request-card__reliability-icon">
-                  <q-icon
-                    :name="request.photoVerification ? mdiCheck : mdiAlert"
-                    size="24px"
-                    :color="request.photoVerification ? 'green-500' : 'red-500'"
-                  />
+        <q-infinite-scroll @load="loadMore" :offset="2000">
+          <section class="b-page__requests">
+            <q-card v-for="(request, index) in requests" :key="request.id" class="b-request-card">
+              <header class="b-request-card__header">
+                <div class="b-request-card__title-wrapper">
+                  <h2 class="b-request-card__title gg-h2">{{ request.problemAreaType }}</h2>
+                  <div class="b-request-card__reliability-icon">
+                    <q-icon
+                      :name="request.photoVerification ? mdiCheck : mdiAlert"
+                      size="24px"
+                      :color="request.photoVerification ? 'green-500' : 'red-500'"
+                    />
+                  </div>
                 </div>
-              </div>
-              <span class="b-request-card__timestamp gg-caption">
-                Заявка создана {{ timeConverter(request.createDate) }}
-              </span>
-            </header>
-            <section class="b-request-card__content q-mb-lg">
-              <button
-                class="b-request-card__open-map-button gg-t-small"
-                @click="viewOnMap(request)"
-              >
-                Посмотреть очаг на карте
-              </button>
-              <section class="b-request-card__main-info">
-                <p class="b-request-card__comment gg-t-base">{{ request.userComment }}</p>
-                <div class="b-request-card__images">
-                  <CFileContainers
-                    :files="request.images"
-                    :clearable="false"
-                    hide-caption
-                  ></CFileContainers>
-                </div>
+                <span class="b-request-card__timestamp gg-caption">
+                  Заявка создана {{ timeConverter(request.createDate) }}
+                </span>
+              </header>
+              <section class="b-request-card__content q-mb-lg">
+                <button
+                  class="b-request-card__open-map-button gg-t-small"
+                  @click="viewOnMap(request)"
+                >
+                  Посмотреть очаг на карте
+                </button>
+                <section class="b-request-card__main-info">
+                  <p class="b-request-card__comment gg-t-base">{{ request.userComment }}</p>
+                  <div class="b-request-card__images">
+                    <CFileContainers
+                      :files="request.images"
+                      :clearable="false"
+                      hide-caption
+                    ></CFileContainers>
+                  </div>
+                </section>
               </section>
-            </section>
-            <footer class="b-request-card__footer justify-between">
-              <div>
-                <CButton @click="approveRequest(request.id)" label="Принять заявку"></CButton>
-              </div>
-              <div>
-                <CButton
-                  @click="rejectRequest(request.id)"
-                  label="Отклонить заявку"
-                  bg-color="var(--app-red-500)"
-                ></CButton>
-              </div>
-            </footer>
-            <div
-              class="intersection"
-              style="height: 1px; width: 100%; opacity: 0"
-              v-if="Math.ceil((requests.length - 1) / 2) === index"
-              v-intersection.once="loadMore"
-            ></div>
-          </q-card>
-        </section>
+              <footer class="b-request-card__footer justify-between">
+                <div>
+                  <CButton @click="approveRequest(request.id)" label="Принять заявку"></CButton>
+                </div>
+                <div>
+                  <CButton
+                    @click="rejectRequest(request.id)"
+                    label="Отклонить заявку"
+                    bg-color="var(--app-red-500)"
+                  ></CButton>
+                </div>
+              </footer>
+            </q-card>
+          </section>
+          <template v-slot:loading>
+            <div v-show="requestsLoading" class="row justify-center q-my-md">
+              <q-spinner-dots color="primary" size="40px" />
+            </div>
+          </template>
+        </q-infinite-scroll>
       </q-scroll-area>
     </section>
     <CDialog v-model="isMapOpen" class="b-dialog">
@@ -104,15 +109,13 @@ interface ApplicationData {
   operatorId: string | null;
   problemAreaType: string;
 }
-interface ApplicationPageRequest {
+interface ApplicationsRequest extends ServerPagination {
   content: ApplicationData[];
-  totalElements: number;
-  totalPages: number;
-  numberOfElements: number;
 }
 const store = useMainStore();
 const { timeConverter } = useFormatters();
 const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
+const requestsLoading = shallowRef(true);
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
@@ -142,7 +145,7 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
 const isMapOpen = shallowRef(false);
 const existingHotbedsByType = ref<Marker[]>([]);
 const selectedHotbed = ref<Marker>();
-const filters = reactive<FilterItem[]>([
+const filters = ref<FilterItem[]>([
   {
     type: "select",
     key: "problemAreaType",
@@ -153,7 +156,7 @@ const filters = reactive<FilterItem[]>([
   {
     type: "date-range",
     key: "periodCreated",
-    selected: "",
+    selected: { from: "", to: "" },
     label: "Период создания",
   },
 ]);
@@ -161,13 +164,17 @@ const filters = reactive<FilterItem[]>([
 const requests = ref<ApplicationData[]>([]);
 const pagination = reactive({
   page: 0,
-  size: 3,
+  size: 10,
   totalElements: 0,
   totalPages: 0,
-  numberOfElements: 0,
 });
-async function getUserRequests() {
-  const response = await $fetch<ApplicationPageRequest>(
+function applyFilters() {
+  pagination.page = 0;
+  getUserRequests("filter");
+}
+async function getUserRequests(source?: "filter") {
+  requestsLoading.value = true;
+  const response = await $fetch<ApplicationsRequest>(
     `${store.apiUserReport}/user-marker/getAll`,
     {
       method: "GET",
@@ -177,21 +184,26 @@ async function getUserRequests() {
       params: {
         page: pagination.page,
         size: pagination.size,
+        problemType: filters.value[0].selected || undefined,
+        startDate: (filters.value[1].selected as DateRange)?.from || undefined,
+        endDate: (filters.value[1].selected as DateRange)?.to || undefined,
       },
     },
   );
+  if (source === "filter") {
+    requests.value = [];
+  }
   requests.value = [...requests.value, ...response.content];
-  pagination.totalElements = response.totalElements;
+  pagination.totalElements = response.totalItems;
   pagination.totalPages = response.totalPages;
-  pagination.numberOfElements = response.numberOfElements;
+  requestsLoading.value = false;
 }
-function loadMore(entry: IntersectionObserverEntry) {
+async function loadMore(index: number, done: (stop?: boolean) => void) {
   if (pagination.page < pagination.totalPages) {
     pagination.page++;
-    getUserRequests();
-    return true;
+    await getUserRequests();
   }
-  return false;
+  done();
 }
 async function getExistingHotbedsOfProblemsByType(type: string) {
   const data = await $fetch<Marker[]>(

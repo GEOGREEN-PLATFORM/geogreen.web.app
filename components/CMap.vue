@@ -195,7 +195,15 @@
                 @update:model-value="updateFeatures(id, marker)"
               />
             </li>
-            <li class="actions-label__action" v-if="!marker.isTempCreatedBy">
+            <li
+              class="actions-label__action"
+              v-if="
+                !marker.isTempCreatedBy &&
+                (props.nonCheckableMarkers === 'all' ||
+                  (Array.isArray(props.nonCheckableMarkers) &&
+                    !props.nonCheckableMarkers?.includes(marker.id)))
+              "
+            >
               <CButton
                 label="Подробнее"
                 size="small"
@@ -298,6 +306,7 @@ interface Props {
   selectedMarker?: Marker | null;
   editableMarkers?: "all" | "none" | string[];
   selectableMarkers?: "all" | "none" | string[];
+  nonCheckableMarkers?: "all" | "none" | string[];
   dataLoading?: boolean;
   defaultInteractionType?: "zone_add" | "marker_add" | "none";
 }
@@ -785,6 +794,11 @@ onMounted(() => {
       top: 12px;
       fill: var(--app-black);
       cursor: pointer;
+    }
+    &:has(.actions-label:empty) {
+      .popup-marker__divider {
+        display: none;
+      }
     }
   }
   .data-list {

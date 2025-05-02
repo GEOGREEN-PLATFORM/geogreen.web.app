@@ -11,7 +11,7 @@ interface MainState {
   protocol: string;
   protocolWS: string;
   user: User | null;
-  problemAreaTypes: ProblemAreaTypes[];
+  problemAreaTypes: string[];
   landTypes: string[];
   thanksForReport: boolean;
 }
@@ -93,5 +93,22 @@ export const useMainStore = defineStore("main", {
     // baseURL: (state) => {
     //   return `${state.protocol}://${state.host}:`;
     // },
+  },
+  actions: {
+    async initDicts() {
+      const { data } = await useAsyncData("storeDicts", async () => {
+        if (!this.problemAreaTypes.length) {
+          this.problemAreaTypes = await $fetch(
+            `${this.apiGeospatial}/geo/dict/problem-area-types`,
+          );
+        }
+        if (!this.landTypes.length) {
+          this.landTypes = await $fetch(
+            `${this.apiGeospatial}/geo/dict/land-types`,
+          );
+        }
+        return "filled";
+      });
+    },
   },
 });

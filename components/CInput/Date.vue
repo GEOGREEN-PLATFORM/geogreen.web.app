@@ -15,7 +15,7 @@
         <q-popup-proxy cover transition-show="scale" transition-hide="scale">
           <q-date
             mask="DD.MM.YYYY"
-            :model-value="formattedDate"
+            :model-value="internalDate"
             color="green-500"
             @update:model-value="updateDate"
             :range="range"
@@ -56,13 +56,42 @@ const formattedDate = computed(() => {
   if (
     typeof props.modelValue === "object" &&
     props.range &&
-    props.modelValue.from
+    props.modelValue.from !== props.modelValue.to
   ) {
     return `${date.formatDate(props.modelValue.from, "DD.MM.YYYY")} - ${date.formatDate(props.modelValue.to, "DD.MM.YYYY")}`;
   }
+  if (
+    typeof props.modelValue === "object" &&
+    props.range &&
+    props.modelValue.from === props.modelValue.to
+  ) {
+    return date.formatDate(props.modelValue.from, "DD.MM.YYYY");
+  }
   return "";
 });
-
+const internalDate = computed(() => {
+  if (!props.modelValue) return "";
+  if (typeof props.modelValue === "string")
+    return date.formatDate(props.modelValue, "DD.MM.YYYY");
+  if (
+    typeof props.modelValue === "object" &&
+    props.range &&
+    props.modelValue.from !== props.modelValue.to
+  ) {
+    return {
+      from: date.formatDate(props.modelValue.from, "DD.MM.YYYY"),
+      to: date.formatDate(props.modelValue.to, "DD.MM.YYYY"),
+    };
+  }
+  if (
+    typeof props.modelValue === "object" &&
+    props.range &&
+    props.modelValue.from === props.modelValue.to
+  ) {
+    return date.formatDate(props.modelValue.from, "DD.MM.YYYY");
+  }
+  return "";
+});
 function isValidDate(dateStr: string): boolean {
   const regex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
   if (!regex.test(dateStr)) return false;
@@ -85,7 +114,7 @@ function getISOFromFormattedDate(val: string) {
   return new Date(year, month - 1, day).toISOString();
 }
 function updateDate(val: number | string | DateRange) {
-  if (typeof val === "string") {
+  if (typeof val === "string" && !props.range) {
     if (isValidDate(val)) {
       emit("update:modelValue", getISOFromFormattedDate(val));
     }
@@ -94,6 +123,13 @@ function updateDate(val: number | string | DateRange) {
       from: getISOFromFormattedDate(val.from),
       to: getISOFromFormattedDate(val.to),
     });
+  } else if (typeof val === "string" && props.range) {
+    if (isValidDate(val)) {
+      emit("update:modelValue", {
+        from: getISOFromFormattedDate(val),
+        to: getISOFromFormattedDate(val),
+      });
+    }
   }
 }
 </script>

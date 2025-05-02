@@ -61,11 +61,13 @@
     </div>
     <section class="b-page__map-section">
       <CMap
-        v-if="!isHotbedsLoading"
+        v-if="!isHotbedsLoading && hotbed"
         @add-marker=""
         @edit-marker=""
         :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
         :markers="existingHotbeds"
+        :selected-marker="hotbed"
+        :non-checkable-markers="[hotbed.id]"
         :shortInfoKeys="shortMarkerInfoNameKeys"
       ></CMap>
     </section>
