@@ -64,10 +64,12 @@ definePageMeta({
   layout: "auth",
 });
 
+const store = useMainStore();
+const router = useRouter();
+
 const INITIAL_STEP = 0;
 const CODE_SENDING_TIMEOUT = 59;
 
-const store = useMainStore();
 const defaultSubButton: ButtonOptions = {
   designType: "tertiary",
   label: "Назад",
@@ -84,7 +86,6 @@ const sendCodeTimer = ref(CODE_SENDING_TIMEOUT);
 const formattedSendTimer = computed(() => {
   return `00:${sendCodeTimer.value.toString().padStart(2, "0")}`;
 });
-const router = useRouter();
 const isWrongCode = ref(false);
 const stepConfig = reactive([
   {

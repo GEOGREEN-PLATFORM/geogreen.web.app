@@ -18,7 +18,7 @@
       <CTabs
         v-model="currentPage"
         returnObj
-        @update:model-value="goToPage"
+        @update:model-value="(tab: string | Tab) => goToPage(tab as Tab)"
         @select-nested="selectNestedPage"
         :tabs="visiblePages"
         shrink
@@ -67,7 +67,7 @@
           <CTabs
             v-model="currentPage"
             returnObj
-            @update:model-value="goToPage"
+            @update:model-value="(tab: string | Tab) => goToPage(tab as Tab)"
             @select-nested="selectNestedPage"
             :tabs="visiblePages"
             shrink

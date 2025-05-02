@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { useMainStore } from "~/store/main";
+import type { UserRegisterData } from "~/types/interfaces/userAuth";
 definePageMeta({
   layout: "auth",
 });
@@ -61,6 +62,7 @@ const store = useMainStore();
 const { setAccessToken } = useFetchTokens();
 const { validateEmail, validatePassword } = useRules();
 const { saveUserEmail } = useCheckUser();
+
 const userData = ref<UserRegisterData>({
   password: "",
   repeatedPassword: "",
@@ -68,7 +70,6 @@ const userData = ref<UserRegisterData>({
   lastName: "",
   email: "",
 });
-
 const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
   main: {
     designType: "primary",

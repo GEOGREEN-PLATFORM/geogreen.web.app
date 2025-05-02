@@ -24,6 +24,7 @@
               <CInputSelect
                 v-model="hotbed.relatedTaskId"
                 disabled
+                :options="[]"
                 height="40px"
                 class="b-labeled-field__input"
               ></CInputSelect>
@@ -87,20 +88,20 @@
 <script setup lang="ts">
 import { mdiDeleteOutline } from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
-import { ref } from "vue";
 import { useMainStore } from "~/store/main";
 
-const editMode = ref(false);
-const showDeleteDialog = ref(false);
-const store = useMainStore();
-const route = useRoute();
 const { HOTBED_WORK_STAGE_OPTIONS, HOTBED_WORK_STAGE_STYLES } =
   useGetStatusOptions();
+const store = useMainStore();
+const route = useRoute();
+const editMode = ref(false);
+const showDeleteDialog = ref(false);
 const hotbed = ref<Marker>();
 const hotdebCardList = ref<CardItem[]>([]);
-const linksByLabel = ref({});
+const linksByLabel = ref<Record<string, string>>({});
 const existingHotbeds = ref<Marker[]>([]);
 const isHotbedsLoading = ref(true);
+const pageLoaded = ref(false);
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
@@ -127,7 +128,6 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
     type: "text",
   },
 });
-const pageLoaded = ref(false);
 function toggleEditMode() {
   editMode.value = !editMode.value;
 }

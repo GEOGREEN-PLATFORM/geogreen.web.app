@@ -1,12 +1,12 @@
 <template>
-  <CDialog v-model="dialogVisible" class="b-dialog">
+  <CDialog v-model="dialogVisible" class="b-dialog" @show="formBindValidation">
     <q-card class="b-dialog__container" :class="`b-dialog__container--step-${currentStep}`">
       <header class="b-dialog__header">
         <h2 class="b-dialog__title gg-h2">Изменение очага</h2>
         <p v-if="subTitle" class="b-dialog__subtitle">{{ subTitle }}</p>
       </header>
       <q-form
-        v-if="localHotbedData"
+        v-if="localHotbed"
         ref="formRef"
         novalidate
         greedy
@@ -17,38 +17,36 @@
           <section class="b-dialog__section">
             <div class="b-dialog__section-content">
               <CInputSelect
-                v-model="localHotbedData.details.problemAreaType"
-                @update:model-value="
-                  (val: string) => handleProblemAreaTypeChange(val as ProblemAreaTypes)
-                "
+                v-model="localHotbed.details.problemAreaType"
+                @update:model-value="handleProblemAreaTypeChange"
                 :options="store.formattedProblemAreaTypes"
                 label="Тип проблемы"
               ></CInputSelect>
               <CInputSelect
-                v-model="localHotbedData.details.landType"
+                v-model="localHotbed.details.landType"
                 :options="store.formattedLandTypes"
                 label="Тип земель"
               ></CInputSelect>
               <CInputSelect
-                v-model="localHotbedData.details.eliminationMethod"
+                v-model="localHotbed.details.eliminationMethod"
                 :options="hotbedEliminationMethods"
-                :disabled="!localHotbedData.details.problemAreaType"
-                :hint="!localHotbedData.details.problemAreaType ? 'Выберите тип проблемы' : ''"
+                :disabled="!localHotbed.details.problemAreaType"
+                :hint="!localHotbed.details.problemAreaType ? 'Выберите тип проблемы' : ''"
                 label="Метод по устранению"
               ></CInputSelect>
               <CInputSelect
-                v-model="localHotbedData.details.density"
+                v-model="localHotbed.details.density"
                 :options="HOTBED_DENSITIES_OPTIONS"
                 label="Плотность распространения"
               ></CInputSelect>
               <CInput
-                v-model="localHotbedData.details.owner"
+                v-model="localHotbed.details.owner"
                 label="Владелец"
                 required
                 class="b-dialog__field"
               />
               <CInput
-                v-model="localHotbedData.details.contractingOrganization"
+                v-model="localHotbed.details.contractingOrganization"
                 label="Подрядная организация"
                 required
                 class="b-dialog__field"
@@ -83,31 +81,28 @@
 
 <script setup lang="ts">
 import { useMainStore } from "~/store/main";
+
 interface Props {
   modelValue: boolean;
   hotbed: Marker;
 }
 
+const props = defineProps<Props>();
+const emits = defineEmits<{
+  (e: "update:modelValue", value: boolean): void;
+  (e: "hotbedUpdated", value: Marker): void;
+}>();
+
 const { HOTBED_DENSITIES_OPTIONS } = useGetStatusOptions();
 const { uploadPhoto } = useFiles();
-const localHotbedData = ref<Marker>();
-const props = defineProps<Props>();
-const emit = defineEmits(["update:modelValue", "hotbedUpdated"]);
 const store = useMainStore();
-const dialogVisible = ref(props.modelValue);
 const { formRef, formBindValidation, formHasError } = useFormValidation();
 
-watch(
-  () => props.modelValue,
-  (newVal) => {
-    dialogVisible.value = newVal;
-  },
-);
-watch(dialogVisible, (newVal) => {
-  emit("update:modelValue", newVal);
-});
-const hotbedEliminationMethods = ref();
 const FILES_MAX_SIZE = 10_000_000;
+
+const localHotbed = ref<Marker>();
+const dialogVisible = ref(props.modelValue);
+const hotbedEliminationMethods = ref<ItemOption[]>([]);
 const attachedFiles = ref<(ImageObj | File)[]>([]);
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
@@ -144,12 +139,12 @@ function onBack() {
     updateLabels();
   }
 }
-function handleProblemAreaTypeChange(newArea: ProblemAreaTypes) {
-  if (!localHotbedData.value) return;
-  localHotbedData.value.details.eliminationMethod = "";
+function handleProblemAreaTypeChange(newArea: string) {
+  if (!localHotbed.value) return;
+  localHotbed.value.details.eliminationMethod = "";
   getEliminationMethodsByArea(newArea);
 }
-async function getEliminationMethodsByArea(area: ProblemAreaTypes) {
+async function getEliminationMethodsByArea(area: string) {
   hotbedEliminationMethods.value = (
     await $fetch<string[]>(
       `${store.apiGeospatial}/geo/dict/elimination-methods/${area}`,
@@ -164,18 +159,18 @@ async function getEliminationMethodsByArea(area: ProblemAreaTypes) {
   }));
 }
 async function updateHotbed() {
-  if (!localHotbedData.value) return;
-  localHotbedData.value.details.images = [];
+  if (!localHotbed.value) return;
+  localHotbed.value.details.images = [];
   for (const file of attachedFiles.value) {
-    let image = null;
+    let image: ImageObj | null = null;
     if (file instanceof File) {
       image = await uploadPhoto(file);
     } else {
-      image = file;
+      image = file as ImageObj;
     }
-    localHotbedData.value.details.images.push(image);
+    localHotbed.value.details.images.push(image);
   }
-  emit("hotbedUpdated", localHotbedData.value);
+  emits("hotbedUpdated", localHotbed.value);
 }
 function nextStep() {
   if (currentStep.value === 1) {
@@ -199,7 +194,7 @@ function updateLabels() {
   }
 }
 function configureData() {
-  localHotbedData.value = structuredClone(toRaw(props.hotbed));
+  localHotbed.value = structuredClone(toRaw(props.hotbed));
   attachedFiles.value = [...props.hotbed.details.images];
   getEliminationMethodsByArea(props.hotbed.details.problemAreaType);
 }
@@ -208,7 +203,7 @@ function resetForm() {
   subTitle.value = "";
   cancelLabel.value = "Отмена";
   applyLabel.value = "Далее";
-  localHotbedData.value = structuredClone(toRaw(props.hotbed));
+  localHotbed.value = structuredClone(toRaw(props.hotbed));
   attachedFiles.value = [...props.hotbed.details.images];
 }
 onMounted(() => {
@@ -226,6 +221,15 @@ watch(
     configureData();
   },
 );
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    dialogVisible.value = newVal;
+  },
+);
+watch(dialogVisible, (newVal) => {
+  emits("update:modelValue", newVal);
+});
 </script>
 
 <style scoped lang="scss">

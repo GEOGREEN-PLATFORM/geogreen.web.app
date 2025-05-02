@@ -24,21 +24,7 @@
 </template>
 
 <script setup lang="ts">
-interface TaskEventHistory {
-  id: string;
-  eventId: string;
-  recordDate: string;
-  recordType: string;
-  description: string;
-  photos: ImageObj[];
-  operator: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    patronymic: string;
-  };
-  createDate: string;
-}
+import type { TaskEventHistory } from "~/types/interfaces/taskEvents";
 
 const props = defineProps<{
   history: TaskEventHistory;

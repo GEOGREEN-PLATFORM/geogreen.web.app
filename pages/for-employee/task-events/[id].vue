@@ -123,25 +123,15 @@
 import { mdiDeleteOutline, mdiSend } from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
-interface TaskEventsHistoryPagination {
+import type { Employee, EmployeesRequest } from "~/types/interfaces/employees";
+import type {
+  TaskEvent,
+  TaskEventHistory,
+} from "~/types/interfaces/taskEvents";
+interface TaskEventsHistoryRequest extends ServerPagination {
   content: TaskEventHistory[];
-  currentPage: number;
-  totalItems: number;
-  totalPages: number;
 }
-interface TaskEventHistory {
-  id: string;
-  eventId: string;
-  recordDate: string;
-  recordType: string;
-  description: string;
-  photos: ImageObj[];
-  operatorName: string;
-  operatorId: string;
-  createDate: string;
-}
-const editMode = ref(false);
-const showDeleteDialog = ref(false);
+
 const store = useMainStore();
 const route = useRoute();
 const {
@@ -150,13 +140,17 @@ const {
   TASK_EVENT_STATUS_STYLES,
 } = useGetStatusOptions();
 const { uploadPhoto } = useFiles();
+
+const editMode = ref(false);
+const showDeleteDialog = ref(false);
 const taskEvent = ref<TaskEvent>();
 const currentHistoryFiles = ref<(File | ImageObj)[]>([]);
 const currentHistory = ref("");
 const taskEventHistory = ref<TaskEventHistory[]>([]);
 const relatedHotbed = ref<Marker>();
+const pageLoaded = ref(false);
 const hotdebCardList = ref<CardItem[]>([]);
-const linksByLabel = computed(() => ({
+const linksByLabel = computed<Record<string, string>>(() => ({
   Ответственный: `/for-employee/employees/${taskEvent.value?.responsibleEmployeeOption?.value}`,
   "Автор мероприятия": `/for-employee/employees/${taskEvent.value?.author?.id}`,
   Очаг: `/hotbeds/${taskEvent.value?.geoPointId}`,
@@ -192,7 +186,7 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
 });
 async function getEmployees(search?: string) {
   try {
-    const res = await $fetch<any>(`${store.apiAuth}/user`, {
+    const res = await $fetch<EmployeesRequest>(`${store.apiAuth}/user`, {
       method: "GET",
       headers: {
         authorization: useGetToken(),
@@ -204,7 +198,7 @@ async function getEmployees(search?: string) {
         search: search,
       },
     });
-    responsibleEmployeesOptions.value = res.users.map((user: User) => ({
+    responsibleEmployeesOptions.value = res.users.map((user: Employee) => ({
       name: `${user.lastName} ${user.firstName} ${user.patronymic}`,
       value: user.id,
     }));
@@ -216,7 +210,6 @@ async function getEmployees(search?: string) {
     };
   }
 }
-const pageLoaded = ref(false);
 async function getHotbeds() {
   isHotbedsLoading.value = true;
   const url = `${store.apiGeospatial}/geo/info/getAll`;
@@ -265,7 +258,7 @@ async function sendHistory() {
 }
 async function getHistory() {
   try {
-    const response = await $fetch<TaskEventsHistoryPagination>(
+    const response = await $fetch<TaskEventsHistoryRequest>(
       `${store.apiEventManager}/events/${route.params.id}/history`,
       {
         method: "GET",

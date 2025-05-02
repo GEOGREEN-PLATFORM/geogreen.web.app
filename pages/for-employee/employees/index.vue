@@ -74,28 +74,8 @@
 import { mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
+import type { Employee, EmployeesRequest } from "~/types/interfaces/employees";
 
-interface EmployeeRaw {
-  id: string;
-  firstName: string;
-  lastName: string;
-  patronymic: string;
-  role: string;
-  enabled: boolean;
-  creationDate: string;
-  email: string;
-}
-interface PagePaginationEmployee {
-  users: EmployeeRaw[];
-  currentPage: number;
-  totalItems: number;
-  totalPages: number;
-}
-const pagination = ref({
-  page: 1,
-  rowsPerPage: 10,
-  rowsNumber: 0,
-});
 const store = useMainStore();
 const debounce = useDebounce();
 const {
@@ -103,7 +83,16 @@ const {
   EMPLOYEE_ACCOUNT_STATUS_OPTIONS,
   EMPLOYEE_ACCOUNT_STATUS_STYLES,
 } = useGetStatusOptions();
-const employees = ref<EmployeeRaw[]>([]);
+
+const searchEmployeeStr = ref("");
+const employeesLoading = ref(true);
+const isEmployeeDialogOpen = ref(false);
+const employees = ref<Employee[]>([]);
+const pagination = ref<TablePagination>({
+  page: 1,
+  rowsPerPage: 10,
+  rowsNumber: 0,
+});
 const tableHeaders: TableHeader[] = [
   {
     name: "initials",
@@ -156,9 +145,6 @@ const filters = ref<FilterItem[]>([
     label: "Период создания",
   },
 ]);
-const searchEmployeeStr = ref("");
-const employeesLoading = ref(true);
-const isEmployeeDialogOpen = ref(false);
 const tableRows: ComputedRef<TableRow[]> = computed(() =>
   employees.value.map((e) => ({
     id: e.id,
@@ -193,7 +179,7 @@ async function getEmployees() {
   }
   const url = `${store.apiAuth}/user`;
   try {
-    const response = await $fetch<PagePaginationEmployee>(url, {
+    const response = await $fetch<EmployeesRequest>(url, {
       method: "GET",
       headers: { Authorization: useGetToken() },
       params: {

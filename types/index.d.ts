@@ -10,6 +10,17 @@ declare global {
     name: string;
     value: string | number;
   }
+  interface Tab {
+    key: string;
+    name: string;
+    disabled?: boolean;
+    hasNested?: boolean;
+    nestedItems?: {
+      name: string;
+      key: string;
+      selected: boolean;
+    }[];
+  }
   interface TableHeader {
     name: string;
     label: string;
@@ -20,31 +31,6 @@ declare global {
   interface TableRow {
     [fieldName: string]: string | number | undefined | null;
   }
-  interface TaskEvent {
-    id: string;
-    geoPointId?: string;
-    startDate: string;
-    endDate: string;
-    lastUpdateDate: string;
-    statusCode: string;
-    eventType: string;
-    problemAreaType: ProblemAreaTypes;
-    description: string;
-    name: string;
-    operator: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      patronymic: string;
-    };
-    author: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      patronymic: string;
-    };
-    responsibleEmployeeOption?: ItemOption;
-  }
   interface TablePagination {
     rowsPerPage: number;
     page: number;
@@ -52,11 +38,10 @@ declare global {
     sortBy?: string | null;
     descending?: boolean;
   }
-  interface MapPopupShortInfoKeys {
-    [key: string]: {
-      name: string;
-      type: "images" | "text" | "status";
-    };
+  interface ServerPagination {
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
   }
   interface CardItem {
     label: string;
@@ -94,16 +79,6 @@ declare global {
     text: string;
     type?: "error" | "success" | "info";
   }
-  interface UserAuthData {
-    password: string;
-    email: string;
-  }
-  type ProblemAreaTypes = "Борщевик" | "Пожар" | "Свалка";
-  interface UserRegisterData extends UserAuthData {
-    repeatedPassword: string;
-    firstName: string;
-    lastName: string;
-  }
   type FilterItem = {
     key: string;
     label: string;
@@ -116,6 +91,7 @@ declare global {
     type: "select";
     selected: string;
     data: ItemOption[];
+    useInput?: boolean;
   };
   type FilterDateRange = {
     type: "date-range";
@@ -127,39 +103,34 @@ declare global {
   };
   interface Marker {
     id: string;
-    coordinate?: Coordinate;
+    coordinate: Coordinate;
     details: {
       square: number;
       owner: string;
       landType: string;
       contractingOrganization: string;
-      problemAreaType: ProblemAreaTypes;
+      problemAreaType: string;
       workStage: string;
-      images: ImageObj[] | [];
+      images: ImageObj[];
       comment: string;
       eliminationMethod: string;
       density: Density;
       creationDate?: string;
       updateDate?: string;
     };
-    relatedTaskId?: string | null;
-    coordinates?: Coordinate[] | null;
+    relatedTaskId: string | null;
+    coordinates: Coordinate[] | null;
     isTempCreatedBy?: string;
+  }
+  interface MapPopupShortInfoKeys {
+    [key: string]: {
+      name: string;
+      type: "images" | "text" | "status";
+    };
   }
   interface ZoneWithDensity {
     density: Density;
     coordinates: Coordinate[];
   }
   type Density = null | "default" | "LOW" | "MIDDLE" | "HIGH";
-  interface Tab {
-    key: string;
-    name: string;
-    disabled?: boolean;
-    hasNested?: boolean;
-    nestedItems?: {
-      name: string;
-      key: string;
-      selected: boolean;
-    }[];
-  }
 }

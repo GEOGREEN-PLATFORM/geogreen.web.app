@@ -255,7 +255,7 @@ async function getUser() {
     role: response.role === "operator" ? "Оператор" : "Администратор",
     email: response.email,
     phone: response.number || "",
-    birthDate: response.birthdate,
+    birthDate: response.birthdate || "",
     fullName: `${response.lastName} ${response.firstName} ${response.patronymic}`,
     image: response.image || null,
   };

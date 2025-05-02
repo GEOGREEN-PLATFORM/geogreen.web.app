@@ -102,7 +102,7 @@ interface ApplicationData {
   updateDate: string;
   operatorName: string | null;
   operatorId: string | null;
-  problemAreaType: ProblemAreaTypes;
+  problemAreaType: string;
 }
 interface ApplicationPageRequest {
   content: ApplicationData[];
@@ -193,11 +193,9 @@ function loadMore(entry: IntersectionObserverEntry) {
   }
   return false;
 }
-async function getExistingHotbedsOfProblemsByType(
-  problemAreaType: ProblemAreaTypes,
-) {
+async function getExistingHotbedsOfProblemsByType(type: string) {
   const data = await $fetch<Marker[]>(
-    `${store.apiGeospatial}/geo/info/getAll/${problemAreaType}`,
+    `${store.apiGeospatial}/geo/info/getAll/${type}`,
     {
       method: "GET",
       headers: {
