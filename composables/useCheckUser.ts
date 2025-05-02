@@ -17,7 +17,7 @@ export default function useCheckUser() {
     try {
       if (email) {
         const user = await $fetch<User>(
-          `${store.apiAuth}/user/by-email/${email}`,
+          `${store.apiAuth}/user/search/by-email/${email}`,
           {
             method: "GET",
             headers: { Authorization: useGetToken() },

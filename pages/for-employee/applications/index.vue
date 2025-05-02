@@ -168,7 +168,7 @@ const pagination = reactive({
 });
 async function getUserRequests() {
   const response = await $fetch<ApplicationPageRequest>(
-    `${store.apiUserReport}/report/getAll`,
+    `${store.apiUserReport}/user-marker/getAll`,
     {
       method: "GET",
       headers: {
@@ -206,7 +206,7 @@ async function getExistingHotbedsOfProblemsByType(type: string) {
   existingHotbedsByType.value = data;
 }
 async function approveRequest(id: string) {
-  const response = await $fetch(`${store.apiUserReport}/report/${id}`, {
+  const response = await $fetch(`${store.apiUserReport}/user-marker/${id}`, {
     method: "PATCH",
     headers: {
       authorization: useGetToken(),
@@ -221,7 +221,7 @@ async function approveRequest(id: string) {
 }
 
 async function rejectRequest(id: string) {
-  const response = await $fetch(`${store.apiUserReport}/report/${id}`, {
+  const response = await $fetch(`${store.apiUserReport}/user-marker/${id}`, {
     method: "PATCH",
     headers: {
       authorization: useGetToken(),

@@ -137,7 +137,11 @@ function syncTabsWithRoute() {
         hit.selected = true;
         return;
       }
-    } else if (page.path && route.path.startsWith(page.path)) {
+    } else if (
+      page.path &&
+      ((route.path === page.path && page.path === "/") ||
+        (page.path !== "/" && route.path.startsWith(page.path)))
+    ) {
       currentPage.value = page;
       return;
     }

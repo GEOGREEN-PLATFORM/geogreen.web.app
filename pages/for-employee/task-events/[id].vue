@@ -186,7 +186,7 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
 });
 async function getEmployees(search?: string) {
   try {
-    const res = await $fetch<EmployeesRequest>(`${store.apiAuth}/user`, {
+    const res = await $fetch<EmployeesRequest>(`${store.apiAuth}/user/search`, {
       method: "GET",
       headers: {
         authorization: useGetToken(),
@@ -232,7 +232,7 @@ async function loadFilesForHistory(files: (File | ImageObj)[]) {
 }
 async function sendHistory() {
   try {
-    await $fetch(`${store.apiEventManager}/events/${route.params.id}/history`, {
+    await $fetch(`${store.apiEventManager}/event/${route.params.id}/history`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
@@ -259,7 +259,7 @@ async function sendHistory() {
 async function getHistory() {
   try {
     const response = await $fetch<TaskEventsHistoryRequest>(
-      `${store.apiEventManager}/events/${route.params.id}/history`,
+      `${store.apiEventManager}/event/${route.params.id}/history`,
       {
         method: "GET",
         headers: {
@@ -291,7 +291,7 @@ async function getRelatedHotbed() {
 async function saveChanges() {
   try {
     const response = await $fetch<TaskEvent>(
-      `${store.apiEventManager}/events/${route.params.id}`,
+      `${store.apiEventManager}/event/${route.params.id}`,
       {
         method: "PATCH",
         headers: {
@@ -337,7 +337,7 @@ async function confirmDeleteAction() {
   showDeleteDialog.value = false;
 }
 async function deleteTaskEvent() {
-  await $fetch(`${store.apiEventManager}/events/${route.params.id}`, {
+  await $fetch(`${store.apiEventManager}/event/${route.params.id}`, {
     method: "DELETE",
     headers: {
       authorization: useGetToken(),
@@ -355,7 +355,7 @@ function filterEmployees(search: string) {
 }
 async function getTaskEvent() {
   const response = await $fetch<TaskEvent>(
-    `${store.apiEventManager}/events/${route.params.id}`,
+    `${store.apiEventManager}/event/${route.params.id}`,
     {
       method: "GET",
       headers: {

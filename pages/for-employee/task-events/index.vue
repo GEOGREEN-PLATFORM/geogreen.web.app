@@ -199,7 +199,7 @@ const filters = ref<FilterItem[]>([
 ]);
 async function handleTaskEventCreated(newTaskEvent: TaskEventData) {
   try {
-    await $fetch(`${store.apiEventManager}/events`, {
+    await $fetch(`${store.apiEventManager}/event/create`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
@@ -230,7 +230,7 @@ async function getEmployees(
   search?: string,
 ) {
   try {
-    const res = await $fetch<EmployeesRequest>(`${store.apiAuth}/user`, {
+    const res = await $fetch<EmployeesRequest>(`${store.apiAuth}/user/search`, {
       method: "GET",
       headers: {
         authorization: useGetToken(),
@@ -339,7 +339,7 @@ async function getTaskEvents() {
   }
   params.append("page", String(pagination.value.page - 1));
   params.append("size", String(pagination.value.rowsPerPage));
-  const url = `${store.apiEventManager}/events/getAll?${params.toString()}`;
+  const url = `${store.apiEventManager}/event/getAll?${params.toString()}`;
   const response = await $fetch<TaskEventsRequest>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },

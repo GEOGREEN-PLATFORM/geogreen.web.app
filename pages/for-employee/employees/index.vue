@@ -46,7 +46,7 @@
           row-key="name"
           :slots="['status']"
           :loading="employeesLoading"
-          @click:row="(row: any) => goToEmployee(row.email)"
+          @click:row="(row: any) => goToEmployee(row.id)"
           @updateTable="getEmployees"
         >
           <template v-slot:body-cell-status="slotProps">
@@ -177,7 +177,7 @@ async function getEmployees() {
     fromDateParam = from || "";
     toDateParam = to || "";
   }
-  const url = `${store.apiAuth}/user`;
+  const url = `${store.apiAuth}/user/search`;
   try {
     const response = await $fetch<EmployeesRequest>(url, {
       method: "GET",

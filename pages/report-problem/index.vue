@@ -165,7 +165,7 @@ async function sendReport() {
     //   const result = await analysePhotoOnHogweedPresence(image.fullImageId);
     //   console.log("Анализ для", image, result);
     // }
-    await $fetch(`${store.apiUserReport}/report`, {
+    await $fetch(`${store.apiUserReport}/user-marker/report`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
