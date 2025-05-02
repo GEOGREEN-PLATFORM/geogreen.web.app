@@ -74,30 +74,19 @@
 
 <script setup lang="ts">
 import { mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
-import type { Coordinate } from "ol/coordinate";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
-interface HotbedData {
-  problemAreaType: string;
-  landType: string;
-  eliminationMethod: string;
-  owner: string;
-  contractingOrganization: string;
-  comment: string;
-  images: ImageObj[];
-  density: Density;
-  coordinate: Coordinate | null;
-  coordinates: Coordinate[];
-}
-const pagination = ref({
-  page: 1,
-  rowsPerPage: 10,
-  rowsNumber: 0,
-});
+import type { HotbedData } from "~/types/interfaces/hotbeds";
+
 const store = useMainStore();
 const debounce = useDebounce();
 const { HOTBED_WORK_STAGE_OPTIONS, HOTBED_WORK_STAGE_STYLES } =
   useGetStatusOptions();
+const pagination = ref<TablePagination>({
+  page: 1,
+  rowsPerPage: 10,
+  rowsNumber: 0,
+});
 const tableHeaders: TableHeader[] = [
   {
     name: "problemAreaType",

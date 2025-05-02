@@ -102,7 +102,7 @@ interface ApplicationData {
   updateDate: string;
   operatorName: string | null;
   operatorId: string | null;
-  problemAreaType: ProblemAreaTypes;
+  problemAreaType: string;
 }
 interface ApplicationPageRequest {
   content: ApplicationData[];
@@ -168,7 +168,7 @@ const pagination = reactive({
 });
 async function getUserRequests() {
   const response = await $fetch<ApplicationPageRequest>(
-    `${store.apiUserReport}/report/getAll`,
+    `${store.apiUserReport}/user-marker/getAll`,
     {
       method: "GET",
       headers: {
@@ -193,11 +193,9 @@ function loadMore(entry: IntersectionObserverEntry) {
   }
   return false;
 }
-async function getExistingHotbedsOfProblemsByType(
-  problemAreaType: ProblemAreaTypes,
-) {
+async function getExistingHotbedsOfProblemsByType(type: string) {
   const data = await $fetch<Marker[]>(
-    `${store.apiGeospatial}/geo/info/getAll/${problemAreaType}`,
+    `${store.apiGeospatial}/geo/info/getAll/${type}`,
     {
       method: "GET",
       headers: {
@@ -208,7 +206,7 @@ async function getExistingHotbedsOfProblemsByType(
   existingHotbedsByType.value = data;
 }
 async function approveRequest(id: string) {
-  const response = await $fetch(`${store.apiUserReport}/report/${id}`, {
+  const response = await $fetch(`${store.apiUserReport}/user-marker/${id}`, {
     method: "PATCH",
     headers: {
       authorization: useGetToken(),
@@ -223,7 +221,7 @@ async function approveRequest(id: string) {
 }
 
 async function rejectRequest(id: string) {
-  const response = await $fetch(`${store.apiUserReport}/report/${id}`, {
+  const response = await $fetch(`${store.apiUserReport}/user-marker/${id}`, {
     method: "PATCH",
     headers: {
       authorization: useGetToken(),

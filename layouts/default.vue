@@ -33,7 +33,7 @@ const pages: Page[] = [
   {
     key: "main",
     name: !store.user || store.user?.role === "user" ? "Главная" : "Карта",
-    disabled: true,
+    path: "/",
     visible: true,
   },
   {

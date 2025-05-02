@@ -81,51 +81,30 @@
 
 <script setup lang="ts">
 import { mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
-import type { Coordinate } from "ol/coordinate";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
+import type { Employee, EmployeesRequest } from "~/types/interfaces/employees";
+import type { TaskEvent, TaskEventData } from "~/types/interfaces/taskEvents";
 
-interface TaskEventPageRequest {
-  currentPage: number;
-  totalItems: number;
-  totalPages: number;
+interface TaskEventsRequest extends ServerPagination {
   content: TaskEvent[];
 }
-interface EmployeeRaw {
-  id: string;
-  firstName: string;
-  lastName: string;
-  patronymic: string;
-  role: string;
-  enabled: boolean;
-  creationDate: string;
-  email: string;
-}
-interface PagePaginationEmployee {
-  users: EmployeeRaw[];
-  currentPage: number;
-  totalItems: number;
-  totalPages: number;
-}
-interface TaskEventData {
-  name: string;
-  description: string;
-  expectedDateEnd: string;
-  responsibleEmployee: ItemOption | null;
-  relatedHotbedId: string;
-}
-const pagination = ref({
+const store = useMainStore();
+const debounce = useDebounce();
+const { TASK_EVENT_STATUS_OPTIONS, TASK_EVENT_STATUS_STYLES } =
+  useGetStatusOptions();
+
+const existingHotbeds = ref<Marker[]>([]);
+const addDialogEmployeesOptions = ref<ItemOption[]>([]);
+const searchTaskEventStr = ref("");
+const taskEventsLoading = ref(true);
+const isTaskEventDialogOpen = ref(false);
+const taskEvents = ref<TaskEvent[]>([]);
+const pagination = ref<TablePagination>({
   page: 1,
   rowsPerPage: 10,
   rowsNumber: 0,
 });
-const store = useMainStore();
-const existingHotbeds = ref<Marker[]>([]);
-const filterEmployeesOptions = ref<ItemOption[]>([]);
-const addDialogEmployeesOptions = ref<ItemOption[]>([]);
-const debounce = useDebounce();
-const { TASK_EVENT_STATUS_OPTIONS, TASK_EVENT_STATUS_STYLES } =
-  useGetStatusOptions();
 const tableHeaders: TableHeader[] = [
   {
     name: "name",
@@ -170,7 +149,6 @@ const tableHeaders: TableHeader[] = [
     field: "endDate",
   },
 ];
-const taskEvents = ref<TaskEvent[]>([]);
 const tableRows: ComputedRef<TableRow[]> = computed(() =>
   taskEvents.value.map((e) => ({
     id: e.id,
@@ -219,12 +197,9 @@ const filters = ref<FilterItem[]>([
     label: "Период завершения",
   },
 ]);
-const searchTaskEventStr = ref("");
-const taskEventsLoading = ref(true);
-const isTaskEventDialogOpen = ref(false);
 async function handleTaskEventCreated(newTaskEvent: TaskEventData) {
   try {
-    await $fetch(`${store.apiEventManager}/events`, {
+    await $fetch(`${store.apiEventManager}/event/create`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
@@ -255,7 +230,7 @@ async function getEmployees(
   search?: string,
 ) {
   try {
-    const res = await $fetch<PagePaginationEmployee>(`${store.apiAuth}/user`, {
+    const res = await $fetch<EmployeesRequest>(`${store.apiAuth}/user/search`, {
       method: "GET",
       headers: {
         authorization: useGetToken(),
@@ -267,8 +242,7 @@ async function getEmployees(
         search: search,
       },
     });
-    if (reqSource === "filter") {
-      filterEmployeesOptions.value = formatEmployeesToOptions(res.users || []);
+    if (reqSource === "filter" && filters.value[1].type === "select") {
       filters.value[1].data = formatEmployeesToOptions(res.users || []);
     } else if (reqSource === "addDialog") {
       addDialogEmployeesOptions.value = formatEmployeesToOptions(
@@ -283,7 +257,7 @@ async function getEmployees(
     };
   }
 }
-function formatEmployeesToOptions(employees: EmployeeRaw[]): ItemOption[] {
+function formatEmployeesToOptions(employees: Employee[]): ItemOption[] {
   return employees.map((e) => ({
     name: `${e.lastName} ${e.firstName} ${e.patronymic}`,
     value: e.id,
@@ -365,8 +339,8 @@ async function getTaskEvents() {
   }
   params.append("page", String(pagination.value.page - 1));
   params.append("size", String(pagination.value.rowsPerPage));
-  const url = `${store.apiEventManager}/events/getAll?${params.toString()}`;
-  const response = await $fetch<TaskEventPageRequest>(url, {
+  const url = `${store.apiEventManager}/event/getAll?${params.toString()}`;
+  const response = await $fetch<TaskEventsRequest>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },
   });

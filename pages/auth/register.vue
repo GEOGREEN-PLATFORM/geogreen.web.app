@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { useMainStore } from "~/store/main";
+import type { UserRegisterData } from "~/types/interfaces/userAuth";
 definePageMeta({
   layout: "auth",
 });
@@ -61,6 +62,7 @@ const store = useMainStore();
 const { setAccessToken } = useFetchTokens();
 const { validateEmail, validatePassword } = useRules();
 const { saveUserEmail } = useCheckUser();
+
 const userData = ref<UserRegisterData>({
   password: "",
   repeatedPassword: "",
@@ -68,7 +70,6 @@ const userData = ref<UserRegisterData>({
   lastName: "",
   email: "",
 });
-
 const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
   main: {
     designType: "primary",
@@ -83,7 +84,7 @@ const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
 async function sendRegister() {
   buttonOptions.value.main.loading = true;
   try {
-    const user = await $fetch<User>(`${store.apiAuth}/register/user`, {
+    const user = await $fetch<User>(`${store.apiAuth}/user/register/user`, {
       method: "POST",
       body: userData.value,
     });

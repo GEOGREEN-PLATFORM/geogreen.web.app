@@ -100,31 +100,26 @@
 
 <script setup lang="ts">
 import { date } from "quasar";
-import { useMainStore } from "~/store/main";
+import type { TaskEventData } from "~/types/interfaces/taskEvents";
+
 interface Props {
   modelValue: boolean;
   hotbeds: Marker[];
   employeesOptions: ItemOption[];
 }
-interface TaskEventData {
-  name: string;
-  description: string;
-  expectedDateEnd: string;
-  responsibleEmployee: ItemOption | null;
-  relatedHotbedId: string;
-}
+
 const props = defineProps<Props>();
-const emit = defineEmits([
-  "update:modelValue",
-  "taskEventCreated",
-  "filterEmployees",
-]);
-const store = useMainStore();
-const dialogVisible = ref(props.modelValue);
+const emits = defineEmits<{
+  (e: "update:modelValue", value: boolean): void;
+  (e: "taskEventCreated", taskEventData: TaskEventData): void;
+  (e: "filterEmployees", val: string): void;
+}>();
+const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
 const { formRef, formBindValidation, formHasError } = useFormValidation();
+
+const dialogVisible = ref(props.modelValue);
 const existingHotbeds = ref<Marker[]>([]);
 const currentSelectedHotbed = ref<Marker | null>(null);
-const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
 const subTitle = ref("");
@@ -180,7 +175,7 @@ function onBack() {
 }
 async function createTaskEvent() {
   dialogVisible.value = false;
-  emit("taskEventCreated", taskEventData.value);
+  emits("taskEventCreated", taskEventData.value);
   resetForm();
 }
 function handleHotbedSelected(hotbedId: string, hotbed: Marker) {
@@ -192,7 +187,7 @@ function handleHotbedDeselected(hotbedId: string) {
   currentSelectedHotbed.value = null;
 }
 function filterEmployees(val: string) {
-  emit("filterEmployees", val);
+  emits("filterEmployees", val);
 }
 function nextStep() {
   if (currentStep.value === 1) {
@@ -254,7 +249,7 @@ watch(
 watch(
   () => dialogVisible.value,
   (newVal) => {
-    emit("update:modelValue", newVal);
+    emits("update:modelValue", newVal);
   },
 );
 onMounted(() => {

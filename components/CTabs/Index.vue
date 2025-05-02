@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 interface Props {
-  modelValue: string | Tab;
+  modelValue?: string | Tab;
   tabs: Tab[];
   shrink?: boolean;
   vertical?: boolean;

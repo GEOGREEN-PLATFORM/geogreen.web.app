@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { useMainStore } from "~/store/main";
-
+import type { UserAuthData } from "~/types/interfaces/userAuth";
 definePageMeta({
   layout: "auth",
 });

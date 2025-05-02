@@ -18,7 +18,7 @@
                 },
               ]"
               type="button"
-              @click="selectProblemType(type)"
+              @click="selectProblemAreaType(type)"
             >
               {{ type }}
             </button>
@@ -82,7 +82,7 @@ interface UserReport {
   coordinate: Coordinate;
   details: {
     images: ImageObj[];
-    problemAreaType: ProblemAreaTypes | "";
+    problemAreaType: string;
     userId: string;
     comment: string;
   };
@@ -133,7 +133,8 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
     type: "text",
   },
 });
-function selectProblemType(type: ProblemAreaTypes) {
+
+function selectProblemAreaType(type: string) {
   if (userReport.details.problemAreaType !== type) {
     userReport.details.problemAreaType = type;
     existingHotbeds.value = [];
@@ -141,11 +142,9 @@ function selectProblemType(type: ProblemAreaTypes) {
     getExistingHotbedsOfProblemsByType(userReport.details.problemAreaType);
   }
 }
-async function getExistingHotbedsOfProblemsByType(
-  problemAreaType: ProblemAreaTypes,
-) {
+async function getExistingHotbedsOfProblemsByType(type: string) {
   const data = await $fetch<Marker[]>(
-    `${store.apiGeospatial}/geo/info/getAll/${problemAreaType}`,
+    `${store.apiGeospatial}/geo/info/getAll/${type}`,
     {
       method: "GET",
       headers: {
@@ -166,7 +165,7 @@ async function sendReport() {
     //   const result = await analysePhotoOnHogweedPresence(image.fullImageId);
     //   console.log("Анализ для", image, result);
     // }
-    await $fetch(`${store.apiUserReport}/report`, {
+    await $fetch(`${store.apiUserReport}/user-marker/report`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),

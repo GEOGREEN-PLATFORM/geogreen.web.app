@@ -128,32 +128,29 @@
 <script setup lang="ts">
 import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
+import type { HotbedData } from "~/types/interfaces/hotbeds";
+
 interface Props {
   modelValue: boolean;
   hotbeds: Marker[];
 }
-interface HotbedData {
-  problemAreaType: string;
-  landType: string;
-  eliminationMethod: string;
-  owner: string;
-  contractingOrganization: string;
-  comment: string;
-  images: ImageObj[];
-  density: Density;
-  coordinate: Coordinate | null;
-  coordinates: Coordinate[] | null;
-}
+
 const props = defineProps<Props>();
-const emit = defineEmits(["update:modelValue", "hotbedCreated"]);
+const emits = defineEmits<{
+  (e: "update:modelValue", value: boolean): void;
+  (e: "hotbedCreated", hotbedData: HotbedData): void;
+}>();
+
 const store = useMainStore();
-const dialogVisible = ref(props.modelValue);
 const { formRef, formBindValidation, formHasError } = useFormValidation();
-const existingHotbeds = ref<Marker[]>([]);
-const hotbedEliminationMethods = ref<ItemOption[]>([]);
 const { HOTBED_WORK_STAGE_STYLES, HOTBED_DENSITIES_OPTIONS } =
   useGetStatusOptions();
+
 const FILES_MAX_SIZE = 10_000_000;
+
+const dialogVisible = ref(props.modelValue);
+const existingHotbeds = ref<Marker[]>([]);
+const hotbedEliminationMethods = ref<ItemOption[]>([]);
 const attachedFiles = ref<File[]>([]);
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
@@ -240,7 +237,7 @@ function addTempHotbed(coordinate: Coordinate, zone?: ZoneWithDensity) {
       workStage: "",
       eliminationMethod: "",
       images: [],
-      problemAreaType: null,
+      problemAreaType: "",
       comment: "",
       density: zone?.density || null,
     },
@@ -309,7 +306,7 @@ async function createHotbed() {
     const image = await uploadPhoto(file);
     hotbedData.value.images.push(image);
   }
-  emit("hotbedCreated", hotbedData.value);
+  emits("hotbedCreated", hotbedData.value);
   dialogVisible.value = false;
   resetForm();
 }
@@ -419,7 +416,7 @@ watch(
 watch(
   () => dialogVisible.value,
   (newVal) => {
-    emit("update:modelValue", newVal);
+    emits("update:modelValue", newVal);
   },
 );
 onMounted(() => {

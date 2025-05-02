@@ -216,7 +216,7 @@ const initialUserData = ref<UserData>({
 const userData = ref({ ...initialUserData.value });
 async function saveChanges() {
   try {
-    await $fetch(`${store.apiAuth}/user/${route.params.id}`, {
+    await $fetch(`${store.apiAuth}/user/search/${route.params.id}`, {
       method: "PATCH",
       headers: {
         authorization: useGetToken(),
@@ -243,7 +243,7 @@ async function saveChanges() {
 }
 async function getUser() {
   const response = await $fetch<User>(
-    `${store.apiAuth}/user/by-email/${route.params.id}`,
+    `${store.apiAuth}/user/search/by-id/${route.params.id}`,
     {
       method: "GET",
       headers: {
@@ -255,7 +255,7 @@ async function getUser() {
     role: response.role === "operator" ? "Оператор" : "Администратор",
     email: response.email,
     phone: response.number || "",
-    birthDate: response.birthdate,
+    birthDate: response.birthdate || "",
     fullName: `${response.lastName} ${response.firstName} ${response.patronymic}`,
     image: response.image || null,
   };
@@ -270,7 +270,7 @@ async function confirmBlockAction() {
 }
 async function blockUser() {
   await $fetch(
-    `${store.apiAuth}/register/${route.params.id}/enabled/${false}`,
+    `${store.apiAuth}/user/register/${route.params.id}/enabled/${false}`,
     {
       method: "POST",
       headers: {
