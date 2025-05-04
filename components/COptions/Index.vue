@@ -5,6 +5,7 @@
       :options="options"
       :color="color"
       :inline="inline"
+      :type="type"
       @update:model-value="updateValue"
     />
   </div>
@@ -16,6 +17,7 @@ interface Props {
   options: Option[];
   color?: string;
   inline?: boolean;
+  type: string;
 }
 interface Option {
   label?: string;
@@ -23,7 +25,9 @@ interface Option {
 }
 type Group = T | T[];
 
-withDefaults(defineProps<Props>(), {});
+withDefaults(defineProps<Props>(), {
+  type: "radio",
+});
 const emits = defineEmits<{
   "update:modelValue": [Group];
 }>();

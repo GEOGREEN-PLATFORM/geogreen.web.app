@@ -15,6 +15,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     "hotbeds-id",
     "report-problem",
     "report-problem-thanks",
+    "account-user",
     "index",
   ];
   const employeeAllowedPathNames = [

@@ -1,0 +1,221 @@
+<template>
+  <main v-if="store.user" class="b-page">
+    <section class="b-header">
+      <h1 class="b-header__title gg-h1">Аккаунт</h1>
+    </section>
+    <section class="b-page__content">
+      <section class="b-page__left-section">
+        <q-card class="b-card b-card--profile">
+          <div><CAvatar class="b-card__avatar" /></div>
+          <div class="b-card__name-container">
+            <span class="b-card__name-text gg-h3">{{
+              `${store.user?.firstName} ${store.user?.lastName}`
+            }}</span>
+            <q-icon :name="mdiAlertCircleOutline" color="orange-500" size="24px" />
+          </div>
+          <div class="b-card__email-container">
+            <span class="b-card__email-text gg-t-small">{{ store.user?.email }}</span>
+          </div>
+          <CButton size="medium" stretch="hug" @click="openManageAccountDialog"
+            >Управлять аккаунтом</CButton
+          >
+        </q-card>
+
+        <q-card class="b-card b-card--map">
+          <div class="b-card__title gg-h3">Моя карта</div>
+          <!-- <CMap /> -->
+        </q-card>
+
+        <q-card class="b-card b-card--new-report">
+          <div class="b-card__title gg-h3">Новое сообщение</div>
+          <CButton size="medium" stretch="hug">Сообщить об очаге</CButton>
+        </q-card>
+      </section>
+      <section class="b-page__right-section">
+        <q-card class="b-card b-card--statistics">
+          <div class="b-card__title gg-h3">Моя статистика</div>
+          <div class="b-card__statistic-item">
+            <div>
+              <div class="gg-t-base">
+                Всего сообщений об очагах:
+                <strong>{{ totalReports }}</strong>
+              </div>
+              <div class="gg-t-base">
+                Принято:
+                <strong>{{ completedReports }} ({{ completionRate }}%)</strong>
+              </div>
+            </div>
+            <q-linear-progress
+              :value="completionRate / 100"
+              color="green-500"
+              track-color="green-300"
+              rounded
+              size="10px"
+              class="b-statistics__progress"
+            />
+          </div>
+        </q-card>
+        <q-card class="b-card b-card--my-reports">
+          <div class="b-card__title gg-h3">Мои сообщения о проблемах</div>
+          <q-list class="requests">
+            <q-item v-for="(report, idx) in reports" :key="idx" clickable class="b-report-item">
+              <section class="b-report-item__left-section">
+                <q-item-section style="width: max-content; flex: none">
+                  <q-item-label class="gg-t-base">{{ report.type }}</q-item-label>
+                  <q-item-label caption class="gg-cap">от {{ report.date }}</q-item-label>
+                </q-item-section>
+                <q-item-section style="width: max-content" class="b-report-item__status">
+                  <div style="width: max-content">{{ report.status }}</div>
+                </q-item-section>
+              </section>
+              <q-item-section side>
+                <CButton size="small">Подробнее</CButton>
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <q-separator />
+          <div class="b-reports__footer">
+            <CButton size="small" stretch="hug" design-type="tertiary">Подробнее</CButton>
+          </div>
+        </q-card>
+        <q-card class="b-card b-card--my-achievements">
+          <div class="b-card__title gg-h3">Достижения</div>
+          <div class="gg-t-normal" style="color: var(--app-grey-400)">Скоро</div>
+        </q-card>
+        <q-card class="b-card b-card--leaderboard">
+          <div class="b-card__title gg-h3">Топ гео‑гринеры</div>
+          <div class="gg-t-normal" style="color: var(--app-grey-400)">Скоро</div>
+        </q-card>
+      </section>
+    </section>
+    <PagesAccountUserManage
+      v-model="dialogManageAccount"
+      :user="store.user"
+    ></PagesAccountUserManage>
+  </main>
+</template>
+
+<script setup lang="ts">
+import { mdiAlertCircleOutline } from "@quasar/extras/mdi-v6";
+import { useMainStore } from "~/store/main";
+
+const store = useMainStore();
+const dialogManageAccount = shallowRef(false);
+const reports = ref([
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
+]);
+
+const totalReports = computed(() => reports.value.length);
+const completedReports = 1; // либо получить динамически
+const completionRate = computed(() =>
+  totalReports.value > 0
+    ? Math.round((completedReports / totalReports.value) * 100)
+    : 0,
+);
+function openManageAccountDialog() {
+  dialogManageAccount.value = true;
+}
+</script>
+
+<style scoped lang="scss">
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
+
+.b-page {
+  background-color: var(--app-green-050);
+  padding: 24px;
+  width: 100%;
+  height: 100%;
+  min-height: max-content;
+  .b-header {
+    display: flex;
+    align-items: center;
+  }
+
+  &__content {
+    display: flex;
+    gap: 24px;
+
+    .b-page__left-section,
+    .b-page__right-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .b-page__left-section {
+      max-width: max-content;
+    }
+    .b-card {
+      padding: 16px;
+      width: 100%;
+      background-color: var(--app-white);
+      border-radius: 16px;
+      gap: 16px;
+      display: flex;
+      flex-direction: column;
+
+      &--profile {
+        justify-content: center;
+        align-items: center;
+
+        .b-card__avatar {
+          width: 84px;
+          height: 84px;
+        }
+
+        .b-card__name-container,
+        .b-card__email-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+      }
+      &__statistic-item {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background-color: var(--app-green-050);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      &--my-reports {
+        gap: 12px;
+      }
+      .requests {
+        max-height: 500px;
+        overflow: auto;
+      }
+    }
+  }
+}
+.requests {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+.b-report-item {
+  background-color: var(--app-green-050);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0px;
+  &__left-section {
+    display: flex;
+    width: 100%;
+    gap: 16px;
+  }
+}
+</style>
