@@ -1,12 +1,18 @@
 <template>
-  <div class="c-avatar" @click="">
-    <input type="file" ref="fileInput" class="c-avatar__file-input" @change="" accept="image/*" />
+  <div class="c-avatar" @click="props.editMode && triggerFileUpload()">
+    <input
+      type="file"
+      ref="fileInput"
+      class="c-avatar__file-input"
+      @change="updateAvatar"
+      accept="image/*"
+    />
     <img
-      v-if="props.avatarSrc"
-      :src="props.avatarSrc"
+      v-if="localFileUrl"
+      :src="localFileUrl"
       alt="Аватар"
       class="c-avatar__item"
-      @click="openPhoto(props.avatarSrc)"
+      @click="openPhoto(localFileUrl)"
     />
     <div v-else class="c-avatar__item c-avatar__item--placeholder">
       <span class="c-avatar__item-icon">
@@ -30,8 +36,34 @@ interface Props {
   editMode?: boolean;
   avatarSrc?: string;
 }
-const { openPhoto } = usePhotoViewer();
+
 const props = withDefaults(defineProps<Props>(), {});
+const emits = defineEmits(["changeAvatar"]);
+
+const { openPhoto } = usePhotoViewer();
+
+const fileInput = ref();
+const localFileUrl = ref(props.avatarSrc);
+async function updateAvatar(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const fileList = input.files;
+  if (!fileList || fileList.length === 0) {
+    console.warn("Файл не выбран");
+    return;
+  }
+  const file = fileList[0];
+  localFileUrl.value = URL.createObjectURL(file);
+  emits("changeAvatar", file);
+}
+function triggerFileUpload() {
+  fileInput.value?.click();
+}
+watch(
+  () => props.avatarSrc,
+  (newVal) => {
+    localFileUrl.value = newVal;
+  },
+);
 </script>
 
 <style scoped lang="scss">

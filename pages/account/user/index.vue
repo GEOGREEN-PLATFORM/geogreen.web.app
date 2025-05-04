@@ -22,13 +22,21 @@
         </q-card>
 
         <q-card class="b-card b-card--map">
-          <div class="b-card__title gg-h3">Моя карта</div>
-          <!-- <CMap /> -->
+          <div class="b-card__title gg-h3">Миникарта</div>
+          <CMap
+            class="b-card__map"
+            hide-controls
+            :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
+            :markers="existingHotbeds"
+            :shortInfoKeys="shortMarkerInfoNameKeys"
+          ></CMap>
         </q-card>
 
         <q-card class="b-card b-card--new-report">
           <div class="b-card__title gg-h3">Новое сообщение</div>
-          <CButton size="medium" stretch="hug">Сообщить об очаге</CButton>
+          <CButton @click="navigateTo('/report-problem')" size="medium" stretch="hug"
+            >Сообщить об очаге</CButton
+          >
         </q-card>
       </section>
       <section class="b-page__right-section">
@@ -100,6 +108,35 @@ import { mdiAlertCircleOutline } from "@quasar/extras/mdi-v6";
 import { useMainStore } from "~/store/main";
 
 const store = useMainStore();
+const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
+const hotbedsLoading = ref(true);
+const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
+  owner: {
+    name: "Владелец",
+    type: "text",
+  },
+  landType: {
+    name: "Тип земель",
+    type: "text",
+  },
+  workStage: {
+    name: "Статус работы",
+    type: "status",
+  },
+  problemAreaType: {
+    name: "Тип проблемы",
+    type: "text",
+  },
+  eliminationMethod: {
+    name: "Метод по устранению",
+    type: "text",
+  },
+  contractingOrganisation: {
+    name: "Подрядная организация",
+    type: "text",
+  },
+});
+const existingHotbeds = ref<Marker[]>([]);
 const dialogManageAccount = shallowRef(false);
 const reports = ref([
   { type: "Борщевик", date: "04.05.2023", status: "В работе" },
@@ -117,15 +154,29 @@ const reports = ref([
 ]);
 
 const totalReports = computed(() => reports.value.length);
-const completedReports = 1; // либо получить динамически
+const completedReports = 1;
 const completionRate = computed(() =>
   totalReports.value > 0
     ? Math.round((completedReports / totalReports.value) * 100)
     : 0,
 );
+async function getHotbeds() {
+  hotbedsLoading.value = true;
+  const params = new URLSearchParams();
+  const url = `${store.apiGeospatial}/geo/info/getAll?${params.toString()}`;
+  const response = await $fetch<Marker[]>(url, {
+    method: "GET",
+    headers: { Authorization: useGetToken() },
+  });
+  existingHotbeds.value = response;
+  hotbedsLoading.value = false;
+}
 function openManageAccountDialog() {
   dialogManageAccount.value = true;
 }
+onMounted(() => {
+  getHotbeds();
+});
 </script>
 
 <style scoped lang="scss">
@@ -143,6 +194,7 @@ $app-narrow-mobile: 364px;
   .b-header {
     display: flex;
     align-items: center;
+    margin-bottom: 24px;
   }
 
   &__content {
@@ -182,6 +234,13 @@ $app-narrow-mobile: 364px;
           display: flex;
           align-items: center;
           gap: 8px;
+        }
+      }
+      &--map {
+        min-height: 286px;
+        .b-card__map {
+          border-radius: 16px;
+          overflow: hidden;
         }
       }
       &__statistic-item {

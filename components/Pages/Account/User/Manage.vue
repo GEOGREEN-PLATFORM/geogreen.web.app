@@ -5,36 +5,37 @@
         <h2 class="b-card__title gg-h2">Управление аккаунтом</h2>
         <p v-if="subTitle" class="b-card__subtitle">{{ subTitle }}</p>
       </header>
-      <q-form ref="formRef" novalidate greedy class="b-form" @submit="submitEmployeeData">
+      <q-form ref="formRef" novalidate greedy class="b-form" @submit="submitUserData">
         <template v-if="currentStep === 1">
           <section class="b-form__section">
             <div class="b-form__section-content">
+              <div class="b-form__submit-email gg-t-base">
+                <span class="text-orange-500">Электронная почта не подтверждена.</span
+                ><span class="text-green-500 cursor-pointer">Нажмите, чтобы подтвердить</span>
+              </div>
               <div class="b-form__avatar-container">
-                <CAvatar></CAvatar>
+                <CAvatar
+                  class="b-form__avatar"
+                  :avatar-src="userData.image?.fullImageId"
+                  @change-avatar="updateAvatar"
+                  edit-mode
+                ></CAvatar>
               </div>
               <div class="b-form__fields-row">
-                <CInput v-model="employeeData.lastName" label="Фамилия" class="b-form__field" />
-                <CInput v-model="employeeData.firstName" label="Имя" class="b-form__field" />
+                <CInput v-model="userData.lastName" label="Фамилия" class="b-form__field" />
+                <CInput v-model="userData.firstName" label="Имя" class="b-form__field" />
               </div>
               <CInput
-                v-model="employeeData.phoneNumber"
+                v-model="userData.phoneNumber"
                 label="Номер телефона"
                 :required="false"
                 class="b-form__field"
                 :rules="[(val: string) => !val || val.length === 18 || 'Неверный формат']"
                 maska="+7 (###) ###-##-##"
               />
-              <COptions
-                v-model="employeeData.sendNotificantions"
-                inline
-                type="toggle"
-                :options="[
-                  {
-                    label:
-                      'Хочу получать уведомления об изменениях по моим сообщениям о проблемах на электронную почту',
-                    value: employeeData.sendNotificantions,
-                  },
-                ]"
+              <CInputSwitch
+                v-model="userData.sendNotificantions"
+                label="Хочу получать уведомления об изменениях по моим сообщениям о проблемах на электронную почту"
               />
             </div>
           </section>
@@ -44,7 +45,7 @@
           <CButton
             :label="applyLabel"
             :disabled="formHasError"
-            :loading="isAddLoading"
+            :loading="isDataSending"
             type="submit"
           />
         </footer>
@@ -62,33 +63,41 @@ interface Props {
 }
 interface UserAccountData {
   firstName: string;
-  secondName: string;
   lastName: string;
   phoneNumber: string;
   sendNotificantions: boolean;
+  image: ImageObj | null;
+  changedImage: File | null;
 }
 
 const props = defineProps<Props>();
-const emits = defineEmits(["update:modelValue", "employeeCreated"]);
+const emits = defineEmits<{
+  (e: "update:modelValue", value: boolean): void;
+  (e: "managedAccount"): void;
+}>();
 const dialogVisible = ref(props.modelValue);
 const { formRef, formBindValidation, formHasError } = useFormValidation();
-
-const employeeData = reactive<UserAccountData>({
+const { uploadPhoto } = useFiles();
+const userData = reactive<UserAccountData>({
   firstName: "",
-  secondName: "",
   lastName: "",
   phoneNumber: "",
   sendNotificantions: false,
+  image: null,
+  changedImage: null,
 });
 
 const cancelLabel = ref("Отмена");
-const applyLabel = ref("Далее");
+const applyLabel = ref("Сохранить");
 const subTitle = ref("");
 const currentStep = ref(1);
-const isAddLoading = ref(false);
+const isDataSending = ref(false);
 const store = useMainStore();
 
-function submitEmployeeData() {
+function updateAvatar(file: File) {
+  userData.changedImage = file;
+}
+function submitUserData() {
   formRef.value?.validate().then((success) => {
     if (success) {
       nextStep();
@@ -97,92 +106,47 @@ function submitEmployeeData() {
 }
 
 function onBack() {
-  if (currentStep.value === 1) {
-    resetForm();
-    dialogVisible.value = false;
-  } else {
-    currentStep.value--;
-    updateLabels();
-  }
+  resetForm();
+  dialogVisible.value = false;
 }
-
 function nextStep() {
-  if (currentStep.value === 1) {
-    currentStep.value++;
-    subTitle.value = "Проверьте корректность введённых данных";
-    cancelLabel.value = "Назад";
-  } else if (currentStep.value === 2) {
-    currentStep.value++;
-    subTitle.value = "Сохраните пароль для сотрудника.";
-    applyLabel.value = "Создать";
-  } else if (currentStep.value === 3) {
-    addEmployee(employeeData);
-  }
+  manageAccount(userData);
 }
-
-function updateLabels() {
-  if (currentStep.value === 1) {
-    cancelLabel.value = "Отмена";
-    applyLabel.value = "Далее";
-    subTitle.value = "";
-  } else if (currentStep.value === 2) {
-    cancelLabel.value = "Назад";
-    applyLabel.value = "Далее";
-    subTitle.value = "Проверьте корректность введённых данных";
-  }
-}
-async function addEmployee(newEmployee: UserAccountData) {
-  isAddLoading.value = true;
+async function manageAccount(updatedAccountData: UserAccountData) {
+  isDataSending.value = true;
   try {
-    await $fetch(`${store.apiAuth}/user/register/operator`, {
-      method: "POST",
+    if (updatedAccountData.changedImage) {
+      userData.image = await uploadPhoto(updatedAccountData.changedImage);
+    }
+    await $fetch(`${store.apiAuth}/user/search/${props.user.email}`, {
+      method: "PATCH",
       headers: {
         authorization: useGetToken(),
       },
       body: {
-        firstName: newEmployee.firstName,
-        lastName: newEmployee.lastName,
-        patronymic: newEmployee.secondName,
-        number: newEmployee.phoneNumber,
+        firstName: updatedAccountData.firstName,
+        lastName: updatedAccountData.lastName,
+        number: updatedAccountData.phoneNumber,
+        image: updatedAccountData.image,
       },
     });
     dialogVisible.value = false;
-    emits("employeeCreated");
+    emits("managedAccount");
   } catch (error: any) {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Не удалось создать оператора",
+      text: "Не удалось изменить данные аккаунта",
     };
   } finally {
-    isAddLoading.value = false;
+    isDataSending.value = false;
   }
 }
 function resetForm() {
-  currentStep.value = 1;
-  subTitle.value = "";
-  cancelLabel.value = "Отмена";
-  applyLabel.value = "Далее";
-  employeeData.firstName = "";
-  employeeData.secondName = "";
-  employeeData.lastName = "";
-  employeeData.phoneNumber = "";
+  userData.firstName = "";
+  userData.lastName = "";
+  userData.phoneNumber = "";
 }
-
-function generatePassword(): string {
-  const specialChars = "@#$%&*";
-  const randomStr = Math.random().toString(36).slice(-10);
-  const passwordArr = randomStr
-    .split("")
-    .map((char) =>
-      Math.random() > 0.5 ? char.toUpperCase() : char.toLowerCase(),
-    );
-  const index = Math.floor(Math.random() * passwordArr.length);
-  passwordArr[index] =
-    specialChars[Math.floor(Math.random() * specialChars.length)];
-  return passwordArr.join("");
-}
-
 watch(
   () => props.modelValue,
   (newVal) => {
@@ -195,15 +159,13 @@ watch(
     emits("update:modelValue", newVal);
   },
 );
-
 onMounted(() => {
   if (!props.user) {
     return;
   }
-  employeeData.firstName = props.user.firstName;
-  employeeData.secondName = props.user.patronymic;
-  employeeData.lastName = props.user.lastName;
-  employeeData.phoneNumber = props.user.number;
+  userData.firstName = props.user.firstName;
+  userData.lastName = props.user.lastName;
+  userData.phoneNumber = props.user.number || "";
 });
 </script>
 
@@ -239,19 +201,14 @@ $app-narrow-mobile: 364px;
 .b-form {
   display: flex;
   flex-direction: column;
-  &__section {
-    padding-top: 20px;
-  }
-  &__section-title {
-    margin-bottom: 12px;
-  }
   &__section-content {
     display: flex;
     flex-direction: column;
+    gap: 16px;
   }
   &__fields-row {
     display: flex;
-    gap: 12px;
+    gap: 24px;
     @media screen and (max-width: $app-mobile) {
       flex-direction: column;
       gap: 0px;
@@ -260,7 +217,6 @@ $app-narrow-mobile: 364px;
   &__field {
     flex: 1;
     max-width: 434px;
-    padding-top: 12px;
   }
   &__info-row {
     display: flex;
@@ -284,6 +240,22 @@ $app-narrow-mobile: 364px;
     display: flex;
     align-items: center;
     overflow-wrap: anywhere;
+  }
+  &__avatar-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 8px 0px;
+    .b-form__avatar {
+      width: 64px;
+      height: 64px;
+    }
+  }
+  &__submit-email {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
   &__footer {
     display: flex;

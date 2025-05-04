@@ -1,7 +1,7 @@
 <template>
   <div class="c-menu-container">
     <div class="toolbar-left gg-logo">
-      <NuxtImg class="gg-logo__image" src="/icons/gg_logo.jpg" width="32px"></NuxtImg>
+      <NuxtImg class="gg-logo__image" src="/icons/gg_logo.png" width="64px"></NuxtImg>
       <div class="gg-logo__text">GeoGreen</div>
       <div
         class="burger"
@@ -38,28 +38,56 @@
           @click="navigateTo('/auth/register')"
         ></CButton>
       </div>
-      <div class="user" @click="handleAccountClick">
-        <CButton
+      <div class="user">
+        <CButtonDropdown
           :icon="mdiAccountOutline"
           strech="hug"
           design-type="secondary"
           size="small"
           iconColor="var(--app-grey-400)"
-        ></CButton>
+        >
+          <q-card class="user__menu-dropdown">
+            <CButton
+              label="Открыть аккаунт"
+              size="small"
+              @click="navigateTo('/account/user')"
+            ></CButton>
+            <CButton
+              label="Выйти из аккаунта"
+              size="small"
+              @click="navigateTo('/auth/login')"
+              design-type="secondary"
+            ></CButton>
+          </q-card>
+        </CButtonDropdown>
       </div>
     </div>
     <Transition name="slide-left">
       <div v-show="isMobileMenuOpened" class="c-menu-container__mobile">
         <div class="menu-top">
           <CThemeToggle></CThemeToggle>
-          <div class="user" @click="handleAccountClick">
-            <CButton
+          <div class="user">
+            <CButtonDropdown
               :icon="mdiAccountOutline"
               strech="hug"
               design-type="secondary"
               size="small"
               iconColor="var(--app-grey-400)"
-            ></CButton>
+            >
+              <q-card class="user__menu-dropdown">
+                <CButton
+                  label="Открыть аккаунт"
+                  size="small"
+                  @click="navigateTo('/account/user')"
+                ></CButton>
+                <CButton
+                  label="Выйти из аккаунта"
+                  @click="navigateTo('/auth/login')"
+                  size="small"
+                  design-type="secondary"
+                ></CButton>
+              </q-card>
+            </CButtonDropdown>
           </div>
           <q-icon :name="mdiCog" color="grey-500" size="32px"></q-icon>
         </div>
@@ -185,7 +213,13 @@ async function selectNestedPage(page: Page, nestedKey: string) {
 const visiblePages = computed(() => props.pages.filter((p) => p.visible));
 
 function handleAccountClick() {
-  navigateTo("/auth/register");
+  if (store.user?.role === "user") {
+    navigateTo("/account/user");
+  } else if (store.user) {
+    navigateTo("/account/employee");
+  } else {
+    navigateTo("/auth/register");
+  }
 }
 </script>
 
@@ -222,7 +256,6 @@ function handleAccountClick() {
   .gg-logo {
     display: flex;
     align-items: center;
-    gap: 24px;
     &__image {
     }
     &__text {
@@ -244,6 +277,14 @@ function handleAccountClick() {
   .user {
     display: flex;
     align-items: center;
+    :global(.user__menu-dropdown) {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
+    }
   }
   .burger {
     width: 32px;
