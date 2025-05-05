@@ -65,25 +65,31 @@
         </q-card>
         <q-card class="b-card b-card--my-reports">
           <div class="b-card__title gg-h3">Мои сообщения о проблемах</div>
-          <q-list class="requests">
+          <q-list v-if="reports.length" class="requests">
             <q-item v-for="(report, idx) in reports" :key="idx" clickable class="b-report-item">
               <section class="b-report-item__left-section">
                 <q-item-section style="width: max-content; flex: none">
-                  <q-item-label class="gg-t-base">{{ report.type }}</q-item-label>
-                  <q-item-label caption class="gg-cap">от {{ report.date }}</q-item-label>
+                  <q-item-label class="gg-t-base">{{ report.problemAreaType }}</q-item-label>
+                  <q-item-label caption class="gg-cap"
+                    >от {{ date.formatDate(report.createDate, "DD.MM.YYYY") }}</q-item-label
+                  >
                 </q-item-section>
                 <q-item-section style="width: max-content" class="b-report-item__status">
-                  <div style="width: max-content">{{ report.status }}</div>
+                  <div
+                    style="width: max-content"
+                    :class="[APPLICATION_STATUS_STYLES[report.status], 'base-status-container']"
+                  >
+                    {{ report.status }}
+                  </div>
                 </q-item-section>
               </section>
               <q-item-section side>
-                <CButton size="small">Подробнее</CButton>
+                <CButton @click="openRequestDetailsDialog(report)" size="small">Подробнее</CButton>
               </q-item-section>
             </q-item>
           </q-list>
-          <q-separator />
-          <div class="b-reports__footer">
-            <CButton size="small" stretch="hug" design-type="tertiary">Подробнее</CButton>
+          <div v-else class="gg-t-base" style="color: var(--app-grey-400)">
+            Вы ещё не сообщали о проблемах
           </div>
         </q-card>
         <q-card class="b-card b-card--my-achievements">
@@ -100,16 +106,79 @@
       v-model="dialogManageAccount"
       :user="store.user"
     ></PagesAccountUserManage>
+    <CDialog v-model="isRequestDetailsOpen" class="b-dialog">
+      <q-card v-if="selectedDetailsRequest" class="b-request-card">
+        <header class="b-request-card__header">
+          <div class="b-request-card__title-wrapper">
+            <h2 class="b-request-card__title gg-h2">
+              {{ selectedDetailsRequest.problemAreaType }}
+            </h2>
+            <div class="b-request-card__status">
+              <div
+                :class="[
+                  APPLICATION_STATUS_STYLES[selectedDetailsRequest.status],
+                  'base-status-container',
+                ]"
+              >
+                {{ selectedDetailsRequest.status }}
+              </div>
+            </div>
+          </div>
+          <span class="b-request-card__timestamp gg-caption">
+            Отправлено {{ timeConverter(selectedDetailsRequest.createDate) }}
+          </span>
+        </header>
+        <section class="b-request-card__content q-mb-lg">
+          <button
+            class="b-request-card__open-map-button gg-t-small"
+            @click="viewOnMap(selectedDetailsRequest)"
+          >
+            Посмотреть очаг на карте
+          </button>
+          <section class="b-request-card__main-info">
+            <p class="b-request-card__comment gg-t-base">
+              {{ selectedDetailsRequest.userComment }}
+            </p>
+            <div class="b-request-card__images">
+              <CFileContainers
+                :files="selectedDetailsRequest.images"
+                :clearable="false"
+                hide-caption
+              ></CFileContainers>
+            </div>
+          </section>
+        </section>
+      </q-card>
+    </CDialog>
+    <CDialog v-model="isRequestMapOpen" class="b-dialog">
+      <div class="b-dialog__content">
+        <CMap
+          :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
+          :markers="existingHotbeds"
+          :shortInfoKeys="shortMarkerInfoNameKeys"
+          hide-controls
+          :selectedMarker="selectedRequestMapHotbed"
+        ></CMap>
+      </div>
+    </CDialog>
   </main>
 </template>
 
 <script setup lang="ts">
 import { mdiAlertCircleOutline } from "@quasar/extras/mdi-v6";
+import { date } from "quasar";
 import { useMainStore } from "~/store/main";
-
+import type { ApplicationData } from "~/types/interfaces/applications";
+interface ApplicationsRequest extends ServerPagination {
+  content: ApplicationData[];
+}
 const store = useMainStore();
-const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
+const { HOTBED_WORK_STAGE_STYLES, APPLICATION_STATUS_STYLES } =
+  useGetStatusOptions();
+const { timeConverter } = useFormatters();
 const hotbedsLoading = ref(true);
+const selectedRequestMapHotbed = ref<Marker | null>(null);
+const isRequestMapOpen = ref(false);
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
@@ -137,27 +206,25 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   },
 });
 const existingHotbeds = ref<Marker[]>([]);
+const isRequestDetailsOpen = ref(false);
+const selectedDetailsRequest = ref<ApplicationData | null>(null);
+const pagination = reactive({
+  page: 0,
+  size: 10,
+  totalElements: 0,
+  totalPages: 0,
+});
+const requestsLoading = shallowRef(true);
 const dialogManageAccount = shallowRef(false);
-const reports = ref([
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-  { type: "Борщевик", date: "04.05.2023", status: "В работе" },
-]);
+const reports = ref<ApplicationData[]>([]);
 
 const totalReports = computed(() => reports.value.length);
-const completedReports = 1;
+const completedReports = computed(
+  () => reports.value.filter((r) => r.status === "Одобрена").length,
+);
 const completionRate = computed(() =>
   totalReports.value > 0
-    ? Math.round((completedReports / totalReports.value) * 100)
+    ? Math.round((completedReports.value / totalReports.value) * 100)
     : 0,
 );
 async function getHotbeds() {
@@ -171,11 +238,61 @@ async function getHotbeds() {
   existingHotbeds.value = response;
   hotbedsLoading.value = false;
 }
+async function viewOnMap(request: ApplicationData) {
+  await getHotbeds();
+  existingHotbeds.value.push({
+    id: "user-temp-created",
+    coordinate: request.coordinates,
+    isTempCreatedBy: "user",
+    details: {
+      square: 0,
+      owner: "",
+      landType: "",
+      contractingOrganization: "",
+      workStage: "",
+      eliminationMethod: "",
+      images: [],
+      problemAreaType: request.problemAreaType,
+      comment: "",
+      density: null,
+    },
+    relatedTaskId: null,
+    coordinates: [],
+  });
+  selectedRequestMapHotbed.value =
+    existingHotbeds.value[existingHotbeds.value.length - 1];
+  isRequestMapOpen.value = true;
+}
+async function getMyRequests() {
+  requestsLoading.value = true;
+  const response = await $fetch<ApplicationsRequest>(
+    `${store.apiUserReport}/user-marker/getAll`,
+    {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+      params: {
+        page: pagination.page,
+        size: pagination.size,
+      },
+    },
+  );
+  reports.value = [...reports.value, ...response.content];
+  pagination.totalElements = response.totalItems;
+  pagination.totalPages = response.totalPages;
+  requestsLoading.value = false;
+}
+function openRequestDetailsDialog(request: ApplicationData) {
+  isRequestDetailsOpen.value = true;
+  selectedDetailsRequest.value = request;
+}
 function openManageAccountDialog() {
   dialogManageAccount.value = true;
 }
 onMounted(() => {
   getHotbeds();
+  getMyRequests();
 });
 </script>
 
@@ -264,6 +381,107 @@ $app-narrow-mobile: 364px;
 .requests {
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+.b-request-card {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background-color: var(--app-green-050);
+  width: 860px;
+  max-width: 860px;
+  border-radius: 16px;
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  &__title-wrapper {
+    display: flex;
+    gap: 12px;
+    @media screen and (max-width: $app-narrow-mobile) {
+      justify-content: space-between;
+      width: 100%;
+    }
+  }
+  &__timestamp {
+    color: var(--app-grey-400);
+  }
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+  }
+  &__open-map-button {
+    color: var(--app-blue-500);
+    cursor: pointer;
+    padding: 8px 0px;
+    @media screen and (max-width: $app-narrow-mobile) {
+      margin: 0 auto;
+    }
+  }
+  &__comment {
+    display: flex;
+    padding: 8px 12px;
+    background-color: var(--app-white);
+    color: var(--app-grey-500);
+    align-items: flex-start;
+    justify-content: flex-start;
+    border-radius: 8px;
+    min-width: 516px;
+    height: 112px;
+    overflow: auto;
+    @media screen and (max-width: $app-laptop) {
+      width: 100%;
+      height: 84px;
+      min-width: 120px;
+    }
+    @media screen and (max-width: $app-mobile) {
+      min-height: 84px;
+      max-height: 120px;
+      height: max-content;
+    }
+  }
+  &__images {
+    width: 100%;
+  }
+  &__footer {
+    display: flex;
+    width: 100%;
+    @media screen and (max-width: $app-mobile) {
+      flex-direction: column;
+      gap: 16px;
+    }
+  }
+  &__main-info {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    gap: 56px;
+    @media screen and (max-width: $app-laptop) {
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+  }
+  @media screen and (max-width: $app-laptop) {
+    width: 100%;
+  }
+}
+.b-dialog {
+  &__content {
+    width: 80dvw;
+    height: 90dvh;
+    max-width: 80dvw;
   }
 }
 .b-report-item {

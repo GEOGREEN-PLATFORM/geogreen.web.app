@@ -11,7 +11,9 @@
             <div class="b-form__section-content">
               <div class="b-form__submit-email gg-t-base">
                 <span class="text-orange-500">Электронная почта не подтверждена.</span
-                ><span class="text-green-500 cursor-pointer">Нажмите, чтобы подтвердить</span>
+                ><span @click="verifyEmail" class="text-green-500 cursor-pointer"
+                  >Нажмите, чтобы подтвердить</span
+                >
               </div>
               <div class="b-form__avatar-container">
                 <CAvatar
@@ -137,6 +139,30 @@ async function manageAccount(updatedAccountData: UserAccountData) {
       show: true,
       type: "error",
       text: "Не удалось изменить данные аккаунта",
+    };
+  } finally {
+    isDataSending.value = false;
+  }
+}
+async function verifyEmail() {
+  isDataSending.value = true;
+  try {
+    await $fetch(
+      `${store.apiAuth}/user/register/verify-email/${props.user.email}`,
+      {
+        method: "POST",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    dialogVisible.value = false;
+    emits("managedAccount");
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось подтвердить почту",
     };
   } finally {
     isDataSending.value = false;

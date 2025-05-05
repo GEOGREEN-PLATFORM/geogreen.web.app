@@ -43,3 +43,27 @@
 .event-status.completed {
   background-color: var(--app-green-400);
 }
+
+.application-status {
+  color: var(--app-white);
+}
+.application-status.created {
+  background-color: var(--app-grey-200);
+}
+.application-status.rejected {
+  background-color: var(--app-red-400);
+}
+.application-status.approved {
+  background-color: var(--app-green-400);
+}
+
+.base-status-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  height: 32px;
+  padding: 4px 16px;
+  border-radius: 16px;
+  color: var(--app-white);
+}
