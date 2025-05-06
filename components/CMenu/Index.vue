@@ -51,11 +51,13 @@
               label="Открыть аккаунт"
               size="small"
               @click="navigateTo('/account/user')"
+              :append-icon="mdiArrowTopRight"
             ></CButton>
             <CButton
               label="Выйти из аккаунта"
               size="small"
-              @click="navigateTo('/auth/login')"
+              @click="logout"
+              :append-icon="mdiLogout"
               design-type="secondary"
             ></CButton>
           </q-card>
@@ -79,11 +81,13 @@
                   label="Открыть аккаунт"
                   size="small"
                   @click="navigateTo('/account/user')"
+                  :append-icon="mdiArrowTopRight"
                 ></CButton>
                 <CButton
                   label="Выйти из аккаунта"
-                  @click="navigateTo('/auth/login')"
+                  @click="logout"
                   size="small"
+                  :append-icon="mdiLogout"
                   design-type="secondary"
                 ></CButton>
               </q-card>
@@ -124,7 +128,12 @@
 
 <script setup lang="ts">
 import { useMainStore } from "@/store/main";
-import { mdiAccountOutline, mdiCog } from "@quasar/extras/mdi-v6";
+import {
+  mdiAccountOutline,
+  mdiArrowTopRight,
+  mdiCog,
+  mdiLogout,
+} from "@quasar/extras/mdi-v6";
 
 interface Page extends Tab {
   path?: string;
@@ -148,31 +157,44 @@ const isMobileMenuOpened = shallowRef(false);
 function toggleMenu() {
   isMobileMenuOpened.value = !isMobileMenuOpened.value;
 }
-
+function logout() {
+  store.logout();
+}
 function syncTabsWithRoute() {
   props.pages.forEach((p) =>
     p.nestedItems?.forEach((n) => {
       n.selected = false;
     }),
   );
+  let foundPage: Page | undefined = undefined;
+  let foundNested: (typeof props.pages)[0]["nestedItems"][0] | undefined =
+    undefined;
   for (const page of props.pages) {
     if (page.hasNested) {
       const hit = page.nestedItems?.find((n) =>
         route.path.startsWith(`${page.path}${n.path}`),
       );
       if (hit) {
-        currentPage.value = page;
-        hit.selected = true;
-        return;
+        foundPage = page;
+        foundNested = hit;
+        break;
       }
     } else if (
       page.path &&
       ((route.path === page.path && page.path === "/") ||
         (page.path !== "/" && route.path.startsWith(page.path)))
     ) {
-      currentPage.value = page;
-      return;
+      foundPage = page;
+      break;
     }
+  }
+  if (foundPage) {
+    currentPage.value = foundPage;
+    if (foundNested) {
+      foundNested.selected = true;
+    }
+  } else {
+    currentPage.value = undefined;
   }
 }
 

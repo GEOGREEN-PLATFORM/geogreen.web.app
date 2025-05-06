@@ -10,10 +10,28 @@
           <section class="b-form__section">
             <div class="b-form__section-content">
               <div class="b-form__submit-email gg-t-base">
-                <span class="text-orange-500">Электронная почта не подтверждена.</span
-                ><span @click="verifyEmail" class="text-green-500 cursor-pointer"
-                  >Нажмите, чтобы подтвердить</span
+                <span
+                  :class="{
+                    'text-orange-500': secondsLeft === 0,
+                    'text-blue-500': secondsLeft !== 0,
+                  }"
+                  >{{
+                    secondsLeft === 0
+                      ? "Электронная почта не подтверждена."
+                      : "Ссылка для подтвержедния отправлена на вашу электронную почту."
+                  }}</span
                 >
+                <span
+                  v-if="secondsLeft === 0"
+                  @click="verifyEmail"
+                  class="text-green-500 cursor-pointer"
+                >
+                  Нажмите, чтобы подтвердить
+                </span>
+                <span v-else class="text-grey-500">
+                  Отправить повторно через
+                  {{ secondsLeft }} с
+                </span>
               </div>
               <div class="b-form__avatar-container">
                 <CAvatar
@@ -75,7 +93,7 @@ interface UserAccountData {
 const props = defineProps<Props>();
 const emits = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
-  (e: "managedAccount"): void;
+  (e: "managedAccount", user: User): void;
 }>();
 const dialogVisible = ref(props.modelValue);
 const { formRef, formBindValidation, formHasError } = useFormValidation();
@@ -95,7 +113,20 @@ const subTitle = ref("");
 const currentStep = ref(1);
 const isDataSending = ref(false);
 const store = useMainStore();
+const secondsLeft = ref(0);
+let countdownInterval: number | undefined;
 
+function startCountdown() {
+  secondsLeft.value = 60;
+  countdownInterval = window.setInterval(() => {
+    if (secondsLeft.value > 0) {
+      secondsLeft.value -= 1;
+    } else {
+      clearInterval(countdownInterval!);
+      countdownInterval = undefined;
+    }
+  }, 1000);
+}
 function updateAvatar(file: File) {
   userData.changedImage = file;
 }
@@ -120,20 +151,23 @@ async function manageAccount(updatedAccountData: UserAccountData) {
     if (updatedAccountData.changedImage) {
       userData.image = await uploadPhoto(updatedAccountData.changedImage);
     }
-    await $fetch(`${store.apiAuth}/user/search/${props.user.email}`, {
-      method: "PATCH",
-      headers: {
-        authorization: useGetToken(),
+    const updatedUser = await $fetch<User>(
+      `${store.apiAuth}/user/search/${props.user.email}`,
+      {
+        method: "PATCH",
+        headers: {
+          authorization: useGetToken(),
+        },
+        body: {
+          firstName: updatedAccountData.firstName,
+          lastName: updatedAccountData.lastName,
+          number: updatedAccountData.phoneNumber,
+          image: updatedAccountData.image,
+        },
       },
-      body: {
-        firstName: updatedAccountData.firstName,
-        lastName: updatedAccountData.lastName,
-        number: updatedAccountData.phoneNumber,
-        image: updatedAccountData.image,
-      },
-    });
+    );
     dialogVisible.value = false;
-    emits("managedAccount");
+    emits("managedAccount", updatedUser);
   } catch (error: any) {
     useState<Alert>("showAlert").value = {
       show: true,
@@ -145,8 +179,8 @@ async function manageAccount(updatedAccountData: UserAccountData) {
   }
 }
 async function verifyEmail() {
-  isDataSending.value = true;
   try {
+    if (!countdownInterval) startCountdown();
     await $fetch(
       `${store.apiAuth}/user/register/verify-email/${props.user.email}`,
       {
@@ -156,8 +190,6 @@ async function verifyEmail() {
         },
       },
     );
-    dialogVisible.value = false;
-    emits("managedAccount");
   } catch (error: any) {
     useState<Alert>("showAlert").value = {
       show: true,
@@ -165,13 +197,18 @@ async function verifyEmail() {
       text: "Не удалось подтвердить почту",
     };
   } finally {
-    isDataSending.value = false;
   }
 }
 function resetForm() {
-  userData.firstName = "";
-  userData.lastName = "";
-  userData.phoneNumber = "";
+  userData.firstName = props.user.firstName;
+  userData.lastName = props.user.lastName;
+  userData.phoneNumber = props.user.number || "";
+  userData.image = props.user.image || null;
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = undefined;
+    secondsLeft.value = 0;
+  }
 }
 watch(
   () => props.modelValue,
@@ -192,6 +229,7 @@ onMounted(() => {
   userData.firstName = props.user.firstName;
   userData.lastName = props.user.lastName;
   userData.phoneNumber = props.user.number || "";
+  userData.image = props.user.image || null;
 });
 </script>
 

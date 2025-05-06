@@ -17,6 +17,7 @@
       :type="type"
       :loading="loading"
       :icon="icon"
+      :icon-right="appendIcon"
       :style="`background-color: ${bgColor}; color: ${textColor}`"
       ><slot></slot
     ></q-btn>
@@ -36,6 +37,7 @@ interface Props {
   iconColor?: string;
   bgColor?: string;
   textColor?: string;
+  appendIcon?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
   rounded: true,
@@ -66,6 +68,9 @@ onMounted(() => {
   .primary {
     background: var(--app-green-500);
     color: var(--app-white);
+    :deep(.q-icon.on-right) {
+      color: var(--app-grey-050);
+    }
   }
   .secondary {
     background: var(--app-green-050);

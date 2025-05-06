@@ -41,9 +41,10 @@ const props = withDefaults(defineProps<Props>(), {});
 const emits = defineEmits(["changeAvatar"]);
 
 const { openPhoto } = usePhotoViewer();
+const { getImageUrl } = useFiles();
 
 const fileInput = ref();
-const localFileUrl = ref(props.avatarSrc);
+const localFileUrl = ref("");
 async function updateAvatar(event: Event) {
   const input = event.target as HTMLInputElement;
   const fileList = input.files;
@@ -58,10 +59,19 @@ async function updateAvatar(event: Event) {
 function triggerFileUpload() {
   fileInput.value?.click();
 }
+onMounted(() => {
+  if (props.avatarSrc) {
+    localFileUrl.value = getImageUrl(props.avatarSrc);
+  }
+});
 watch(
   () => props.avatarSrc,
   (newVal) => {
-    localFileUrl.value = newVal;
+    if (!newVal) {
+      localFileUrl.value = "";
+    } else {
+      localFileUrl.value = getImageUrl(newVal);
+    }
   },
 );
 </script>
@@ -80,11 +90,6 @@ $app-narrow-mobile: 364px;
   overflow: hidden;
   background-color: var(--app-grey-050);
   cursor: pointer;
-  @media screen and (max-width: $app-mobile) {
-    width: 100%;
-    height: 120px;
-    border-radius: 4px;
-  }
   &__file-input {
     position: absolute;
     width: 0;

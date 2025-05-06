@@ -6,12 +6,17 @@
     <section class="b-page__content">
       <section class="b-page__left-section">
         <q-card class="b-card b-card--profile">
-          <div><CAvatar class="b-card__avatar" /></div>
+          <div><CAvatar class="b-card__avatar" :avatar-src="store.user?.image?.fullImageId" /></div>
           <div class="b-card__name-container">
             <span class="b-card__name-text gg-h3">{{
               `${store.user?.firstName} ${store.user?.lastName}`
             }}</span>
-            <q-icon :name="mdiAlertCircleOutline" color="orange-500" size="24px" />
+            <q-icon :name="mdiAlertCircleOutline" color="orange-500" size="24px">
+              <CHint>
+                Электронная почта не подтверждена. Для подтверждения перейдите в управление
+                аккаунтом
+              </CHint>
+            </q-icon>
           </div>
           <div class="b-card__email-container">
             <span class="b-card__email-text gg-t-small">{{ store.user?.email }}</span>
@@ -34,7 +39,7 @@
 
         <q-card class="b-card b-card--new-report">
           <div class="b-card__title gg-h3">Новое сообщение</div>
-          <CButton @click="navigateTo('/report-problem')" size="medium" stretch="hug"
+          <CButton @click="navigateTo('/report-problem')" size="medium" stretch="fill"
             >Сообщить об очаге</CButton
           >
         </q-card>
@@ -65,16 +70,22 @@
         </q-card>
         <q-card class="b-card b-card--my-reports">
           <div class="b-card__title gg-h3">Мои сообщения о проблемах</div>
-          <q-list v-if="reports.length" class="requests">
-            <q-item v-for="(report, idx) in reports" :key="idx" clickable class="b-report-item">
-              <section class="b-report-item__left-section">
+          <q-list v-if="reports.length" class="b-requests">
+            <q-item
+              v-for="(report, idx) in reports"
+              :key="idx"
+              clickable
+              @click="openRequestDetailsDialog(report)"
+              class="b-request-item"
+            >
+              <q-item-section class="b-request-item__left-section">
                 <q-item-section style="width: max-content; flex: none">
                   <q-item-label class="gg-t-base">{{ report.problemAreaType }}</q-item-label>
                   <q-item-label caption class="gg-cap"
                     >от {{ date.formatDate(report.createDate, "DD.MM.YYYY") }}</q-item-label
                   >
                 </q-item-section>
-                <q-item-section style="width: max-content" class="b-report-item__status">
+                <q-item-section style="width: max-content" class="b-request-item__status">
                   <div
                     style="width: max-content"
                     :class="[APPLICATION_STATUS_STYLES[report.status], 'base-status-container']"
@@ -82,8 +93,8 @@
                     {{ report.status }}
                   </div>
                 </q-item-section>
-              </section>
-              <q-item-section side>
+              </q-item-section>
+              <q-item-section class="b-request-item__right-section" side>
                 <CButton @click="openRequestDetailsDialog(report)" size="small">Подробнее</CButton>
               </q-item-section>
             </q-item>
@@ -105,6 +116,7 @@
     <PagesAccountUserManage
       v-model="dialogManageAccount"
       :user="store.user"
+      @managedAccount="handleaAccountManaged"
     ></PagesAccountUserManage>
     <CDialog v-model="isRequestDetailsOpen" class="b-dialog">
       <q-card v-if="selectedDetailsRequest" class="b-request-card">
@@ -263,6 +275,9 @@ async function viewOnMap(request: ApplicationData) {
     existingHotbeds.value[existingHotbeds.value.length - 1];
   isRequestMapOpen.value = true;
 }
+function handleaAccountManaged(updatedUser: User) {
+  store.user = updatedUser;
+}
 async function getMyRequests() {
   requestsLoading.value = true;
   const response = await $fetch<ApplicationsRequest>(
@@ -308,6 +323,9 @@ $app-narrow-mobile: 364px;
   width: 100%;
   height: 100%;
   min-height: max-content;
+  @media screen and (max-width: $app-narrow-mobile) {
+    padding: 12px;
+  }
   .b-header {
     display: flex;
     align-items: center;
@@ -317,16 +335,17 @@ $app-narrow-mobile: 364px;
   &__content {
     display: flex;
     gap: 24px;
-
+    flex-wrap: wrap;
     .b-page__left-section,
     .b-page__right-section {
-      flex: 1;
+      flex: 10000;
       display: flex;
       flex-direction: column;
       gap: 24px;
     }
     .b-page__left-section {
-      max-width: max-content;
+      min-width: max-content;
+      flex: 1;
     }
     .b-card {
       padding: 16px;
@@ -369,21 +388,49 @@ $app-narrow-mobile: 364px;
         padding: 16px;
       }
       &--my-reports {
-        gap: 12px;
-      }
-      .requests {
-        max-height: 500px;
-        overflow: auto;
+        .b-requests {
+          max-height: 500px;
+          overflow: auto;
+          gap: 12px;
+          &::-webkit-scrollbar {
+            display: none;
+          }
+          .b-request-item {
+            display: flex;
+            width: 100%;
+            gap: 16px;
+            background-color: var(--app-green-050);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0px;
+            &__left-section {
+              display: flex;
+              flex-direction: row;
+              gap: 8px;
+              min-width: max-content;
+            }
+          }
+        }
+        @media screen and (max-width: 489px) {
+          .b-requests {
+            .b-request-item {
+              &__left-section {
+                justify-content: space-between;
+              }
+              &__right-section {
+                padding-left: 0;
+              }
+              &__status {
+                max-width: max-content;
+              }
+              flex-direction: column;
+            }
+          }
+        }
       }
     }
   }
 }
-.requests {
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
 .b-request-card {
   padding: 16px;
   display: flex;
@@ -482,17 +529,6 @@ $app-narrow-mobile: 364px;
     width: 80dvw;
     height: 90dvh;
     max-width: 80dvw;
-  }
-}
-.b-report-item {
-  background-color: var(--app-green-050);
-  border-radius: 12px;
-  padding: 16px;
-  margin: 16px 0px;
-  &__left-section {
-    display: flex;
-    width: 100%;
-    gap: 16px;
   }
 }
 </style>

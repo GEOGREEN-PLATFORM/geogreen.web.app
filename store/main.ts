@@ -110,5 +110,10 @@ export const useMainStore = defineStore("main", {
         return "filled";
       });
     },
+    logout() {
+      this.user = null;
+      useSetToken(null);
+      navigateTo("/auth/login");
+    },
   },
 });
