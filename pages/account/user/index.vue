@@ -79,15 +79,20 @@
               class="b-request-item"
             >
               <q-item-section class="b-request-item__left-section">
-                <q-item-section style="width: max-content; flex: none">
-                  <q-item-label class="gg-t-base">{{ report.problemAreaType }}</q-item-label>
+                <q-item-section
+                  class="b-request-item__text-info"
+                  style="width: max-content; flex: none"
+                >
+                  <q-item-label class="b-request-item__name gg-t-base">{{
+                    report.problemAreaType
+                  }}</q-item-label>
                   <q-item-label caption class="gg-cap"
                     >от {{ date.formatDate(report.createDate, "DD.MM.YYYY") }}</q-item-label
                   >
                 </q-item-section>
                 <q-item-section style="width: max-content" class="b-request-item__status">
                   <div
-                    style="width: max-content"
+                    style="width: max-content; margin: 0"
                     :class="[APPLICATION_STATUS_STYLES[report.status], 'base-status-container']"
                   >
                     {{ report.status }}
@@ -342,6 +347,10 @@ $app-narrow-mobile: 364px;
       display: flex;
       flex-direction: column;
       gap: 24px;
+      @media screen and (max-width: $app-narrow-mobile) {
+        min-width: 248px;
+        flex: 1;
+      }
     }
     .b-page__left-section {
       min-width: 248px;
@@ -404,19 +413,31 @@ $app-narrow-mobile: 364px;
             border-radius: 12px;
             padding: 16px;
             margin: 16px 0px;
+            overflow-wrap: anywhere;
+            min-width: max-content;
+            &__name {
+              overflow: hidden;
+              text-overflow: ellipsis;
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+              max-width: 200px;
+            }
             &__left-section {
               display: flex;
               flex-direction: row;
               gap: 8px;
-              min-width: max-content;
+              align-items: center;
             }
           }
         }
         @media screen and (max-width: 489px) {
           .b-requests {
             .b-request-item {
+              min-width: unset;
               &__left-section {
                 justify-content: space-between;
+                width: 100%;
               }
               &__right-section {
                 padding-left: 0;

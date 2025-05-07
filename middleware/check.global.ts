@@ -27,6 +27,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     "for-employee-task-events",
     "for-employee-task-events-id",
     "account-employee",
+    "account-user",
   ];
   if (
     !noAuthAllowedPathNames.includes(to.name as string) &&

@@ -93,7 +93,6 @@
               </q-card>
             </CButtonDropdown>
           </div>
-          <q-icon :name="mdiCog" color="grey-500" size="32px"></q-icon>
         </div>
         <div class="menu-bottom">
           <CTabs
@@ -134,17 +133,17 @@ import {
   mdiCog,
   mdiLogout,
 } from "@quasar/extras/mdi-v6";
-
+interface NestedPage {
+  path?: string;
+  name: string;
+  key: string;
+  selected: boolean;
+}
 interface Page extends Tab {
   path?: string;
   visible?: boolean;
   hasNested?: boolean;
-  nestedItems?: {
-    path?: string;
-    name: string;
-    key: string;
-    selected: boolean;
-  }[];
+  nestedItems?: NestedPage[];
 }
 
 const props = defineProps<{ pages: Page[] }>();
@@ -174,8 +173,7 @@ function syncTabsWithRoute() {
     }),
   );
   let foundPage: Page | undefined = undefined;
-  let foundNested: (typeof props.pages)[0]["nestedItems"][0] | undefined =
-    undefined;
+  let foundNested: NestedPage | undefined = undefined;
   for (const page of props.pages) {
     if (page.hasNested) {
       const hit = page.nestedItems?.find((n) =>

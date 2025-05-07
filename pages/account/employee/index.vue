@@ -23,7 +23,7 @@
         </q-card>
         <q-card class="b-card b-card--new-report">
           <div class="b-card__title gg-h3">Новый очаг</div>
-          <CButton @click="navigateTo('/hotbeds')" size="medium" stretch="fill"
+          <CButton @click="navigateTo('/hotbeds?addFromStart=true')" size="medium" stretch="fill"
             >Добавить очаг</CButton
           >
         </q-card>
@@ -34,11 +34,11 @@
           <div class="b-card__statistic-item">
             <div>
               <div class="gg-t-base">
-                Очагов создано
+                Очагов создано:&nbsp;
                 <strong>{{ 10 }}</strong>
               </div>
               <div class="gg-t-base">
-                Обработано:
+                Обработано:&nbsp;
                 <strong>{{ 1 }} ({{ 10 }}%)</strong>
               </div>
             </div>
@@ -54,11 +54,11 @@
           <div class="b-card__statistic-item">
             <div>
               <div class="gg-t-base">
-                Всего мероприятий
+                Всего мероприятий:&nbsp;
                 <strong>{{ 1 }}</strong>
               </div>
               <div class="gg-t-base">
-                Выполнено:
+                Выполнено:&nbsp;
                 <strong>{{ 1 }} ({{ 10 }}%)</strong>
               </div>
             </div>
@@ -77,15 +77,14 @@
           <div v-if="closestTaskEvent" class="b-requests">
             <div class="b-request-item" @click="goToTaskEvent(closestTaskEvent.id)">
               <div class="b-request-item__left-section">
-                <div style="width: max-content; flex: none">
-                  <div class="gg-t-base">{{ closestTaskEvent.name }}</div>
+                <div class="b-request-item__text-info">
+                  <div class="b-request-item__name gg-t-base">{{ closestTaskEvent.name }}</div>
                   <div class="gg-cap" caption>
                     до {{ date.formatDate(closestTaskEvent.endDate, "DD.MM.YYYY") }}
                   </div>
                 </div>
-                <div style="width: max-content" class="b-request-item__status">
+                <div class="b-request-item__status">
                   <div
-                    style="width: max-content"
                     :class="[
                       TASK_EVENT_STATUS_STYLES[
                         closestTaskEvent.statusCode as keyof typeof TASK_EVENT_STATUS_STYLES
@@ -285,6 +284,10 @@ $app-narrow-mobile: 364px;
       display: flex;
       flex-direction: column;
       gap: 24px;
+      @media screen and (max-width: $app-narrow-mobile) {
+        min-width: 248px;
+        flex: 1;
+      }
     }
     .b-page__left-section {
       min-width: 248px;
@@ -348,6 +351,15 @@ $app-narrow-mobile: 364px;
             border-radius: 12px;
             padding: 16px;
             transition: background-color 0.3s ease;
+            overflow-wrap: anywhere;
+            min-width: max-content;
+            &__name {
+              overflow: hidden;
+              text-overflow: ellipsis;
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+            }
             cursor: pointer;
             &:hover {
               background-color: var(--app-green-100);
@@ -356,16 +368,17 @@ $app-narrow-mobile: 364px;
               display: flex;
               flex-direction: row;
               gap: 16px;
-              min-width: max-content;
               align-items: center;
             }
           }
         }
-        @media screen and (max-width: 489px) {
+        @media screen and (max-width: 493px) {
           .b-requests {
             .b-request-item {
+              min-width: unset;
               &__left-section {
                 justify-content: space-between;
+                width: 100%;
               }
               &__right-section {
                 padding-left: 0;
@@ -388,6 +401,7 @@ $app-narrow-mobile: 364px;
       display: flex;
       flex-direction: column;
       gap: 16px;
+      min-width: 248px;
     }
   }
 }
