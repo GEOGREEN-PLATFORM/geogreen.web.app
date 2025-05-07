@@ -1,7 +1,7 @@
 <template>
   <div class="c-menu-container">
     <div class="toolbar-left gg-logo">
-      <NuxtImg class="gg-logo__image" src="/icons/gg_logo.jpg" width="32px"></NuxtImg>
+      <NuxtImg class="gg-logo__image" src="/icons/gg_logo.png" width="64px"></NuxtImg>
       <div class="gg-logo__text">GeoGreen</div>
       <div
         class="burger"
@@ -38,30 +38,61 @@
           @click="navigateTo('/auth/register')"
         ></CButton>
       </div>
-      <div class="user" @click="handleAccountClick">
-        <CButton
+      <div class="user">
+        <CButtonDropdown
           :icon="mdiAccountOutline"
           strech="hug"
           design-type="secondary"
           size="small"
           iconColor="var(--app-grey-400)"
-        ></CButton>
+        >
+          <q-card class="user__menu-dropdown">
+            <CButton
+              label="Открыть аккаунт"
+              size="small"
+              @click="goToAccount"
+              :append-icon="mdiArrowTopRight"
+            ></CButton>
+            <CButton
+              label="Выйти из аккаунта"
+              size="small"
+              @click="logout"
+              :append-icon="mdiLogout"
+              design-type="secondary"
+            ></CButton>
+          </q-card>
+        </CButtonDropdown>
       </div>
     </div>
     <Transition name="slide-left">
       <div v-show="isMobileMenuOpened" class="c-menu-container__mobile">
         <div class="menu-top">
           <CThemeToggle></CThemeToggle>
-          <div class="user" @click="handleAccountClick">
-            <CButton
+          <div class="user">
+            <CButtonDropdown
               :icon="mdiAccountOutline"
               strech="hug"
               design-type="secondary"
               size="small"
               iconColor="var(--app-grey-400)"
-            ></CButton>
+            >
+              <q-card class="user__menu-dropdown">
+                <CButton
+                  label="Открыть аккаунт"
+                  size="small"
+                  @click="goToAccount"
+                  :append-icon="mdiArrowTopRight"
+                ></CButton>
+                <CButton
+                  label="Выйти из аккаунта"
+                  @click="logout"
+                  size="small"
+                  :append-icon="mdiLogout"
+                  design-type="secondary"
+                ></CButton>
+              </q-card>
+            </CButtonDropdown>
           </div>
-          <q-icon :name="mdiCog" color="grey-500" size="32px"></q-icon>
         </div>
         <div class="menu-bottom">
           <CTabs
@@ -96,18 +127,23 @@
 
 <script setup lang="ts">
 import { useMainStore } from "@/store/main";
-import { mdiAccountOutline, mdiCog } from "@quasar/extras/mdi-v6";
-
+import {
+  mdiAccountOutline,
+  mdiArrowTopRight,
+  mdiCog,
+  mdiLogout,
+} from "@quasar/extras/mdi-v6";
+interface NestedPage {
+  path?: string;
+  name: string;
+  key: string;
+  selected: boolean;
+}
 interface Page extends Tab {
   path?: string;
   visible?: boolean;
   hasNested?: boolean;
-  nestedItems?: {
-    path?: string;
-    name: string;
-    key: string;
-    selected: boolean;
-  }[];
+  nestedItems?: NestedPage[];
 }
 
 const props = defineProps<{ pages: Page[] }>();
@@ -120,31 +156,50 @@ const isMobileMenuOpened = shallowRef(false);
 function toggleMenu() {
   isMobileMenuOpened.value = !isMobileMenuOpened.value;
 }
-
+function logout() {
+  store.logout();
+}
+function goToAccount() {
+  if (store.user?.role === "user") {
+    navigateTo("/account/user");
+  } else if (store.user) {
+    navigateTo("/account/employee");
+  }
+}
 function syncTabsWithRoute() {
   props.pages.forEach((p) =>
     p.nestedItems?.forEach((n) => {
       n.selected = false;
     }),
   );
+  let foundPage: Page | undefined = undefined;
+  let foundNested: NestedPage | undefined = undefined;
   for (const page of props.pages) {
     if (page.hasNested) {
       const hit = page.nestedItems?.find((n) =>
         route.path.startsWith(`${page.path}${n.path}`),
       );
       if (hit) {
-        currentPage.value = page;
-        hit.selected = true;
-        return;
+        foundPage = page;
+        foundNested = hit;
+        break;
       }
     } else if (
       page.path &&
       ((route.path === page.path && page.path === "/") ||
         (page.path !== "/" && route.path.startsWith(page.path)))
     ) {
-      currentPage.value = page;
-      return;
+      foundPage = page;
+      break;
     }
+  }
+  if (foundPage) {
+    currentPage.value = foundPage;
+    if (foundNested) {
+      foundNested.selected = true;
+    }
+  } else {
+    currentPage.value = undefined;
   }
 }
 
@@ -185,7 +240,13 @@ async function selectNestedPage(page: Page, nestedKey: string) {
 const visiblePages = computed(() => props.pages.filter((p) => p.visible));
 
 function handleAccountClick() {
-  navigateTo("/auth/register");
+  if (store.user?.role === "user") {
+    navigateTo("/account/user");
+  } else if (store.user) {
+    navigateTo("/account/employee");
+  } else {
+    navigateTo("/auth/register");
+  }
 }
 </script>
 
@@ -222,7 +283,6 @@ function handleAccountClick() {
   .gg-logo {
     display: flex;
     align-items: center;
-    gap: 24px;
     &__image {
     }
     &__text {
@@ -244,6 +304,14 @@ function handleAccountClick() {
   .user {
     display: flex;
     align-items: center;
+    :global(.user__menu-dropdown) {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
+    }
   }
   .burger {
     width: 32px;

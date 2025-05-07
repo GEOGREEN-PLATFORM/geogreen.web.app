@@ -79,6 +79,7 @@ import { useMainStore } from "~/store/main";
 import type { HotbedData } from "~/types/interfaces/hotbeds";
 
 const store = useMainStore();
+const route = useRoute();
 const debounce = useDebounce();
 const { HOTBED_WORK_STAGE_OPTIONS, HOTBED_WORK_STAGE_STYLES } =
   useGetStatusOptions();
@@ -267,6 +268,9 @@ function goToHotbed(id: string) {
 }
 onMounted(() => {
   getHotbeds();
+  if (route.query.addFromStart) {
+    openHotbedDialog();
+  }
 });
 </script>
 

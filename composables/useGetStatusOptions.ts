@@ -83,6 +83,25 @@ export default function useGetStatusOptions() {
     Отклонено: "event-status rejected",
     Выполнено: "event-status completed",
   };
+  const APPLICATION_STATUS_OPTIONS: ItemOption[] = [
+    {
+      name: "Создана",
+      value: "Создана",
+    },
+    {
+      name: "Одобрена",
+      value: "Одобрена",
+    },
+    {
+      name: "Отклонена",
+      value: "Отклонена",
+    },
+  ];
+  const APPLICATION_STATUS_STYLES = {
+    Создана: "application-status created",
+    Одобрена: "application-status approved",
+    Отклонена: "application-status rejected",
+  };
   return {
     EMPLOYEE_ACCOUNT_STATUS_OPTIONS,
     EMPLOYEE_ACCOUNT_STATUS_STYLES,
@@ -92,5 +111,7 @@ export default function useGetStatusOptions() {
     HOTBED_DENSITIES_OPTIONS,
     TASK_EVENT_STATUS_OPTIONS,
     TASK_EVENT_STATUS_STYLES,
+    APPLICATION_STATUS_OPTIONS,
+    APPLICATION_STATUS_STYLES,
   };
 }

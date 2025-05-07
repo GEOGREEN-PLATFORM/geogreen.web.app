@@ -1,6 +1,6 @@
 <template>
   <div class="c-button-main" :class="{ 'button-icon': icon }">
-    <q-btn
+    <q-btn-dropdown
       :class="{
         [designType]: true,
         disabled,
@@ -17,10 +17,11 @@
       :type="type"
       :loading="loading"
       :icon="icon"
-      :icon-right="appendIcon"
       :style="`background-color: ${bgColor}; color: ${textColor}`"
+      v-model="contentOpened"
+      :menu-offset="[0, 12]"
       ><slot></slot
-    ></q-btn>
+    ></q-btn-dropdown>
   </div>
 </template>
 
@@ -37,7 +38,6 @@ interface Props {
   iconColor?: string;
   bgColor?: string;
   textColor?: string;
-  appendIcon?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
   rounded: true,
@@ -52,7 +52,7 @@ const buttonDesignTypeSettings = ref({
   flat: false,
   loading: false,
 });
-
+const contentOpened = ref(false);
 onMounted(() => {
   buttonDesignTypeSettings.value.flat = props.designType === "tertiary";
 });
@@ -68,9 +68,6 @@ onMounted(() => {
   .primary {
     background: var(--app-green-500);
     color: var(--app-white);
-    :deep(.q-icon.on-right) {
-      color: var(--app-grey-050);
-    }
   }
   .secondary {
     background: var(--app-green-050);
@@ -125,6 +122,9 @@ onMounted(() => {
   }
   .q-btn.disabled {
     opacity: 1 !important;
+  }
+  .q-btn-dropdown__arrow.q-btn-dropdown__arrow-container {
+    display: none;
   }
 }
 .c-button-main.button-icon {

@@ -88,27 +88,9 @@
 
 <script setup lang="ts">
 import { mdiAlert, mdiCheck } from "@quasar/extras/mdi-v6";
-import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
+import type { ApplicationData } from "~/types/interfaces/applications";
 
-interface ApplicationData {
-  id: string;
-  coordinates: Coordinate;
-  userId: string;
-  userComment: string;
-  images: {
-    previewImageId: string;
-    fullImageId: string;
-  }[];
-  status: "Создана" | "Одобрена" | "Отклонена";
-  createDate: string;
-  operatorComment: string;
-  photoVerification: boolean;
-  updateDate: string;
-  operatorName: string | null;
-  operatorId: string | null;
-  problemAreaType: string;
-}
 interface ApplicationsRequest extends ServerPagination {
   content: ApplicationData[];
 }
