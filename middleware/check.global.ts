@@ -19,13 +19,14 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     "index",
   ];
   const employeeAllowedPathNames = [
-    ...userAllowedPathNames,
+    ...userAllowedPathNames.filter((name) => name !== "account-user"),
     "for-employee-employees",
     "for-employee-employees-id",
     "for-employee-applications",
     "for-employee-applications-id",
     "for-employee-task-events",
     "for-employee-task-events-id",
+    "account-employee",
   ];
   if (
     !noAuthAllowedPathNames.includes(to.name as string) &&

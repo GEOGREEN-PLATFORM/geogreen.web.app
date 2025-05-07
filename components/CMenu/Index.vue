@@ -50,7 +50,7 @@
             <CButton
               label="Открыть аккаунт"
               size="small"
-              @click="navigateTo('/account/user')"
+              @click="goToAccount"
               :append-icon="mdiArrowTopRight"
             ></CButton>
             <CButton
@@ -80,7 +80,7 @@
                 <CButton
                   label="Открыть аккаунт"
                   size="small"
-                  @click="navigateTo('/account/user')"
+                  @click="goToAccount"
                   :append-icon="mdiArrowTopRight"
                 ></CButton>
                 <CButton
@@ -159,6 +159,13 @@ function toggleMenu() {
 }
 function logout() {
   store.logout();
+}
+function goToAccount() {
+  if (store.user?.role === "user") {
+    navigateTo("/account/user");
+  } else if (store.user) {
+    navigateTo("/account/employee");
+  }
 }
 function syncTabsWithRoute() {
   props.pages.forEach((p) =>

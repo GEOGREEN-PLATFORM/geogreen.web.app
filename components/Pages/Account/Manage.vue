@@ -9,7 +9,7 @@
         <template v-if="currentStep === 1">
           <section class="b-form__section">
             <div class="b-form__section-content">
-              <div class="b-form__submit-email gg-t-base">
+              <div v-if="store.user?.role === 'user'" class="b-form__submit-email gg-t-base">
                 <span
                   :class="{
                     'text-orange-500': secondsLeft === 0,
@@ -44,7 +44,19 @@
               <div class="b-form__fields-row">
                 <CInput v-model="userData.lastName" label="Фамилия" class="b-form__field" />
                 <CInput v-model="userData.firstName" label="Имя" class="b-form__field" />
+                <CInput
+                  v-if="store.user?.role !== 'user'"
+                  v-model="userData.secondName"
+                  label="Отчество"
+                  class="b-form__field"
+                />
               </div>
+              <CInputDate
+                v-if="store.user?.role !== 'user'"
+                v-model="userData.dateOfBirth"
+                label="Дата рождения"
+                class="b-form__field"
+              />
               <CInput
                 v-model="userData.phoneNumber"
                 label="Номер телефона"
@@ -54,6 +66,7 @@
                 maska="+7 (###) ###-##-##"
               />
               <CInputSwitch
+                v-if="store.user?.role === 'user'"
                 v-model="userData.sendNotificantions"
                 label="Хочу получать уведомления об изменениях по моим сообщениям о проблемах на электронную почту"
               />
@@ -84,6 +97,8 @@ interface Props {
 interface UserAccountData {
   firstName: string;
   lastName: string;
+  secondName: string;
+  dateOfBirth: string;
   phoneNumber: string;
   sendNotificantions: boolean;
   image: ImageObj | null;
@@ -101,6 +116,8 @@ const { uploadPhoto } = useFiles();
 const userData = reactive<UserAccountData>({
   firstName: "",
   lastName: "",
+  secondName: "",
+  dateOfBirth: "",
   phoneNumber: "",
   sendNotificantions: false,
   image: null,
@@ -230,6 +247,10 @@ onMounted(() => {
   userData.lastName = props.user.lastName;
   userData.phoneNumber = props.user.number || "";
   userData.image = props.user.image || null;
+  if (store.user?.role !== "user") {
+    userData.secondName = props.user.patronymic || "";
+    userData.dateOfBirth = props.user.birthdate || "";
+  }
 });
 </script>
 

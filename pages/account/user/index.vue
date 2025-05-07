@@ -8,7 +8,7 @@
         <q-card class="b-card b-card--profile">
           <div><CAvatar class="b-card__avatar" :avatar-src="store.user?.image?.fullImageId" /></div>
           <div class="b-card__name-container">
-            <span class="b-card__name-text gg-h3">{{
+            <span class="b-card__name-text text-center gg-h3">{{
               `${store.user?.firstName} ${store.user?.lastName}`
             }}</span>
             <q-icon :name="mdiAlertCircleOutline" color="orange-500" size="24px">
@@ -113,11 +113,11 @@
         </q-card>
       </section>
     </section>
-    <PagesAccountUserManage
+    <PagesAccountManage
       v-model="dialogManageAccount"
       :user="store.user"
       @managedAccount="handleaAccountManaged"
-    ></PagesAccountUserManage>
+    ></PagesAccountManage>
     <CDialog v-model="isRequestDetailsOpen" class="b-dialog">
       <q-card v-if="selectedDetailsRequest" class="b-request-card">
         <header class="b-request-card__header">
@@ -344,7 +344,7 @@ $app-narrow-mobile: 364px;
       gap: 24px;
     }
     .b-page__left-section {
-      min-width: max-content;
+      min-width: 248px;
       flex: 1;
     }
     .b-card {
@@ -370,6 +370,7 @@ $app-narrow-mobile: 364px;
           display: flex;
           align-items: center;
           gap: 8px;
+          overflow-wrap: anywhere;
         }
       }
       &--map {
