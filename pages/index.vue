@@ -1,9 +1,19 @@
 <template>
-  <div class="main-text gg-h1">
-    Добро пожаловать {{ store.user ? `, ${store.user.firstName} ${store.user.lastName}` : "" }}
-    <br />
-    Главная страница находится в разработке. <br />Для перемещения между страницами воспользуйтесь
-    навигационной панелью.
+  <div class="b-page">
+    <div class="b-hero-background">
+      <div class="b-hero-background__content">
+        <div class="b-hero-background__text">
+          МИНИМУМ УСИЛИЙ<br />
+          МАКСИМУМ ВЛИЯНИЯ<br />
+          GEOGREEN
+        </div>
+        <div class="b-hero-background__actions">
+          <CButton label="Сообщить о проблеме"></CButton>
+          <CButton label="К карте"></CButton>
+        </div>
+      </div>
+    </div>
+    <div class="b-page__content"></div>
   </div>
 </template>
 
@@ -14,12 +24,33 @@ const store = useMainStore();
 </script>
 
 <style scoped lang="scss">
-.main-text {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 0px 128px;
-  text-align: center;
+.b-page {
+  .b-hero-background {
+    position: absolute;
+    top: 0;
+    background-image: url("/public/images/hero_main_bg.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    width: 100dvw;
+    height: 100dvh;
+    &__content {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 668px;
+      position: relative;
+      top: 20dvh;
+      left: 15dvw;
+    }
+    &__text {
+      font-family: "Russo One";
+      font-size: 48px;
+    }
+    &__actions {
+      display: flex;
+      gap: 64px;
+      align-items: center;
+    }
+  }
 }
 </style>
