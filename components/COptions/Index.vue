@@ -5,6 +5,8 @@
       :options="options"
       :color="color"
       :inline="inline"
+      keep-color
+      :dark="false"
       :type="type"
       @update:model-value="updateValue"
     />

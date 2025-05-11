@@ -337,6 +337,7 @@ const emit = defineEmits<{
   forbiddenAddMarker: [];
 }>();
 
+const $q = useQuasar();
 const confirmationDialog = reactive({
   isOpened: false,
   mainText: "",
@@ -762,6 +763,7 @@ watch(
 //   mapElement.classList.toggle("is-active", clickedInside);
 // };
 onMounted(() => {
+  gGreenOlMap.url = `https://tiles.stadiamaps.com/tiles/${$q.dark.isActive ? "alidade_smooth_dark" : "osm_bright"}/{z}/{x}/{y}@2x.png`;
   if (props.markers?.length) {
     gGreenCluster.markersDict = convertMarkersToDictionary(props.markers);
     gGreenCluster.markerFeatures = convertMarkersToFeatures(props.markers);
@@ -779,7 +781,12 @@ onMounted(() => {
     }
   }
 });
-
+watch(
+  () => $q.dark.isActive,
+  () => {
+    gGreenOlMap.url = `https://tiles.stadiamaps.com/tiles/${$q.dark.isActive ? "alidade_smooth_dark" : "osm_bright"}/{z}/{x}/{y}@2x.png`;
+  },
+);
 // onBeforeUnmount(() => {
 //   document.removeEventListener("click", onMapClick);
 // });
@@ -1066,6 +1073,7 @@ onMounted(() => {
         background-position: center center;
         width: 24px;
         height: 24px;
+        filter: var(--app-filter-grey-300);
       }
       &.ol-full-screen-false::after {
         background-image: url("/icons/fullscreen.svg");
@@ -1087,12 +1095,15 @@ onMounted(() => {
     button {
       width: 32px;
       height: 32px;
+      background-color: var(--app-white);
+      color: var(--app-white);
       cursor: pointer;
       box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
       border-radius: 2px;
       img {
         width: 24px;
         height: 24px;
+        filter: var(--app-filter-grey-300);
       }
     }
   }

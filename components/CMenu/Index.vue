@@ -44,7 +44,7 @@
           strech="hug"
           design-type="secondary"
           size="small"
-          iconColor="var(--app-grey-400)"
+          iconColor="var(--app-grey-300)"
         >
           <q-card class="user__menu-dropdown">
             <CButton
@@ -78,7 +78,7 @@
               strech="hug"
               design-type="secondary"
               size="small"
-              iconColor="var(--app-grey-400)"
+              iconColor="var(--app-grey-300)"
             >
               <q-card class="user__menu-dropdown">
                 <CButton

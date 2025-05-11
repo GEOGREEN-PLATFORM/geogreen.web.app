@@ -1,7 +1,7 @@
 <template>
   <div
     class="theme-toggle"
-    :class="{ 'theme-toggle--dark': colorMode?.value === 'dark' }"
+    :class="{ 'theme-toggle--dark': $q.dark.isActive }"
     @click="toggleTheme"
   >
     <div class="theme-toggle__circle"></div>
@@ -164,18 +164,12 @@
 </template>
 
 <script lang="ts" setup>
-const colorMode = ref(null);
+const $q = useQuasar();
+const darkModeCookie = useCookie("dark-mode");
 const toggleTheme = () => {
-  if (!colorMode.value) return;
-  if (colorMode.value.value === "dark") {
-    colorMode.value.preference = "light";
-  } else {
-    colorMode.value.preference = "dark";
-  }
+  $q.dark.toggle();
+  darkModeCookie.value = $q.dark.isActive ? "dark" : "light";
 };
-onMounted(() => {
-  colorMode.value = useColorMode();
-});
 </script>
 
 <style scoped lang="scss">
@@ -245,7 +239,7 @@ onMounted(() => {
   }
   .icon-moon {
     svg {
-      fill: var(--app-white);
+      fill: var(--app-black);
     }
   }
 }

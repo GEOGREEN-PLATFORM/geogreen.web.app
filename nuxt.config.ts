@@ -19,20 +19,8 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "nuxt-quasar-ui",
     "@nuxt/image",
-    "@nuxtjs/color-mode",
     "@nuxt/test-utils/module",
   ],
-  colorMode: {
-    preference: "light",
-    fallback: "light",
-    hid: "nuxt-color-mode-script",
-    globalName: "__NUXT_COLOR_MODE__",
-    componentName: "ColorScheme",
-    classPrefix: "",
-    classSuffix: "-mode",
-    storage: "cookie",
-    storageKey: "nuxt-color-mode",
-  },
   css: [
     "normalize.css/normalize.css",
     "@/assets/styles/quasar_class_overriding.scss",
@@ -47,10 +35,11 @@ export default defineNuxtConfig({
     config: {
       brand: {
         primary: "var(--app-green-500)",
-        dark: "",
+        dark: "var(--app-grey-900)",
         negative: "var(--app-red-500)",
-        positive: "#BC0909",
+        positive: "var(--app-green-500)",
       },
+      dark: "auto",
     },
   },
   build: {
