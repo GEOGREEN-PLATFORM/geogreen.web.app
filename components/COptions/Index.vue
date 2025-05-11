@@ -17,7 +17,7 @@ interface Props {
   options: Option[];
   color?: string;
   inline?: boolean;
-  type: "toggle" | "radio" | "checkbox" | undefined;
+  type?: "toggle" | "radio" | "checkbox" | undefined;
 }
 interface Option {
   label?: string;

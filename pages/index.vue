@@ -1,6 +1,12 @@
 <template>
-  <div class="b-page">
+  <div
+    class="b-page"
+    :class="{
+      'b-page--employee-mode': store.user?.role !== 'user',
+    }"
+  >
     <div
+      v-if="store.user?.role === 'user'"
       class="b-hero-background"
       :class="{ 'is-dark': colorMode.preference === 'dark', scrolled: !isTop }"
     >
@@ -24,67 +30,75 @@
         </div>
       </div>
     </div>
-    <div class="b-page__content">
-      <q-card class="b-page__map-container">
+    <section class="b-page__content">
+      <q-card class="b-card b-page__map-container">
+        <h3 class="gg-h3 q-mb-md">
+          Интерактивная карта<q-icon><CHint></CHint></q-icon>
+        </h3>
+        <ol v-if="store.user?.role === 'user'" class="gg-t-big b-card__list">
+          <li>Отметьте точку на карте, соответствующую расположению проблемы</li>
+          <li>
+            Во всплывшем окне созданного очага нажмите кнопку "Продолжить" и укажите тип проблемы
+          </li>
+          <li>Подтвердите отправку сообщения</li>
+        </ol>
         <div id="page-map" class="b-page__map-wrapper">
           <CMap
             @add-marker="addTempHotbed"
-            @edit-marker="editTempHotbed"
+            @edit-marker="editHotbed"
             @delete-marker="deleteTempHotbed"
             @forbiddenAddMarker="handleForbiddenAddTry"
             :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
             :addMarker="isAddMarker ? 'forbid' : 'enable'"
+            :add-zone="store.user?.role === 'user' ? 'hide' : 'enable'"
             :markers="existingHotbeds"
             :shortInfoKeys="shortMarkerInfoNameKeys"
             :selectedMarker="addedHotbed"
-            :editableMarkers="[addedHotbed?.id || '']"
-          ></CMap>
+            :non-checkable-markers="store.user?.role === 'user' ? 'all' : 'none'"
+            :editableMarkers="store.user?.role === 'user' ? 'none' : 'all'"
+          >
+            <template #custom-temp-action>
+              <CButton
+                :label="store.user?.role === 'user' ? 'Продолжить' : 'Указать данные'"
+                @click="dialogVisible = true"
+                size="small"
+              ></CButton>
+            </template>
+          </CMap>
         </div>
       </q-card>
-    </div>
+    </section>
+    <PagesHotbedsAdd
+      v-model="dialogVisible"
+      :initial-hotbed="addedHotbed"
+      :minimal="store.user?.role === 'user'"
+      :from="store.user?.role === 'user' ? 'user' : 'employee'"
+      @hotbed-created="handleCreatedHotbed"
+    ></PagesHotbedsAdd>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
+import type { HotbedData } from "~/types/interfaces/hotbeds";
+
+definePageMeta({
+  transparentHeader: true,
+});
+
 const isTop = ref(true);
 const onScroll = () => {
   isTop.value = window.scrollY < 10;
   route.meta.transparentHeader = isTop.value;
 };
-definePageMeta({
-  transparentHeader: isTop.value,
-});
+
 const colorMode = useColorMode();
 const store = useMainStore();
 const isMobile = ref(false);
-onMounted(() => {
-  window.addEventListener("scroll", onScroll, { passive: true });
-  getHotbeds();
-  onScroll();
-});
-onBeforeUnmount(() => {
-  window.removeEventListener("scroll", onScroll);
-});
-onMounted(() => {
-  isMobile.value = window.innerWidth < 364;
-});
-import type { Coordinate } from "ol/coordinate";
-import type { HotbedData } from "~/types/interfaces/hotbeds";
-
-const { formRef, formBindValidation, formHasError } = useFormValidation();
-const { HOTBED_WORK_STAGE_STYLES, HOTBED_DENSITIES_OPTIONS } =
-  useGetStatusOptions();
-
-const FILES_MAX_SIZE = 10_000_000;
-
+const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
 const existingHotbeds = ref<Marker[]>([]);
-const hotbedEliminationMethods = ref<ItemOption[]>([]);
-const attachedFiles = ref<File[]>([]);
-const cancelLabel = ref("Отмена");
-const applyLabel = ref("Далее");
-const subTitle = ref("Отметьте на карте новый очаг проблемы");
-const currentStep = ref(1);
+const dialogVisible = ref(false);
 const hotbedsLoading = ref(false);
 const route = useRoute();
 const hotbedData = ref<HotbedData>({
@@ -125,31 +139,10 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
     type: "text",
   },
 });
-async function uploadFiles(files: File[]) {
-  const currentTotal = attachedFiles.value.reduce((sum, f) => sum + f.size, 0);
-  const newFilesTotal = files.reduce((sum, f) => sum + f.size, 0);
-  if (newFilesTotal + currentTotal > FILES_MAX_SIZE) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: `Добавляемые файлы превышают ${FILES_MAX_SIZE / 1e6} MB`,
-    };
-    return;
-  }
-  files.forEach((file) => {
-    attachedFiles.value.push(file);
-  });
-}
-function onSubmit() {
-  formRef.value?.validate().then((success) => {
-    if (success) {
-      nextStep();
-    }
-  });
-}
+
 const addedHotbed = computed(() => {
   return existingHotbeds.value[existingHotbeds.value.length - 1]
-    ?.isTempCreatedBy === "employee"
+    ?.isTempCreatedBy
     ? existingHotbeds.value[existingHotbeds.value.length - 1]
     : null;
 });
@@ -176,7 +169,7 @@ function addTempHotbed(coordinate: Coordinate, zone?: ZoneWithDensity) {
   existingHotbeds.value.push({
     id: "user-temp-created",
     coordinate: coordinate,
-    isTempCreatedBy: "employee",
+    isTempCreatedBy: store.user?.role === "user" ? "user" : "employee",
     details: {
       square: 0,
       owner: "",
@@ -194,38 +187,36 @@ function addTempHotbed(coordinate: Coordinate, zone?: ZoneWithDensity) {
   });
   isAddMarker.value = true;
 }
-function editTempHotbed(hotbedId: string, marker: Marker) {
-  const hotbedIndex = existingHotbeds.value.findIndex((m) => m.id === hotbedId);
-  existingHotbeds.value[hotbedIndex] = marker;
-  if (marker.details.density) {
-    hotbedData.value.density = marker.details.density;
+async function editHotbed(hotbedId: string, marker: Marker) {
+  if (marker.isTempCreatedBy) {
+    const hotbedIndex = existingHotbeds.value.findIndex(
+      (m) => m.id === hotbedId,
+    );
+    existingHotbeds.value[hotbedIndex] = marker;
+    if (marker.details.density) {
+      hotbedData.value.density = marker.details.density;
+    }
+    hotbedData.value.coordinates = marker?.coordinates || null;
+  } else {
+    try {
+      await $fetch(`${store.apiGeospatial}/geo/info/${hotbedId}`, {
+        method: "PATCH",
+        headers: {
+          authorization: useGetToken(),
+        },
+        body: { ...marker, coordinates: marker.coordinates?.[0] || null },
+      });
+    } catch (err: any) {
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: `Не удалось изменить данные очага: ${err.message}`,
+      };
+    }
   }
-  hotbedData.value.coordinates = marker?.coordinates || null;
 }
 const isAddMarker = shallowRef(false);
-function onBack() {
-  if (currentStep.value === 1) {
-    resetForm();
-  } else {
-    currentStep.value--;
-    updateLabels();
-  }
-}
-async function getEliminationMethodsByArea(area: string) {
-  hotbedData.value.eliminationMethod = "";
-  hotbedEliminationMethods.value = (
-    await $fetch<string[]>(
-      `${store.apiGeospatial}/geo/dict/elimination-methods/${area}`,
-      {
-        method: "GET",
-        headers: { Authorization: useGetToken() },
-      },
-    )
-  ).map((elem) => ({
-    name: elem,
-    value: elem,
-  }));
-}
+
 function deleteTempHotbed(id: string) {
   existingHotbeds.value = existingHotbeds.value.filter(
     (hotbed) => !hotbed.isTempCreatedBy,
@@ -238,113 +229,86 @@ function handleForbiddenAddTry() {
     text: "Вы уже добавили очаг на карту. Удалите его, чтобы добавить новый.",
   };
 }
-function changeHotdedsDensity() {
-  if (hotbedData.value.density) {
-    const hotbedIndex = existingHotbeds.value.findIndex(
-      (m) => m.isTempCreatedBy === "employee",
-    );
-    if (hotbedIndex === -1) return;
-    existingHotbeds.value[hotbedIndex].details.density = hotbedData.value
-      .density as Density;
-  }
-}
-async function createHotbed() {
-  for (const file of attachedFiles.value) {
-    const image = await uploadPhoto(file);
-    hotbedData.value.images.push(image);
-  }
-  resetForm();
-}
-async function uploadPhoto(file: File) {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await $fetch<{
-      previewImageId: string;
-      fullImageId: string;
-    }>(`${store.apiFileServer}/file/image/upload`, {
-      method: "POST",
-      body: formData,
-    });
-    return response;
-  } catch (err) {
-    throw new Error("Ошибка при загрузке фото");
-  }
-}
-function nextStep() {
-  if (currentStep.value === 1) {
-    currentStep.value++;
-    updateLabels();
-    nextTick(() => {
-      formBindValidation();
-    });
-  } else if (currentStep.value === 2) {
-    currentStep.value++;
-    updateLabels();
-  } else if (currentStep.value === 3) {
-    currentStep.value++;
-    updateLabels();
-  } else if (currentStep.value === 4) {
-    createHotbed();
-  }
-}
-
-function updateLabels() {
-  if (currentStep.value === 1) {
-    cancelLabel.value = "Отмена";
-    applyLabel.value = "Далее";
-    subTitle.value = "Отметьте на карте новый очаг проблемы";
-  } else if (currentStep.value === 2) {
-    cancelLabel.value = "Назад";
-    applyLabel.value = "Далее";
-    subTitle.value = "Заполните данные по добавляемому очагу";
-  } else if (currentStep.value === 3) {
-    cancelLabel.value = "Назад";
-    applyLabel.value = "Далее";
-    subTitle.value = "Проверьте корректность введённых данных";
-  } else if (currentStep.value === 4) {
-    cancelLabel.value = "Назад";
-    applyLabel.value = "Создать";
-    subTitle.value = "Добавьте комментарий и изображения создаваемого очага";
-  }
-}
-
-function resetForm() {
-  currentStep.value = 1;
-  subTitle.value = "";
-  cancelLabel.value = "Отмена";
-  applyLabel.value = "Далее";
-  hotbedData.value = {
-    problemAreaType: "",
-    landType: "",
-    eliminationMethod: "",
-    owner: "",
-    contractingOrganization: "",
-    comment: "",
-    images: [],
-    density: null,
-    coordinate: null,
-    coordinates: null,
-  };
-  existingHotbeds.value = [];
-  attachedFiles.value = [];
-  isAddMarker.value = false;
-}
-watch(
-  () => hotbedData.value,
-  (newData) => {
-    const details = addedHotbed.value?.details;
-    if (details) {
-      Object.keys(newData).forEach((key) => {
-        if (Object.hasOwn(newData, key) && Object.hasOwn(details, key)) {
-          // @ts-expect-error динамическое присвоение
-          details[key] = newData[key];
-        }
+async function handleCreatedHotbed(newHotbed: HotbedData) {
+  if (store.user?.role === "user") {
+    try {
+      await $fetch(`${store.apiUserReport}/user-marker/report`, {
+        method: "POST",
+        headers: {
+          authorization: useGetToken(),
+        },
+        body: {
+          coordinate: newHotbed.coordinate,
+          details: {
+            images: [],
+            problemAreaType: newHotbed.problemAreaType,
+            userId: store.user?.id || "",
+          },
+        },
       });
+      deleteTempHotbed("user-temp-created");
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "success",
+        text: "Сообщение о проблеме успешно отправлено на модерацию",
+      };
+    } catch (err: any) {
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: `Невозможно отправить отчёт: ${err.message}`,
+      };
     }
-  },
-  { deep: true },
-);
+  } else if (store.user?.role === "admin" || store.user?.role === "operator") {
+    try {
+      await $fetch(`${store.apiGeospatial}/geo/info`, {
+        method: "POST",
+        headers: {
+          authorization: useGetToken(),
+        },
+        body: {
+          coordinate: newHotbed.coordinate,
+          details: {
+            owner: newHotbed.owner,
+            landType: newHotbed.landType,
+            contractingOrganization: newHotbed.contractingOrganization,
+            eliminationMethod: newHotbed.eliminationMethod,
+            images: newHotbed.images,
+            workStage: "Создано",
+            problemAreaType: newHotbed.problemAreaType,
+            comment: newHotbed.comment,
+            density: newHotbed.density,
+          },
+          coordinates: newHotbed.coordinates?.[0] || null,
+        },
+      });
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "success",
+        text: "Очаг успешно добавлен на карту",
+      };
+      getHotbeds();
+    } catch (error: any) {
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Не удалось добавить очаг",
+      };
+    }
+  }
+}
+onMounted(() => {
+  window.addEventListener("scroll", onScroll, { passive: true });
+  isMobile.value = window.innerWidth < 364;
+  getHotbeds();
+  onScroll();
+  if (store.user?.role !== "user") {
+    route.meta.transparentHeader = false;
+  }
+});
+onBeforeUnmount(() => {
+  window.removeEventListener("scroll", onScroll);
+});
 </script>
 
 <style scoped lang="scss">
@@ -465,14 +429,31 @@ $app-narrow-mobile: 364px;
       height: 100%;
       width: 100%;
       padding: 16px;
-      border-radius: 32px;
+      display: flex;
+      flex-direction: column;
+      border-radius: 12px;
       .b-page__map-wrapper {
         height: 100%;
         width: 100%;
-        border-radius: 16px;
+        border-radius: 12px;
         overflow: hidden;
       }
     }
   }
+  &--employee-mode {
+    height: 100%;
+    .b-page__content {
+      position: static;
+      padding: 32px;
+      height: 100%;
+      @media screen and (max-width: $app-mobile) {
+        padding: 8px;
+      }
+    }
+  }
+}
+.b-card__list {
+  padding-left: 0;
+  list-style-position: inside;
 }
 </style>
