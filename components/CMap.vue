@@ -199,7 +199,7 @@
               class="actions-label__action"
               v-if="
                 !marker.isTempCreatedBy &&
-                (props.nonCheckableMarkers === 'all' ||
+                (props.nonCheckableMarkers === 'none' ||
                   (Array.isArray(props.nonCheckableMarkers) &&
                     !props.nonCheckableMarkers?.includes(marker.id)))
               "
@@ -209,6 +209,7 @@
                 size="small"
                 stretch="fill"
                 design-type="secondary"
+                @click="checkDetailInfo(marker.id)"
               ></CButton>
             </li>
             <li
@@ -249,6 +250,12 @@
                 bg-color="var(--app-red-500)"
                 @click="suggestDeleteMarker(marker.id)"
               ></CButton>
+            </li>
+            <li class="actions-label__action">
+              <slot name="custom-action"></slot>
+            </li>
+            <li v-if="marker.isTempCreatedBy" class="actions-label__action">
+              <slot name="custom-temp-action"></slot>
             </li>
           </ul>
         </div>
@@ -317,6 +324,7 @@ const props = withDefaults(defineProps<Props>(), {
   addZone: "enable",
   addMarker: "enable",
   toggleVisibility: "enable",
+  nonCheckableMarkers: "none",
   hideControls: false,
 });
 const emit = defineEmits<{
@@ -325,6 +333,7 @@ const emit = defineEmits<{
   editMarker: [id: string, marker: Marker];
   selectMarker: [id: string, marker: Marker];
   cancelMarkerSelection: [id: string];
+  checkDetailInfo: [id: string];
   forbiddenAddMarker: [];
 }>();
 
@@ -416,7 +425,13 @@ function convertZonesToFeatures(markers: Marker[]) {
     .map((marker) => ({
       type: "Feature",
       properties: { density: marker.details?.density || "default" },
-      geometry: { type: "Polygon", coordinates: marker.coordinates },
+      geometry: {
+        type: "Polygon",
+        coordinates:
+          marker.coordinates?.length === 1
+            ? marker.coordinates
+            : [marker.coordinates],
+      },
       id: marker.id,
     }));
   const providerFeatureCollection = {
@@ -660,7 +675,9 @@ function configureMap() {
 function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle("is-active");
 }
-
+function checkDetailInfo(id: string) {
+  emit("checkDetailInfo", id);
+}
 function createZone(event: DrawEvent) {
   if (gGreenCluster.currentSelectedMarkerId && event.feature) {
     const marker = gGreenCluster.markersDict.get(
@@ -708,6 +725,14 @@ onMounted(() => {
     });
   }
 });
+watch(
+  () => props.selectedMarker,
+  (newVal, oldVal) => {
+    if (!newVal) {
+      closeMarkerPopup(oldVal?.id || "");
+    }
+  },
+);
 watch(
   () => props.markers,
   (newMarkers) => {
@@ -856,6 +881,9 @@ onMounted(() => {
       gap: 8px;
       margin: 12px 0px;
       cursor: pointer;
+      &:empty {
+        display: none;
+      }
       .actions-label__text {
       }
       .actions-label__icon {
@@ -985,7 +1013,7 @@ onMounted(() => {
     &:has(.burger-button.is-active) {
       width: 195px;
       .burger-button img {
-        transform: rotate(180deg);
+        transform: rotate(0deg);
       }
     }
     .burger-button {
@@ -1007,7 +1035,7 @@ onMounted(() => {
       img {
         cursor: pointer;
         transition: transform 0.3s ease;
-        transform: rotate(0deg);
+        transform: rotate(180deg);
         width: 24px;
         height: 24px;
         filter: var(--app-filter-grey-300);

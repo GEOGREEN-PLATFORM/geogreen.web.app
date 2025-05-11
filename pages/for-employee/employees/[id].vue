@@ -128,7 +128,7 @@
                   'b-labeled-field__value--empty': !userData.birthDate,
                 }"
               >
-                {{ userData.birthDate || "Не указано" }}
+                {{ date.formatDate(userData.birthDate, "DD.MM.YYYY") || "Не указано" }}
               </div>
             </div>
             <div class="b-labeled-field">
@@ -168,12 +168,34 @@
           </div>
         </div>
       </section>
-      <section class="b-page__data-card">
-        <!-- Future content will go here -->
-      </section>
     </div>
     <section class="b-page__table-section">
-      <!-- Future table will go here -->
+      <div class="b-card__title gg-h3 q-mb-md">Мероприятия сотрудника</div>
+      <div class="b-table">
+        <CTable
+          :columns="tableHeaders"
+          :rows="tableRows"
+          v-model:pagination="pagination"
+          row-key="name"
+          :slots="['statusCode']"
+          @click:row="(row: any) => goToTaskEvent(row.id)"
+          @updateTable="getEmployeeTaskEvents"
+          :loading="taskEventsLoading"
+        >
+          <template v-slot:body-cell-statusCode="slotProps">
+            <div
+              class="base-status-container gg-t-small"
+              :class="
+                TASK_EVENT_STATUS_STYLES[
+                  slotProps.row.statusCode as keyof typeof TASK_EVENT_STATUS_STYLES
+                ]
+              "
+            >
+              {{ slotProps.row.statusCode }}
+            </div>
+          </template>
+        </CTable>
+      </div>
     </section>
     <CDialogConfirm
       v-model="showBlockDialog"
@@ -347,7 +369,93 @@ function cancelToggleBlockAction() {
 }
 onMounted(() => {
   getUser();
+  getEmployeeTaskEvents();
 });
+import { date } from "quasar";
+import type { TaskEvent } from "~/types/interfaces/taskEvents";
+interface TaskEventsRequest extends ServerPagination {
+  content: TaskEvent[];
+}
+const { TASK_EVENT_STATUS_OPTIONS, TASK_EVENT_STATUS_STYLES } =
+  useGetStatusOptions();
+const myTaskEvents = ref<TaskEvent[]>([]);
+const pagination = ref<TablePagination>({
+  page: 1,
+  rowsPerPage: 10,
+  rowsNumber: 0,
+});
+const taskEventsLoading = shallowRef(true);
+const tableHeaders: TableHeader[] = [
+  {
+    name: "name",
+    align: "left",
+    label: "Название",
+    field: "name",
+  },
+  {
+    name: "description",
+    align: "left",
+    label: "Описание",
+    field: "description",
+  },
+  {
+    name: "statusCode",
+    align: "center",
+    label: "Статус",
+    field: "statusCode",
+  },
+  {
+    name: "startDate",
+    align: "right",
+    label: "Дата создания",
+    field: "startDate",
+  },
+  {
+    name: "lastUpdateDate",
+    align: "right",
+    label: "Дата последнего изменения",
+    field: "lastUpdateDate",
+  },
+  {
+    name: "endDate",
+    align: "right",
+    label: "Ожидаемая дата завершения",
+    field: "endDate",
+  },
+];
+const tableRows: ComputedRef<TableRow[]> = computed(() =>
+  myTaskEvents.value.map((e) => ({
+    id: e.id,
+    name: e.name,
+    description: e.description,
+    statusCode: TASK_EVENT_STATUS_OPTIONS.find((o) => o.value === e.statusCode)
+      ?.name,
+    operatorName: `${e.operator?.lastName} ${e.operator?.firstName} ${e.operator?.patronymic}`,
+    startDate: date.formatDate(new Date(e.startDate), "DD.MM.YYYY"),
+    lastUpdateDate: date.formatDate(new Date(e.lastUpdateDate), "DD.MM.YYYY"),
+    endDate: date.formatDate(new Date(e.endDate), "DD.MM.YYYY"),
+  })),
+);
+async function getEmployeeTaskEvents() {
+  taskEventsLoading.value = true;
+  const url = `${store.apiEventManager}/event/getAll`;
+  const response = await $fetch<TaskEventsRequest>(url, {
+    method: "GET",
+    headers: { Authorization: useGetToken() },
+    params: {
+      page: pagination.value.page - 1,
+      size: pagination.value.rowsPerPage,
+      operatorId: route.params.id,
+    },
+  });
+  myTaskEvents.value = response.content;
+  pagination.value.rowsNumber = response.totalItems;
+  taskEventsLoading.value = false;
+}
+
+function goToTaskEvent(id: string) {
+  navigateTo(`/for-employee/task-events/${id}`);
+}
 </script>
 
 <style scoped lang="scss">
@@ -359,6 +467,8 @@ $app-narrow-mobile: 364px;
   background-color: var(--app-white);
   width: 100%;
   padding: 24px;
+  display: flex;
+  flex-direction: column;
   @media screen and (max-width: $app-mobile) {
     padding: 16px;
   }
@@ -377,10 +487,9 @@ $app-narrow-mobile: 364px;
     min-height: 250px;
   }
   &__table-section {
-    background-color: var(--app-grey-100);
     border-radius: 8px;
     width: 100%;
-    min-height: 360px;
+    height: 100%;
   }
 }
 .b-name {

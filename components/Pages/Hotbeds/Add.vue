@@ -1,12 +1,12 @@
 <template>
-  <CDialog v-model="dialogVisible" class="b-dialog" @show="formBindValidation">
+  <CDialog v-model="dialogVisible" class="b-dialog" @show="nextTick(formBindValidation)">
     <q-card class="b-card" :class="`b-card--step-${currentStep}`">
       <header class="b-card__header">
-        <h2 class="b-card__title gg-h2">Добавление очага</h2>
+        <h2 v-if="!props.minimal" class="b-card__title gg-h2">Добавление очага</h2>
         <p v-if="subTitle" class="b-card__subtitle">{{ subTitle }}</p>
       </header>
       <q-form ref="formRef" novalidate greedy class="b-form" @submit="onSubmit">
-        <template v-if="currentStep === 1">
+        <template v-if="currentStep === 1 && !props.initialHotbed">
           <section class="b-form__section b-form__map">
             <CMap
               @add-marker="addTempHotbed"
@@ -18,11 +18,11 @@
               :markers="existingHotbeds"
               :shortInfoKeys="shortMarkerInfoNameKeys"
               :selectedMarker="addedHotbed"
-              :editableMarkers="[addedHotbed?.id || '']"
+              :editableMarkers="[props.from === 'user' ? '' : addedHotbed?.id || '']"
             ></CMap>
           </section>
         </template>
-        <template v-else-if="currentStep === 2">
+        <template v-else-if="currentStep === 2 && !props.minimal">
           <section class="b-form__section">
             <div class="b-form__section-content">
               <CInputSelect
@@ -45,7 +45,7 @@
               ></CInputSelect>
               <CInputSelect
                 v-model="hotbedData.density"
-                @update:model-value="changeHotdedsDensity"
+                @update:model-value="changeHotbedDensity"
                 :options="HOTBED_DENSITIES_OPTIONS"
                 label="Плотность распространения"
               ></CInputSelect>
@@ -58,7 +58,7 @@
             </div>
           </section>
         </template>
-        <template v-else-if="currentStep === 3">
+        <template v-else-if="currentStep === 3 && !props.minimal">
           <section class="b-form__section">
             <div class="b-form__info-row gg-t-base">
               <span class="b-form__info-label">Тип проблемы:</span>
@@ -88,7 +88,7 @@
             </div>
           </section>
         </template>
-        <template v-else-if="currentStep === 4">
+        <template v-else-if="currentStep === 4 && !props.minimal">
           <section class="b-form__section">
             <fieldset class="b-form__fieldset q-mb-md">
               <legend class="b-form__legend gg-h3 q-mb-sm">Комментарий</legend>
@@ -111,7 +111,13 @@
             </fieldset>
           </section>
         </template>
-
+        <template v-if="props.minimal">
+          <CInputSelect
+            v-model="hotbedData.problemAreaType"
+            :options="store.formattedProblemAreaTypes"
+            label="Тип проблемы"
+          ></CInputSelect>
+        </template>
         <footer class="b-form__footer">
           <CButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
           <CButton
@@ -132,10 +138,16 @@ import type { HotbedData } from "~/types/interfaces/hotbeds";
 
 interface Props {
   modelValue: boolean;
-  hotbeds: Marker[];
+  hotbeds?: Marker[];
+  initialHotbed?: Marker | null;
+  minimal?: boolean;
+  from?: "user" | "employee";
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  minimal: false,
+  from: "employee",
+});
 const emits = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
   (e: "hotbedCreated", hotbedData: HotbedData): void;
@@ -189,7 +201,7 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
     name: "Метод по устранению",
     type: "text",
   },
-  contractingOrganisation: {
+  contractingOrganization: {
     name: "Подрядная организация",
     type: "text",
   },
@@ -209,6 +221,18 @@ async function uploadFiles(files: File[]) {
     attachedFiles.value.push(file);
   });
 }
+function handleExternalHotbed(marker?: Marker | null) {
+  if (!marker) return;
+  existingHotbeds.value = [marker];
+  isAddMarker.value = true;
+  hotbedData.value.coordinate = marker.coordinate;
+  hotbedData.value.coordinates = marker.coordinates || null;
+  Object.assign(hotbedData.value, { ...marker.details });
+  if (currentStep.value === 1) {
+    currentStep.value = 2;
+    updateLabels();
+  }
+}
 function onSubmit() {
   formRef.value?.validate().then((success) => {
     if (success) {
@@ -218,7 +242,7 @@ function onSubmit() {
 }
 const addedHotbed = computed(() => {
   return existingHotbeds.value[existingHotbeds.value.length - 1]
-    ?.isTempCreatedBy === "employee"
+    ?.isTempCreatedBy
     ? existingHotbeds.value[existingHotbeds.value.length - 1]
     : null;
 });
@@ -228,7 +252,7 @@ function addTempHotbed(coordinate: Coordinate, zone?: ZoneWithDensity) {
   existingHotbeds.value.push({
     id: "user-temp-created",
     coordinate: coordinate,
-    isTempCreatedBy: "employee",
+    isTempCreatedBy: props.from === "user" ? "user" : "employee",
     details: {
       square: 0,
       owner: "",
@@ -256,7 +280,10 @@ function editTempHotbed(hotbedId: string, marker: Marker) {
 }
 const isAddMarker = shallowRef(false);
 function onBack() {
-  if (currentStep.value === 1) {
+  if (
+    currentStep.value === 1 ||
+    (currentStep.value === 2 && props.initialHotbed)
+  ) {
     resetForm();
     dialogVisible.value = false;
   } else {
@@ -291,10 +318,10 @@ function handleForbiddenAddTry() {
     text: "Вы уже добавили очаг на карту. Удалите его, чтобы добавить новый.",
   };
 }
-function changeHotdedsDensity() {
+function changeHotbedDensity() {
   if (hotbedData.value.density) {
     const hotbedIndex = existingHotbeds.value.findIndex(
-      (m) => m.isTempCreatedBy === "employee",
+      (m) => m.isTempCreatedBy,
     );
     if (hotbedIndex === -1) return;
     existingHotbeds.value[hotbedIndex].details.density = hotbedData.value
@@ -333,6 +360,8 @@ function nextStep() {
     nextTick(() => {
       formBindValidation();
     });
+  } else if (currentStep.value === 2 && props.minimal && props.initialHotbed) {
+    createHotbed();
   } else if (currentStep.value === 2) {
     currentStep.value++;
     updateLabels();
@@ -349,6 +378,18 @@ function updateLabels() {
     cancelLabel.value = "Отмена";
     applyLabel.value = "Далее";
     subTitle.value = "Отметьте на карте новый очаг проблемы";
+  } else if (currentStep.value === 2 && props.minimal) {
+    cancelLabel.value = "Отмена";
+    applyLabel.value = props.minimal
+      ? props.from === "user"
+        ? "Подтвердить"
+        : "Создать"
+      : "Далее";
+    subTitle.value = "Выберите тип добавляемой проблемы";
+  } else if (currentStep.value === 2 && props.initialHotbed) {
+    cancelLabel.value = "Отмена";
+    applyLabel.value = "Далее";
+    subTitle.value = "Заполните данные по добавляемому очагу";
   } else if (currentStep.value === 2) {
     cancelLabel.value = "Назад";
     applyLabel.value = "Далее";
@@ -365,10 +406,8 @@ function updateLabels() {
 }
 
 function resetForm() {
-  currentStep.value = 1;
-  subTitle.value = "";
-  cancelLabel.value = "Отмена";
-  applyLabel.value = "Далее";
+  currentStep.value = props.initialHotbed ? 2 : 1;
+  updateLabels();
   hotbedData.value = {
     problemAreaType: "",
     landType: "",
@@ -377,18 +416,18 @@ function resetForm() {
     contractingOrganization: "",
     comment: "",
     images: [],
-    density: null,
-    coordinate: null,
-    coordinates: null,
+    density: props.initialHotbed ? props.initialHotbed.details.density : null,
+    coordinate: props.initialHotbed ? props.initialHotbed.coordinate : null,
+    coordinates: props.initialHotbed ? props.initialHotbed.coordinates : null,
   };
   existingHotbeds.value = [];
   attachedFiles.value = [];
-  isAddMarker.value = false;
+  isAddMarker.value = !!props.initialHotbed;
 }
 watch(
   () => props.hotbeds,
   (newVal) => {
-    existingHotbeds.value = [...newVal];
+    existingHotbeds.value = newVal ? [...newVal] : [];
   },
 );
 watch(
@@ -420,8 +459,16 @@ watch(
   },
 );
 onMounted(() => {
-  existingHotbeds.value = [...props.hotbeds];
+  existingHotbeds.value = props.hotbeds || [];
+  if (props.initialHotbed) {
+    handleExternalHotbed(props.initialHotbed);
+  }
 });
+watch(
+  () => props.initialHotbed,
+  (newVal) => handleExternalHotbed(newVal),
+  { deep: true },
+);
 </script>
 
 <style scoped lang="scss">
@@ -539,6 +586,14 @@ $app-narrow-mobile: 364px;
     margin-top: 10px;
     font-size: 18px;
     color: var(--app-grey-300);
+  }
+  &:not(:has(.b-card__title)) {
+    .b-card__subtitle {
+      margin-top: 0px;
+    }
+    .b-card__header {
+      padding-top: 0px;
+    }
   }
 }
 @keyframes pop {

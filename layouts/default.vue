@@ -1,6 +1,9 @@
 <template>
   <q-layout view="hHh lpR fFf" class="layout-container">
-    <q-header class="header-container">
+    <q-header
+      class="header-container"
+      :class="{ 'header-container--transparent': route.meta?.transparentHeader }"
+    >
       <q-toolbar class="toolbar-container">
         <CMenu :pages="pages"></CMenu>
       </q-toolbar>
@@ -29,6 +32,7 @@ interface Page extends Tab {
   visible: boolean;
 }
 const store = useMainStore();
+const route = useRoute();
 const pages: Page[] = [
   {
     key: "main",
@@ -40,7 +44,7 @@ const pages: Page[] = [
     key: "hotbeds",
     name: "Очаги",
     path: "/hotbeds",
-    visible: true,
+    visible: store.user?.role !== "user",
   },
   {
     key: "report",
@@ -88,6 +92,30 @@ const pages: Page[] = [
   .header-container {
     padding: 0px 28px;
     background-color: var(--app-white);
+    transition: background-color 0.3s ease;
+    &--transparent:not(:has(.c-menu-container__mobile.opened)) {
+      background-color: transparent;
+      :deep(.q-tab) {
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
+        background-color: transparent;
+        .q-focus-helper {
+          transition: opacity 0.3s ease;
+          opacity: 0 !important;
+        }
+        &:hover {
+          color: var(--app-green-700);
+        }
+      }
+      :deep(.q-tab--active) {
+        color: var(--app-green-050);
+      }
+      :deep(.hr-line) {
+        transition: background-color 0.3s ease;
+        background-color: transparent;
+      }
+    }
   }
   .toolbar-container {
     display: flex;
@@ -96,10 +124,10 @@ const pages: Page[] = [
 
   .hr-line {
     width: 100vw;
-    position: relative;
-    left: -28px;
-    top: -1px;
-    height: 1px;
+    position: absolute;
+    left: 0;
+    height: 2px;
+    top: calc(100% - 2px);
     background-color: var(--app-grey-050);
   }
 }

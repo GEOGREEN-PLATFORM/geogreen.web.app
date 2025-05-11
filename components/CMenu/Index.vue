@@ -65,7 +65,11 @@
       </div>
     </div>
     <Transition name="slide-left">
-      <div v-show="isMobileMenuOpened" class="c-menu-container__mobile">
+      <div
+        v-show="isMobileMenuOpened"
+        class="c-menu-container__mobile"
+        :class="{ opened: isMobileMenuOpened }"
+      >
         <div class="menu-top">
           <CThemeToggle></CThemeToggle>
           <div class="user">
