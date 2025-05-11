@@ -8,7 +8,7 @@
     <div
       v-if="store.user?.role === 'user'"
       class="b-hero-background"
-      :class="{ 'is-dark': colorMode.preference === 'dark', scrolled: !isTop }"
+      :class="{ 'is-dark': $q.dark.isActive, scrolled: !isTop }"
     >
       <div class="b-hero-background__content">
         <div class="b-hero-background__text">
@@ -98,7 +98,7 @@ const onScroll = () => {
   route.meta.transparentHeader = isTop.value;
 };
 
-const colorMode = useColorMode();
+const $q = useQuasar();
 const store = useMainStore();
 const isMobile = ref(false);
 const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();

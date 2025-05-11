@@ -24,7 +24,7 @@
       </span>
     </div>
     <div v-if="props.editMode" class="c-avatar__item-overlay">
-      <q-icon :name="mdiUpload" color="grey-050" size="32px"></q-icon>
+      <q-icon :name="mdiUpload" color="white" size="32px"></q-icon>
     </div>
   </div>
 </template>

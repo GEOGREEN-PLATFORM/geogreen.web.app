@@ -76,7 +76,7 @@
   --app-filter-grey-500: invert(0%) sepia(4%) saturate(2757%) hue-rotate(348deg) brightness(90%)
     contrast(76%);
 }
-.dark-mode {
+.body--dark {
   --input-label: rgba(255, 255, 255, 0.7);
   --app-orange-050: #191919;
   --app-orange-100: #683400;
@@ -123,10 +123,10 @@
   --app-red-900: #840012;
 
   --app-grey-050: #232323;
-  --app-grey-100: #b9b9b9;
+  --app-grey-100: #2f2f2f;
   --app-grey-200: #989898;
-  --app-grey-300: #686868;
-  --app-grey-400: #4b4b4b;
+  --app-grey-300: #b1b1b1;
+  --app-grey-400: #cccccc;
   --app-grey-500: #e1e1e1;
   --app-grey-600: #e4e4e4;
   --app-grey-700: #ffffff;
@@ -136,6 +136,16 @@
   --app-black: #ffffff;
   --app-white: #0d0d0d;
 
+  --app-filter-red-300: brightness(0) saturate(100%) invert(74%) sepia(81%) saturate(3744%)
+    hue-rotate(310deg) brightness(100%) contrast(102%);
+  --app-filter-orange-300: brightness(0) saturate(100%) invert(72%) sepia(52%) saturate(460%)
+    hue-rotate(338deg) brightness(100%) contrast(103%);
+  --app-filter-red-500: brightness(0) saturate(100%) invert(23%) sepia(61%) saturate(5068%)
+    hue-rotate(341deg) brightness(103%) contrast(107%);
+  --app-filter-grey-300: brightness(0) saturate(100%) invert(75%) sepia(1%) saturate(0%)
+    hue-rotate(135deg) brightness(99%) contrast(82%);
+  --app-filter-white: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(6150%)
+    hue-rotate(138deg) brightness(101%) contrast(90%);
   --app-filter-grey-500: invert(99%) sepia(0%) saturate(0%) hue-rotate(277deg) brightness(109%)
     contrast(101%);
 }
