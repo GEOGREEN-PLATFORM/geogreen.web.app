@@ -44,7 +44,7 @@ const pages: Page[] = [
     key: "hotbeds",
     name: "Очаги",
     path: "/hotbeds",
-    visible: true,
+    visible: store.user?.role !== "user",
   },
   {
     key: "report",

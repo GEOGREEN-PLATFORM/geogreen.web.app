@@ -209,6 +209,7 @@
                 size="small"
                 stretch="fill"
                 design-type="secondary"
+                @click="checkDetailInfo(marker.id)"
               ></CButton>
             </li>
             <li
@@ -332,6 +333,7 @@ const emit = defineEmits<{
   editMarker: [id: string, marker: Marker];
   selectMarker: [id: string, marker: Marker];
   cancelMarkerSelection: [id: string];
+  checkDetailInfo: [id: string];
   forbiddenAddMarker: [];
 }>();
 
@@ -673,7 +675,9 @@ function configureMap() {
 function toggleControlBar(targetButton: HTMLElement) {
   targetButton.classList.toggle("is-active");
 }
-
+function checkDetailInfo(id: string) {
+  emit("checkDetailInfo", id);
+}
 function createZone(event: DrawEvent) {
   if (gGreenCluster.currentSelectedMarkerId && event.feature) {
     const marker = gGreenCluster.markersDict.get(

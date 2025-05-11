@@ -32,15 +32,19 @@
     </div>
     <section class="b-page__content">
       <q-card class="b-card b-page__map-container">
-        <h3 class="gg-h3 q-mb-md">
+        <h3 class="gg-h3 q-mb-sm">
           Интерактивная карта<q-icon><CHint></CHint></q-icon>
         </h3>
-        <ol v-if="store.user?.role === 'user'" class="gg-t-big b-card__list">
+        <ol v-if="store.user?.role === 'user'" class="gg-t-big b-card__list q-mb-md">
           <li>Отметьте точку на карте, соответствующую расположению проблемы</li>
           <li>
             Во всплывшем окне созданного очага нажмите кнопку "Продолжить" и укажите тип проблемы
           </li>
           <li>Подтвердите отправку сообщения</li>
+        </ol>
+        <ol v-else class="gg-t-big b-card__list q-mb-md">
+          <li>Все изменения существующих очагов автоматически сохраняются</li>
+          <li>Добавлеяемый очаг не будет сохранен без указания данных</li>
         </ol>
         <div id="page-map" class="b-page__map-wrapper">
           <CMap
@@ -48,6 +52,7 @@
             @edit-marker="editHotbed"
             @delete-marker="deleteTempHotbed"
             @forbiddenAddMarker="handleForbiddenAddTry"
+            @checkDetailInfo="(id: string) => navigateTo(`/hotbeds/${id}`)"
             :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
             :addMarker="isAddMarker ? 'forbid' : 'enable'"
             :add-zone="store.user?.role === 'user' ? 'hide' : 'enable'"
@@ -296,6 +301,19 @@ async function handleCreatedHotbed(newHotbed: HotbedData) {
       };
     }
   }
+  hotbedData.value = {
+    problemAreaType: "",
+    landType: "",
+    eliminationMethod: "",
+    owner: "",
+    contractingOrganization: "",
+    comment: "",
+    images: [],
+    density: "default",
+    coordinate: null,
+    coordinates: null,
+  };
+  isAddMarker.value = false;
 }
 onMounted(() => {
   window.addEventListener("scroll", onScroll, { passive: true });
