@@ -6,14 +6,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       PORTAL_HTTP_PROTOCOL: "",
-      PORTAL_API_GEOSPATIAL: "",
-      PORTAL_API_FILE_SERVER: "",
-      PORTAL_API_PHOTO_ANALYSE: "",
-      PORTAL_API_USER_REPORT: "",
-      PORTAL_API_EVENT_MANAGER: "",
-      PORTAL_API_AUTH: "",
-      PORTAL_API_KEYCLOAK: "",
-      PORTAL_API_NOTIFICATIONS: "",
+      PORTAL_API_HOST: "",
+      PORTAL_API_PORT: "",
     },
   },
 

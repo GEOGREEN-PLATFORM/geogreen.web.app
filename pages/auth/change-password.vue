@@ -157,7 +157,7 @@ function sendChangePassword() {
 }
 async function sendCodeToEmail() {
   await $fetch(
-    `${store.apiAuth}/user/register/forgot-password/${userData.value.email}`,
+    `${store.apiV1}/user/register/forgot-password/${userData.value.email}`,
     {
       headers: {
         Authorization: useGetToken(),

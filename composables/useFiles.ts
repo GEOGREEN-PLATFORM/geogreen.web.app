@@ -7,7 +7,7 @@ export default function useFiles() {
       const formData = new FormData();
       formData.append("file", file);
       const response = await $fetch<ImageObj>(
-        `${store.apiFileServer}/file/image/upload`,
+        `${store.apiV1}/file/image/upload`,
         {
           method: "POST",
           body: formData,
@@ -19,7 +19,7 @@ export default function useFiles() {
     }
   }
   function getImageUrl(imageId: string) {
-    return `${store.apiFileServer}/file/image/download/${imageId}`;
+    return `${store.apiV1}/file/image/download/${imageId}`;
   }
   return {
     uploadPhoto,

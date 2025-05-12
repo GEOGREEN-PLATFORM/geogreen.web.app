@@ -153,7 +153,7 @@ const addedHotbed = computed(() => {
 });
 async function getHotbeds() {
   hotbedsLoading.value = true;
-  const url = `${store.apiGeospatial}/geo/info/getAll`;
+  const url = `${store.apiV1}/geo/info/getAll`;
   const response = await $fetch<Marker[]>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },
@@ -204,7 +204,7 @@ async function editHotbed(hotbedId: string, marker: Marker) {
     hotbedData.value.coordinates = marker?.coordinates || null;
   } else {
     try {
-      await $fetch(`${store.apiGeospatial}/geo/info/${hotbedId}`, {
+      await $fetch(`${store.apiV1}/geo/info/${hotbedId}`, {
         method: "PATCH",
         headers: {
           authorization: useGetToken(),
@@ -237,7 +237,7 @@ function handleForbiddenAddTry() {
 async function handleCreatedHotbed(newHotbed: HotbedData) {
   if (store.user?.role === "user") {
     try {
-      await $fetch(`${store.apiUserReport}/user-marker/report`, {
+      await $fetch(`${store.apiV1}/user-marker/report`, {
         method: "POST",
         headers: {
           authorization: useGetToken(),
@@ -266,7 +266,7 @@ async function handleCreatedHotbed(newHotbed: HotbedData) {
     }
   } else if (store.user?.role === "admin" || store.user?.role === "operator") {
     try {
-      await $fetch(`${store.apiGeospatial}/geo/info`, {
+      await $fetch(`${store.apiV1}/geo/info`, {
         method: "POST",
         headers: {
           authorization: useGetToken(),

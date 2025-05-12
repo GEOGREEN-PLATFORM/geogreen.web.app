@@ -135,7 +135,7 @@ function toggleEditMode() {
 }
 async function getHotbeds() {
   isHotbedsLoading.value = true;
-  const url = `${store.apiGeospatial}/geo/info/getAll`;
+  const url = `${store.apiV1}/geo/info/getAll`;
   const response = await $fetch<Marker[]>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },
@@ -146,7 +146,7 @@ async function getHotbeds() {
 async function saveChanges(fullEditHotbed?: Marker) {
   try {
     const response = await $fetch<Marker>(
-      `${store.apiGeospatial}/geo/info/${route.params.id}`,
+      `${store.apiV1}/geo/info/${route.params.id}`,
       {
         method: "PATCH",
         headers: {
@@ -180,7 +180,7 @@ async function confirmDeleteAction() {
   showDeleteDialog.value = false;
 }
 async function deleteHotbed() {
-  await $fetch(`${store.apiGeospatial}/geo/info/${route.params.id}`, {
+  await $fetch(`${store.apiV1}/geo/info/${route.params.id}`, {
     method: "DELETE",
     headers: {
       authorization: useGetToken(),
@@ -195,7 +195,7 @@ async function deleteHotbed() {
 }
 async function getHotbed() {
   const response = await $fetch<Marker>(
-    `${store.apiGeospatial}/geo/info/${route.params.id}`,
+    `${store.apiV1}/geo/info/${route.params.id}`,
     {
       method: "GET",
       headers: {

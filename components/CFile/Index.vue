@@ -78,7 +78,7 @@ onMounted(async () => {
     localUrl.value = URL.createObjectURL(props.file as File);
   } else {
     const res = await fetch(
-      `${store.apiFileServer}/file/image/download/${(props.file as ImageObj).fullImageId}`,
+      `${store.apiV1}/file/image/download/${(props.file as ImageObj).fullImageId}`,
     );
     const blob = await res.blob();
     localUrl.value = URL.createObjectURL(blob);

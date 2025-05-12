@@ -295,7 +295,7 @@ async function getEliminationMethodsByArea(area: string) {
   hotbedData.value.eliminationMethod = "";
   hotbedEliminationMethods.value = (
     await $fetch<string[]>(
-      `${store.apiGeospatial}/geo/dict/elimination-methods/${area}`,
+      `${store.apiV1}/geo/dict/elimination-methods/${area}`,
       {
         method: "GET",
         headers: { Authorization: useGetToken() },
@@ -344,7 +344,7 @@ async function uploadPhoto(file: File) {
     const response = await $fetch<{
       previewImageId: string;
       fullImageId: string;
-    }>(`${store.apiFileServer}/file/image/upload`, {
+    }>(`${store.apiV1}/file/image/upload`, {
       method: "POST",
       body: formData,
     });

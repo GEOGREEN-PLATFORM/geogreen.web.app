@@ -147,7 +147,7 @@ function handleProblemAreaTypeChange(newArea: string) {
 async function getEliminationMethodsByArea(area: string) {
   hotbedEliminationMethods.value = (
     await $fetch<string[]>(
-      `${store.apiGeospatial}/geo/dict/elimination-methods/${area}`,
+      `${store.apiV1}/geo/dict/elimination-methods/${area}`,
       {
         method: "GET",
         headers: { Authorization: useGetToken() },

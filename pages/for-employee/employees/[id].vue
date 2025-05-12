@@ -249,24 +249,21 @@ const initialUserData = ref<UserData>({
 const userData = ref({ ...initialUserData.value });
 async function saveChanges() {
   try {
-    await $fetch(
-      `${store.apiAuth}/user/search/${initialUserData.value.email}`,
-      {
-        method: "PATCH",
-        headers: {
-          authorization: useGetToken(),
-        },
-        body: {
-          firstName: userData.value.fullName.split(" ")[1],
-          lastName: userData.value.fullName.split(" ")[0],
-          patronymic: userData.value.fullName.split(" ")[2],
-          email: userData.value.email,
-          number: userData.value.phone,
-          birthdate: userData.value.birthDate,
-          image: userData.value.image,
-        },
+    await $fetch(`${store.apiV1}/user/search/${initialUserData.value.email}`, {
+      method: "PATCH",
+      headers: {
+        authorization: useGetToken(),
       },
-    );
+      body: {
+        firstName: userData.value.fullName.split(" ")[1],
+        lastName: userData.value.fullName.split(" ")[0],
+        patronymic: userData.value.fullName.split(" ")[2],
+        email: userData.value.email,
+        number: userData.value.phone,
+        birthdate: userData.value.birthDate,
+        image: userData.value.image,
+      },
+    });
     getUser();
   } catch (error: any) {
     useState<Alert>("showAlert").value = {
@@ -279,7 +276,7 @@ async function saveChanges() {
 }
 async function getUser() {
   const response = await $fetch<User>(
-    `${store.apiAuth}/user/search/by-id/${route.params.id}`,
+    `${store.apiV1}/user/search/by-id/${route.params.id}`,
     {
       method: "GET",
       headers: {
@@ -307,7 +304,7 @@ async function confirmToggleBlockAction() {
 }
 async function toggleBlockUser() {
   await $fetch(
-    `${store.apiAuth}/user/register/${initialUserData.value.email}/enabled/${!isEmployeeBlocked.value}`,
+    `${store.apiV1}/user/register/${initialUserData.value.email}/enabled/${!isEmployeeBlocked.value}`,
     {
       method: "POST",
       headers: {
@@ -438,7 +435,7 @@ const tableRows: ComputedRef<TableRow[]> = computed(() =>
 );
 async function getEmployeeTaskEvents() {
   taskEventsLoading.value = true;
-  const url = `${store.apiEventManager}/event/getAll`;
+  const url = `${store.apiV1}/event/getAll`;
   const response = await $fetch<TaskEventsRequest>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },

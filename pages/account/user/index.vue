@@ -264,7 +264,7 @@ const completionRate = computed(() =>
 async function getHotbeds() {
   hotbedsLoading.value = true;
   const params = new URLSearchParams();
-  const url = `${store.apiGeospatial}/geo/info/getAll?${params.toString()}`;
+  const url = `${store.apiV1}/geo/info/getAll?${params.toString()}`;
   const response = await $fetch<Marker[]>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },
@@ -303,7 +303,7 @@ function handleaAccountManaged(updatedUser: User) {
 async function getMyNotifications() {
   try {
     const response = await $fetch<NotificationsRequest>(
-      `${store.apiNotifications}/notification/subscribe/get-all/${store.user?.email}`,
+      `${store.apiV1}/notification/subscribe/get-all/${store.user?.email}`,
       {
         method: "GET",
         headers: {
@@ -324,7 +324,7 @@ async function getMyNotifications() {
 async function getMyRequests() {
   requestsLoading.value = true;
   const response = await $fetch<ApplicationsRequest>(
-    `${store.apiUserReport}/user-marker/getAll`,
+    `${store.apiV1}/user-marker/getAll`,
     {
       method: "GET",
       headers: {
@@ -343,7 +343,7 @@ async function getMyRequests() {
 }
 async function subscribeToReportNotifications(userReportId: string) {
   try {
-    await $fetch(`${store.apiNotifications}/notification/subscribe`, {
+    await $fetch(`${store.apiV1}/notification/subscribe`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
@@ -366,7 +366,7 @@ async function subscribeToReportNotifications(userReportId: string) {
 async function deleteSubscriptionIdByReportId(userReportId: string) {
   try {
     await $fetch(
-      `${store.apiNotifications}/notification/subscribe/${store.user?.email}/delete-by-element-id/${userReportId}`,
+      `${store.apiV1}/notification/subscribe/${store.user?.email}/delete-by-element-id/${userReportId}`,
       {
         method: "DELETE",
         headers: {

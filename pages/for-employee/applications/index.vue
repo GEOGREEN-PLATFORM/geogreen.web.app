@@ -157,7 +157,7 @@ function applyFilters() {
 async function getUserRequests(source?: "filter") {
   requestsLoading.value = true;
   const response = await $fetch<ApplicationsRequest>(
-    `${store.apiUserReport}/user-marker/getAll`,
+    `${store.apiV1}/user-marker/getAll`,
     {
       method: "GET",
       headers: {
@@ -189,7 +189,7 @@ async function loadMore(index: number, done: (stop?: boolean) => void) {
 }
 async function getExistingHotbedsOfProblemsByType(type: string) {
   const data = await $fetch<Marker[]>(
-    `${store.apiGeospatial}/geo/info/getAll/${type}`,
+    `${store.apiV1}/geo/info/getAll/${type}`,
     {
       method: "GET",
       headers: {
@@ -200,7 +200,7 @@ async function getExistingHotbedsOfProblemsByType(type: string) {
   existingHotbedsByType.value = data;
 }
 async function approveRequest(id: string) {
-  const response = await $fetch(`${store.apiUserReport}/user-marker/${id}`, {
+  const response = await $fetch(`${store.apiV1}/user-marker/${id}`, {
     method: "PATCH",
     headers: {
       authorization: useGetToken(),
@@ -215,7 +215,7 @@ async function approveRequest(id: string) {
 }
 
 async function rejectRequest(id: string) {
-  const response = await $fetch(`${store.apiUserReport}/user-marker/${id}`, {
+  const response = await $fetch(`${store.apiV1}/user-marker/${id}`, {
     method: "PATCH",
     headers: {
       authorization: useGetToken(),

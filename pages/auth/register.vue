@@ -84,7 +84,7 @@ const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
 async function sendRegister() {
   buttonOptions.value.main.loading = true;
   try {
-    const user = await $fetch<User>(`${store.apiAuth}/user/register/user`, {
+    const user = await $fetch<User>(`${store.apiV1}/user/register/user`, {
       method: "POST",
       body: userData.value,
     });
