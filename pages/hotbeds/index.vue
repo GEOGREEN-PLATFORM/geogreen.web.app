@@ -21,6 +21,7 @@
           @update:model-value="searchHotbed"
           label="Поиск очага"
           hideBottomSpace
+          disabled
           height="48px"
           :required="false"
         >
@@ -77,7 +78,9 @@ import { mdiMagnify, mdiPlus } from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
 import type { HotbedData } from "~/types/interfaces/hotbeds";
-
+interface GeoPointsRequest extends ServerPagination {
+  geoPoints: Marker[];
+}
 const store = useMainStore();
 const route = useRoute();
 const debounce = useDebounce();
@@ -151,6 +154,7 @@ const filters = ref<FilterItem[]>([
     key: "problemAreaType",
     label: "Тип проблемы",
     selected: "",
+    disabled: true,
     data: store.formattedProblemAreaTypes,
   },
   {
@@ -172,12 +176,6 @@ const filters = ref<FilterItem[]>([
     key: "dateCreated",
     selected: "",
     label: "Период создания",
-  },
-  {
-    type: "date-range",
-    key: "dateUpdated",
-    selected: "",
-    label: "Период изменения",
   },
 ]);
 const searchHotbedStr = ref("");
@@ -217,44 +215,39 @@ async function handleHotbedCreated(newHotbed: HotbedData) {
 }
 async function getHotbeds() {
   hotbedsLoading.value = true;
-  const params = new URLSearchParams();
-  if (searchHotbedStr.value) {
-    params.append("search", searchHotbedStr.value);
-  }
-  if (filters.value[0].selected) {
-    params.append("role", filters.value[0].selected as string);
-  }
-  if (filters.value[1].selected) {
-    params.append("status", filters.value[1].selected as string);
-  }
+  let fromDateParam = "";
+  let toDateParam = "";
   if (
-    filters.value[2].selected &&
-    typeof filters.value[2].selected === "string"
+    filters.value[3].selected &&
+    typeof filters.value[3].selected === "string"
   ) {
-    params.append("fromDate", filters.value[2].selected);
-    params.append("toDate", filters.value[2].selected);
+    fromDateParam = filters.value[3].selected;
+    toDateParam = filters.value[3].selected;
   } else {
-    const { from, to } = filters.value[2].selected as {
+    const { from, to } = filters.value[3].selected as {
       from: string | null;
       to: string | null;
     };
-    if (from) {
-      params.append("fromDate", from);
-    }
-    if (to) {
-      params.append("toDate", to);
-    }
+    fromDateParam = from || "";
+    toDateParam = to || "";
   }
-
-  params.append("page", String(pagination.value.page - 1));
-  params.append("size", String(pagination.value.rowsPerPage));
-  const url = `${store.apiGeospatial}/geo/info/getAll?${params.toString()}`;
-  const response = await $fetch<Marker[]>(url, {
+  const url = `${store.apiGeospatial}/geo/info`;
+  const response = await $fetch<GeoPointsRequest>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },
+    params: {
+      search: searchHotbedStr.value || undefined,
+      workStage: filters.value[1].selected || undefined,
+      problemAreaType: filters.value[0].selected || undefined,
+      landType: filters.value[2].selected || undefined,
+      fromDate: fromDateParam ? fromDateParam : undefined,
+      toDate: toDateParam ? toDateParam : undefined,
+      page: pagination.value.page - 1,
+      size: pagination.value.rowsPerPage,
+    },
   });
-  hotbeds.value = response;
-  // pagination.value.rowsNumber = response.totalItems;
+  hotbeds.value = response.geoPoints;
+  pagination.value.rowsNumber = response.totalItems;
   hotbedsLoading.value = false;
 }
 function searchHotbed() {

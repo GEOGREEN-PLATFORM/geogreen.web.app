@@ -26,6 +26,7 @@
                 v-model="item.selected"
                 :options="item.data"
                 :label="item.label"
+                :disabled="item.disabled"
                 :required="false"
                 :useInput="!!item.useInput"
                 @filter="(val: string) => updateDataForItem(item.key, val)"
@@ -35,6 +36,7 @@
               <CInputDate
                 :label="item.label"
                 v-model="item.selected"
+                :disabled="item.disabled"
                 :required="false"
                 range
               ></CInputDate>

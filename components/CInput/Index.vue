@@ -23,6 +23,7 @@
       :autogrow="autogrow"
       :autocomplete="autocomplete"
       :mask="maska"
+      :disable="disabled"
       :hint="hint"
       :readonly="readonly"
       :maxlength="maxLength"
@@ -71,6 +72,7 @@ interface Props {
   placeholder?: string;
   name?: string;
   autogrow?: boolean;
+  disabled?: boolean;
   autocomplete?: string;
   maska?: string;
   height?: string;
@@ -87,6 +89,7 @@ const props = withDefaults(defineProps<Props>(), {
   type: "text",
   placeholder: "Введите текст",
   hideErrorIcon: true,
+  disabled: false,
   hideBottomSpace: false,
   autogrow: false,
   height: "56px",

@@ -82,6 +82,7 @@ declare global {
   type FilterItem = {
     key: string;
     label: string;
+    disabled?: boolean;
   } & (FilterDateRange | FilterSelect | FilterText);
   type FilterText = {
     type: "text";
