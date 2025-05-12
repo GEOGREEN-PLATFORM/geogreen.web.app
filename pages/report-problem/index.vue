@@ -63,6 +63,12 @@
             <CFileContainers v-model:files="attachedFiles" raw></CFileContainers>
           </section>
         </fieldset>
+        <section class="q-my-sm" v-if="store.user?.role === 'user'">
+          <CInputSwitch
+            v-model="isSendNotificantion"
+            label="Уведомлять на&nbsp;почту об&nbsp;изменениях по&nbsp;сообщению о&nbsp;проблеме"
+          />
+        </section>
         <CButton
           class="b-form__submit-button"
           label="Отправить"
@@ -78,6 +84,7 @@
 <script setup lang="ts">
 import type { Coordinate } from "ol/coordinate";
 import { useMainStore } from "~/store/main";
+import type { ApplicationData } from "~/types/interfaces/applications";
 interface UserReport {
   coordinate: Coordinate;
   details: {
@@ -105,6 +112,7 @@ const userReport = reactive<UserReport>({
     comment: "",
   },
 });
+const isSendNotificantion = shallowRef(false);
 const isAddMarker = shallowRef(false);
 const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
@@ -165,13 +173,19 @@ async function sendReport() {
     //   const result = await analysePhotoOnHogweedPresence(image.fullImageId);
     //   console.log("Анализ для", image, result);
     // }
-    await $fetch(`${store.apiUserReport}/user-marker/report`, {
-      method: "POST",
-      headers: {
-        authorization: useGetToken(),
+    const response = await $fetch<ApplicationData>(
+      `${store.apiUserReport}/user-marker/report`,
+      {
+        method: "POST",
+        headers: {
+          authorization: useGetToken(),
+        },
+        body: userReport,
       },
-      body: userReport,
-    });
+    );
+    if (isSendNotificantion.value) {
+      await subscribeToReportNotifications(response.id);
+    }
     attachedFiles.value = [];
     userReport.details.images = [];
     userReport.details.problemAreaType = "";
@@ -189,7 +203,23 @@ async function sendReport() {
     isFormSending.value = false;
   }
 }
-
+async function subscribeToReportNotifications(userReportId: string) {
+  try {
+    await $fetch(`${store.apiNotifications}/notification/subscribe`, {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: {
+        elementId: userReportId,
+        email: store.user?.email,
+        type: "Заявка",
+      },
+    });
+  } catch (err) {
+    throw new Error("Ошибка при подписке на уведомления");
+  }
+}
 async function analysePhotoOnHogweedPresence(photoId: string) {
   try {
     return await $fetch(`${store.apiPhotoAnalyse}/analyse`, {

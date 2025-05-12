@@ -74,7 +74,6 @@
             <q-item
               v-for="(report, idx) in reports"
               :key="idx"
-              clickable
               @click="openRequestDetailsDialog(report)"
               class="b-request-item"
             >
@@ -100,6 +99,13 @@
                 </q-item-section>
               </q-item-section>
               <q-item-section class="b-request-item__right-section" side>
+                <CButtonNotification
+                  :subscribed="!!myNotifications.find((n) => n.elementId === report.id)"
+                  tooltipSubText="Уведомлять об изменениях на почту"
+                  tooltip-unsub-text="Отписаться от уведомлений"
+                  @subscribe="subscribeToReportNotifications(report.id)"
+                  @unsubscribe="deleteSubscriptionIdByReportId(report.id)"
+                ></CButtonNotification>
                 <CButton @click="openRequestDetailsDialog(report)" size="small">Подробнее</CButton>
               </q-item-section>
             </q-item>
@@ -186,8 +192,12 @@ import { mdiAlertCircleOutline } from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
 import type { ApplicationData } from "~/types/interfaces/applications";
+import type { NotificationData } from "~/types/interfaces/notifications";
 interface ApplicationsRequest extends ServerPagination {
   content: ApplicationData[];
+}
+interface NotificationsRequest extends ServerPagination {
+  subscriptions: NotificationData[];
 }
 const store = useMainStore();
 const { HOTBED_WORK_STAGE_STYLES, APPLICATION_STATUS_STYLES } =
@@ -223,11 +233,18 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   },
 });
 const existingHotbeds = ref<Marker[]>([]);
+const myNotifications = ref<NotificationData[]>([]);
 const isRequestDetailsOpen = ref(false);
 const selectedDetailsRequest = ref<ApplicationData | null>(null);
-const pagination = reactive({
+const paginationApplications = reactive({
   page: 0,
-  size: 10,
+  size: 100,
+  totalElements: 0,
+  totalPages: 0,
+});
+const paginationNotifications = reactive({
+  page: 0,
+  size: 100,
   totalElements: 0,
   totalPages: 0,
 });
@@ -283,6 +300,27 @@ async function viewOnMap(request: ApplicationData) {
 function handleaAccountManaged(updatedUser: User) {
   store.user = updatedUser;
 }
+async function getMyNotifications() {
+  try {
+    const response = await $fetch<NotificationsRequest>(
+      `${store.apiNotifications}/notification/subscribe/get-all/${store.user?.email}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+        params: {
+          page: paginationNotifications.page,
+          size: paginationNotifications.size,
+        },
+      },
+    );
+    myNotifications.value = response.subscriptions;
+    paginationNotifications.totalElements = response.totalItems;
+  } catch (error) {
+    console.error(error);
+  }
+}
 async function getMyRequests() {
   requestsLoading.value = true;
   const response = await $fetch<ApplicationsRequest>(
@@ -293,15 +331,57 @@ async function getMyRequests() {
         authorization: useGetToken(),
       },
       params: {
-        page: pagination.page,
-        size: pagination.size,
+        page: paginationApplications.page,
+        size: paginationApplications.size,
       },
     },
   );
   reports.value = [...reports.value, ...response.content];
-  pagination.totalElements = response.totalItems;
-  pagination.totalPages = response.totalPages;
+  paginationApplications.totalElements = response.totalItems;
+  paginationApplications.totalPages = response.totalPages;
   requestsLoading.value = false;
+}
+async function subscribeToReportNotifications(userReportId: string) {
+  try {
+    await $fetch(`${store.apiNotifications}/notification/subscribe`, {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: {
+        elementId: userReportId,
+        email: store.user?.email,
+        type: "Заявка",
+      },
+    });
+    getMyNotifications();
+  } catch (err) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Произошла ошибка при подписке на уведомления",
+    };
+  }
+}
+async function deleteSubscriptionIdByReportId(userReportId: string) {
+  try {
+    await $fetch(
+      `${store.apiNotifications}/notification/subscribe/${store.user?.email}/delete-by-element-id/${userReportId}`,
+      {
+        method: "DELETE",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    getMyNotifications();
+  } catch (err) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Произошла ошибка при подписке на уведомления",
+    };
+  }
 }
 function openRequestDetailsDialog(request: ApplicationData) {
   isRequestDetailsOpen.value = true;
@@ -313,6 +393,7 @@ function openManageAccountDialog() {
 onMounted(() => {
   getHotbeds();
   getMyRequests();
+  getMyNotifications();
 });
 </script>
 
@@ -423,11 +504,22 @@ $app-narrow-mobile: 364px;
               -webkit-box-orient: vertical;
               max-width: 200px;
             }
+            &:hover {
+              background-color: var(--app-green-100);
+            }
             &__left-section {
               display: flex;
               flex-direction: row;
               gap: 8px;
               align-items: center;
+            }
+            &__right-section {
+              display: flex;
+              flex-direction: row;
+              flex-wrap: nowrap;
+              align-items: center;
+              justify-content: center;
+              gap: 16px;
             }
           }
         }

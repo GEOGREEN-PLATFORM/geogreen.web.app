@@ -13,6 +13,7 @@ export default defineNuxtConfig({
       PORTAL_API_EVENT_MANAGER: "",
       PORTAL_API_AUTH: "",
       PORTAL_API_KEYCLOAK: "",
+      PORTAL_API_NOTIFICATIONS: "",
     },
   },
 
