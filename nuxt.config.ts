@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: "2024-04-03",
   devtools: { enabled: true },
+
   runtimeConfig: {
     public: {
       PORTAL_HTTP_PROTOCOL: "",
@@ -14,13 +15,17 @@ export default defineNuxtConfig({
       PORTAL_API_KEYCLOAK: "",
     },
   },
+
   ssr: true,
+
   modules: [
     "@pinia/nuxt",
     "nuxt-quasar-ui",
     "@nuxt/image",
     "@nuxt/test-utils/module",
+    "@sentry/nuxt/module",
   ],
+
   css: [
     "normalize.css/normalize.css",
     "@/assets/styles/quasar_class_overriding.scss",
@@ -30,6 +35,7 @@ export default defineNuxtConfig({
     "@/assets/styles/main.scss",
     "@/assets/styles/status_model_classes.scss",
   ],
+
   quasar: {
     lang: "ru",
     config: {
@@ -42,7 +48,19 @@ export default defineNuxtConfig({
       dark: "auto",
     },
   },
+
   build: {
     transpile: process.env.NODE_ENV === "test" ? ["vue3-openlayers", "ol"] : [],
+  },
+
+  sentry: {
+    sourceMapsUploadOptions: {
+      org: "geogreen-cr",
+      project: "javascript-nuxt",
+    },
+  },
+
+  sourcemap: {
+    client: "hidden",
   },
 });
