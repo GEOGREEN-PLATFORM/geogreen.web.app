@@ -169,7 +169,7 @@ async function manageAccount(updatedAccountData: UserAccountData) {
       userData.image = await uploadPhoto(updatedAccountData.changedImage);
     }
     const updatedUser = await $fetch<User>(
-      `${store.apiAuth}/user/search/${props.user.email}`,
+      `${store.apiV1}/user/search/${props.user.email}`,
       {
         method: "PATCH",
         headers: {
@@ -199,7 +199,7 @@ async function verifyEmail() {
   try {
     if (!countdownInterval) startCountdown();
     await $fetch(
-      `${store.apiAuth}/user/register/verify-email/${props.user.email}`,
+      `${store.apiV1}/user/register/verify-email/${props.user.email}`,
       {
         method: "POST",
         headers: {

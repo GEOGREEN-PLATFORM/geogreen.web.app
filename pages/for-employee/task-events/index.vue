@@ -199,7 +199,7 @@ const filters = ref<FilterItem[]>([
 ]);
 async function handleTaskEventCreated(newTaskEvent: TaskEventData) {
   try {
-    await $fetch(`${store.apiEventManager}/event/create`, {
+    await $fetch(`${store.apiV1}/event/create`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
@@ -230,7 +230,7 @@ async function getEmployees(
   search?: string,
 ) {
   try {
-    const res = await $fetch<EmployeesRequest>(`${store.apiAuth}/user/search`, {
+    const res = await $fetch<EmployeesRequest>(`${store.apiV1}/user/search`, {
       method: "GET",
       headers: {
         authorization: useGetToken(),
@@ -339,7 +339,7 @@ async function getTaskEvents() {
   }
   params.append("page", String(pagination.value.page - 1));
   params.append("size", String(pagination.value.rowsPerPage));
-  const url = `${store.apiEventManager}/event/getAll?${params.toString()}`;
+  const url = `${store.apiV1}/event/getAll?${params.toString()}`;
   const response = await $fetch<TaskEventsRequest>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },
@@ -349,7 +349,7 @@ async function getTaskEvents() {
   taskEventsLoading.value = false;
 }
 async function getHotbeds() {
-  const url = `${store.apiGeospatial}/geo/info/getAll`;
+  const url = `${store.apiV1}/geo/info/getAll`;
   const response = await $fetch<Marker[]>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },

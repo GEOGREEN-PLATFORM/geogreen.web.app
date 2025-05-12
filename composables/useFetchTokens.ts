@@ -14,7 +14,7 @@ export function useFetchTokens() {
     });
     try {
       const response = await $fetch<OauthToken>(
-        `${store.apiKeycloak}/realms/geogreen/protocol/openid-connect/token`,
+        `${store.apiV1}/realms/geogreen/protocol/openid-connect/token`,
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -48,7 +48,7 @@ export function useFetchTokens() {
     });
     try {
       const response = await $fetch<OauthToken>(
-        `${store.apiKeycloak}/realms/geogreen/protocol/openid-connect/token`,
+        `${store.apiV1}/realms/geogreen/protocol/openid-connect/token`,
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },

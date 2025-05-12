@@ -183,7 +183,7 @@ const hotbedsLoading = ref(true);
 const isHotbedDialogOpen = ref(false);
 async function handleHotbedCreated(newHotbed: HotbedData) {
   try {
-    await $fetch(`${store.apiGeospatial}/geo/info`, {
+    await $fetch(`${store.apiV1}/geo/info`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
@@ -231,7 +231,7 @@ async function getHotbeds() {
     fromDateParam = from || "";
     toDateParam = to || "";
   }
-  const url = `${store.apiGeospatial}/geo/info`;
+  const url = `${store.apiV1}/geo/info`;
   const response = await $fetch<GeoPointsRequest>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },

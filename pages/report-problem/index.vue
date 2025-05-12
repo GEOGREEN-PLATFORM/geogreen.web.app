@@ -152,7 +152,7 @@ function selectProblemAreaType(type: string) {
 }
 async function getExistingHotbedsOfProblemsByType(type: string) {
   const data = await $fetch<Marker[]>(
-    `${store.apiGeospatial}/geo/info/getAll/${type}`,
+    `${store.apiV1}/geo/info/getAll/${type}`,
     {
       method: "GET",
       headers: {
@@ -174,7 +174,7 @@ async function sendReport() {
     //   console.log("Анализ для", image, result);
     // }
     const response = await $fetch<ApplicationData>(
-      `${store.apiUserReport}/user-marker/report`,
+      `${store.apiV1}/user-marker/report`,
       {
         method: "POST",
         headers: {
@@ -205,7 +205,7 @@ async function sendReport() {
 }
 async function subscribeToReportNotifications(userReportId: string) {
   try {
-    await $fetch(`${store.apiNotifications}/notification/subscribe`, {
+    await $fetch(`${store.apiV1}/notification/subscribe`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
@@ -222,7 +222,7 @@ async function subscribeToReportNotifications(userReportId: string) {
 }
 async function analysePhotoOnHogweedPresence(photoId: string) {
   try {
-    return await $fetch(`${store.apiPhotoAnalyse}/analyse`, {
+    return await $fetch(`${store.apiV1}/analyse`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),

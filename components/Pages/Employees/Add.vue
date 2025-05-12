@@ -208,7 +208,7 @@ function updateLabels() {
 async function addEmployee(newEmployee: EmployeeData) {
   isAddLoading.value = true;
   try {
-    await $fetch(`${store.apiAuth}/user/register/operator`, {
+    await $fetch(`${store.apiV1}/user/register/operator`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),

@@ -224,7 +224,7 @@ const tableRows: ComputedRef<TableRow[]> = computed(() =>
 const dialogManageAccount = shallowRef(false);
 async function getMyTaskEvents() {
   taskEventsLoading.value = true;
-  const url = `${store.apiEventManager}/event/getAll`;
+  const url = `${store.apiV1}/event/getAll`;
   const response = await $fetch<TaskEventsRequest>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },

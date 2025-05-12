@@ -177,7 +177,7 @@ async function getEmployees() {
     fromDateParam = from || "";
     toDateParam = to || "";
   }
-  const url = `${store.apiAuth}/user/search`;
+  const url = `${store.apiV1}/user/search`;
   try {
     const response = await $fetch<EmployeesRequest>(url, {
       method: "GET",
