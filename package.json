@@ -1,7 +1,7 @@
 {
   "name": "nuxt-app",
   "type": "module",
-  "version": "0.4.1",
+  "version": "0.4.3",
   "private": true,
   "scripts": {
     "build": "nuxt build",
@@ -9,6 +9,7 @@
     "lint": "npx biome check",
     "lintfix": "npx biome check --fix",
     "format": "npx prettier --write .",
+    "lintformat": "npx prettier --write . && npx biome check --fix",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
