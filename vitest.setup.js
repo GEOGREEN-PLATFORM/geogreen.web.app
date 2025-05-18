@@ -5,3 +5,14 @@ global.Worker = class {
   postMessage() {}
   terminate() {}
 };
+import { URL } from "node:url";
+// @ts-ignore
+global.URL = URL;
+
+if (!navigator.clipboard) {
+  // @ts-ignore
+  navigator.clipboard = {};
+}
+
+// @ts-ignore
+navigator.clipboard.writeText = vi.fn().mockResolvedValue();

@@ -1,5 +1,5 @@
 <template>
-  <div class="gg-button-radio">
+  <div class="с-button-radio">
     <q-radio
       :keep-color="keepColor"
       :color="color"
@@ -14,8 +14,8 @@
 <script setup lang="ts">
 interface Props {
   modelValue: boolean;
-  color: string;
-  keepColor: boolean;
+  color?: string;
+  keepColor?: boolean;
 }
 withDefaults(defineProps<Props>(), {
   modelValue: false,
