@@ -16,3 +16,7 @@ if (!navigator.clipboard) {
 
 // @ts-ignore
 navigator.clipboard.writeText = vi.fn().mockResolvedValue();
+Object.defineProperty(global.URL, "createObjectURL", {
+  writable: true,
+  value: vi.fn().mockReturnValue("blob://fake"),
+});
