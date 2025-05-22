@@ -1,10 +1,18 @@
 <template>
   <main class="policy">
     <header class="policy__header">
-      <h1 class="policy__title gg-h1 q-mt-md">
+      <h1 class="policy__title gg-h1 q-mt-sm">
         Политика в отношении обработки персональных данных
       </h1>
     </header>
+    <button
+      class="back-button"
+      :style="`opacity: ${showButton ? 1 : 0}; pointer-events: ${showButton ? 'auto' : 'none'}`"
+      @click="goBack"
+      title="Назад"
+    >
+      <q-icon :name="mdiChevronLeft" size="32px" />
+    </button>
     <ol class="policy__ol">
       <li v-for="section in sections" :key="section.id" class="policy__ol-item">
         <h2 class="policy__ol-item-title gg-t-big q-mt-md q-mb-sm">{{ section.title }}</h2>
@@ -51,36 +59,28 @@
             v-html="`${section.text}`"
           ></p>
           <section
-            class="policy__mixed-blocks"
+            v-for="(block, bIdx) in section.items as MixedItem[]"
+            :key="bIdx"
+            class="policy__mixed-blocks q-mb-md"
             :class="{
               'policy__mixed-blocks--indented': section.showBlockIndex,
             }"
           >
-            <div
-              v-for="(block, bIdx) in section.items as MixedItem[]"
-              :key="bIdx"
-              class="policy__mixed-block q-mb-md"
+            <p
+              class="policy__text gg-t-base q-mb-xs"
+              v-html="`${section.showBlockIndex ? `${section.id}.${bIdx + 1}.` : ''} ${block.text}`"
+            ></p>
+            <ol
+              class="policy__sub-ol"
+              :class="{ 'policy__sub-ol--indented': section.showItemsIndex }"
             >
-              <p
-                class="policy__text gg-t-base q-mb-xs"
-                v-html="
-                  `${section.showBlockIndex ? `${section.id}.${bIdx + 1}.` : ''} ${block.text}`
-                "
-              ></p>
-              <ol
-                class="policy__sub-ol"
-                :class="{ 'policy__sub-ol--indented': section.showItemsIndex }"
-              >
-                <li
-                  v-for="(subtext, sIdx) in block.items"
-                  :key="sIdx"
-                  class="policy__sub-ol-item"
-                  v-html="
-                    `${section.showItemsIndex ? `${section.id}.${sIdx + 1}.` : ''} ${subtext}`
-                  "
-                ></li>
-              </ol>
-            </div>
+              <li
+                v-for="(subtext, sIdx) in block.items"
+                :key="sIdx"
+                class="policy__sub-ol-item"
+                v-html="`${section.showItemsIndex ? `${section.id}.${sIdx + 1}.` : ''} ${subtext}`"
+              ></li>
+            </ol>
           </section>
         </template>
       </li>
@@ -89,6 +89,8 @@
 </template>
 
 <script setup lang="ts">
+import { mdiChevronLeft } from "@quasar/extras/mdi-v6";
+import { useRouter } from "vue-router";
 definePageMeta({ layout: false });
 
 interface ListItem {
@@ -113,6 +115,7 @@ interface Section {
   showItemsIndex?: boolean;
 }
 
+const router = useRouter();
 const sections: Section[] = [
   {
     id: 1,
@@ -424,6 +427,31 @@ const sections: Section[] = [
     ],
   },
 ];
+function goBack() {
+  router.back();
+}
+const showButton = ref(true);
+let lastScrollTop = 0;
+
+const handleScroll = () => {
+  const currentScroll = window.scrollY || document.documentElement.scrollTop;
+
+  if (currentScroll > lastScrollTop + 5) {
+    showButton.value = false;
+  } else if (currentScroll < lastScrollTop - 5) {
+    showButton.value = true;
+  }
+
+  lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
+};
+
+onMounted(() => {
+  window.addEventListener("scroll", handleScroll);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", handleScroll);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -431,7 +459,8 @@ const sections: Section[] = [
   max-width: 800px;
   margin: 0 auto;
   padding: 16px;
-
+  hyphens: auto;
+  overflow-wrap: anywhere;
   &__header {
     text-wrap: balance;
     margin-bottom: 24px;
@@ -522,6 +551,35 @@ const sections: Section[] = [
       background: #f5f5f5;
       font-weight: 600;
     }
+  }
+}
+.back-button {
+  position: fixed;
+  top: 24px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  z-index: 100;
+  &:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  &:active {
+    transform: translateY(4px);
   }
 }
 </style>
