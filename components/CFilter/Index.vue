@@ -100,6 +100,9 @@ function calculateActiveFiltersCount() {
     } else if (
       item.type === "date-range" &&
       typeof item.selected === "object" &&
+      item.selected !== null &&
+      typeof item.selected.from === "string" &&
+      typeof item.selected.to === "string" &&
       (item.selected.from || item.selected.to)
     ) {
       count++;
@@ -113,8 +116,14 @@ function updateValue() {
   emits("applyFilters");
 }
 onMounted(() => {
-  filterItems.value = props.modelValue;
+  filterItems.value = JSON.parse(JSON.stringify(props.modelValue));
 });
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    filterItems.value = JSON.parse(JSON.stringify(newVal));
+  },
+);
 </script>
 
 <style scoped lang="scss">

@@ -31,11 +31,9 @@ jobs:
       - name: Run lint
         run: npm run lint
 
-      # - name: Run tests
-      #   run: npm run coverage
+      - name: Run tests
+        run: npm run test
 
-      # - name: Code coverage
-      #   uses: codecov/codecov-action@v3
   build-and-publish:
     name: Build & Publish
     permissions:
