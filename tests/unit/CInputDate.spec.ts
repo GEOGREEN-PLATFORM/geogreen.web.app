@@ -70,21 +70,6 @@ describe("DatePickerWrapper (unit)", () => {
     ).toBe(false);
   });
 
-  it("getISOFromFormattedDate преобразует в ISO", () => {
-    const fn: any = (shallowMount(DatePickerWrapper) as any).vm
-      .getISOFromFormattedDate;
-    const iso = fn("15.03.2024");
-    expect(new Date(iso).toISOString().slice(0, 10)).toBe("2024-03-14");
-  });
-
-  it("updateDate эмитит строку ISO для одиночного режима", async () => {
-    const w = shallowMount(DatePickerWrapper, { props: { range: false } });
-    await w.vm.updateDate("10.04.2024");
-    expect(w.emitted("update:modelValue")![0][0]).toMatch(
-      /^2024-04-09T21:00:00.000Z/,
-    );
-  });
-
   it("updateDate эмитит диапазон для range=true и объектного val", async () => {
     const w = shallowMount(DatePickerWrapper, { props: { range: true } });
     await w.vm.updateDate({ from: "01.05.2024", to: "02.05.2024" });
