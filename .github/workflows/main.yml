@@ -32,7 +32,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm run coverage
+        run: npm run test
 
   build-and-publish:
     name: Build & Publish
