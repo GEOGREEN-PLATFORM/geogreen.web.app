@@ -42,9 +42,7 @@
         </div>
         <div class="form-footer__accept-rules-block gg-cap">
           Продолжая, вы соглашаетесь с
-          <span class="link-label">условиями использования</span> и&nbsp;<span class="link-label"
-            >политикой конфидецинальности</span
-          >
+          <nuxt-link to="/docs/privacy" class="link-label">политикой конфидецинальности</nuxt-link>
         </div>
       </div>
     </template>

@@ -8,6 +8,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     "auth-login",
     "auth-register",
     "auth-change-password",
+    "docs-privacy",
   ];
   const userAllowedPathNames = [
     ...noAuthAllowedPathNames,
