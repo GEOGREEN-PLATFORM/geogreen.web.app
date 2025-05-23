@@ -93,6 +93,20 @@
           </ol-style-text>
         </ol-style>
       </ol-animated-clusterlayer>
+      <ol-geolocation :projection="gGreenOlMap.projection" @change:position="geoLocChange">
+        <template>
+          <ol-vector-layer :zIndex="2">
+            <ol-source-vector>
+              <ol-feature ref="positionFeature">
+                <ol-geom-point :coordinates="gGreenOlMap.geolocation"></ol-geom-point>
+                <ol-style>
+                  <ol-style-icon :src="markerIconGreenSrc" :scale="1"></ol-style-icon>
+                </ol-style>
+              </ol-feature>
+            </ol-source-vector>
+          </ol-vector-layer>
+        </template>
+      </ol-geolocation>
       <ol-overlay
         v-for="[id, marker] in Array.from(gGreenCluster.markersPopupOpened.entries())"
         :key="id"
@@ -273,19 +287,33 @@
       <img src="/icons/plus.svg" ref="plusElem" />
       <img src="/icons/minus.svg" ref="minusElem" />
     </div>
+    <div class="geolocation-control">
+      <button
+        class="geolocation-btn"
+        @click="centerOnGeolocation"
+        :disabled="!gGreenOlMap.geolocation.length"
+        :title="
+          gGreenOlMap.geolocation.length ? 'Центрировать по геолокации' : 'Геолокация недоступна'
+        "
+      >
+        <q-icon :name="mdiCrosshairsGps" size="24px"></q-icon>
+      </button>
+    </div>
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
 import {
   mdiClose,
+  mdiCrosshairsGps,
   mdiInformation,
   mdiPencil,
   mdiPlus,
 } from "@quasar/extras/mdi-v6";
-import type { Feature, MapBrowserEvent } from "ol";
+import type { Feature, MapBrowserEvent, View } from "ol";
 import type { MapControls, SelectCluster } from "ol-ext";
 import type { FeatureLike } from "ol/Feature";
+import type { ObjectEvent } from "ol/Object";
 import type { Coordinate } from "ol/coordinate";
 import { getCenter } from "ol/extent";
 import { GeoJSON } from "ol/format";
@@ -319,6 +347,7 @@ interface Props {
 }
 const store = useMainStore();
 const mapRef = ref();
+const view = ref<View>();
 const props = withDefaults(defineProps<Props>(), {
   markers: () => [],
   addZone: "enable",
@@ -383,6 +412,7 @@ const gGreenOlMap = reactive({
   interactionType: "none",
   projection: "EPSG:3857",
   url: "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}@2x.png",
+  geolocation: [],
 });
 
 const gGreenZone = reactive({
@@ -419,7 +449,18 @@ function convertMarkersToFeatures(markers: Marker[]) {
   };
   return gGreenCluster.geoJSON.readFeatures(providerFeatureCollection);
 }
-
+function centerOnGeolocation() {
+  if (gGreenOlMap.geolocation.length) {
+    if (mapRef.value?.map) {
+      const view = mapRef.value.map.getView();
+      view.animate({
+        center: gGreenOlMap.geolocation,
+        zoom: 16,
+        duration: 1000,
+      });
+    }
+  }
+}
 function convertZonesToFeatures(markers: Marker[]) {
   const features = markers
     .filter((marker) => marker.coordinates)
@@ -445,7 +486,10 @@ function convertZonesToFeatures(markers: Marker[]) {
 function convertMarkersToDictionary(markers: Marker[]) {
   return new Map(markers.map((marker) => [marker.id as string, marker]));
 }
-
+const geoLocChange = (event: ObjectEvent) => {
+  gGreenOlMap.geolocation = event.target.getPosition();
+  gGreenOlMap.center = event.target.getPosition();
+};
 function getMemberStyle(clusterMember: FeatureLike) {
   const features = clusterMember.get("features");
   if (!features || !features.length) return null;
@@ -1106,6 +1150,27 @@ watch(
         filter: var(--app-filter-grey-300);
       }
     }
+  }
+}
+.geolocation-control {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  z-index: 100;
+  .geolocation-btn {
+    width: 40px;
+    height: 40px;
+    background-color: var(--app-white);
+    color: var(--app-white);
+    cursor: pointer;
+    box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
+    border-radius: 50%;
+    background-color: var(--app-white);
+    border: 1px var(--app-grey-100) solid;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
   }
 }
 </style>
