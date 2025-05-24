@@ -120,7 +120,7 @@ onMounted(() => {
   inputValue.value = props.modelValue;
   if (props.required) {
     validationRules.value = [
-      (val) => (val && val.length > 0) || "Поле не может быть пустым",
+      (val) => (val && val.length > 0) || "Не может быть пустым",
     ];
   }
   if (props.rules?.length > 0) {

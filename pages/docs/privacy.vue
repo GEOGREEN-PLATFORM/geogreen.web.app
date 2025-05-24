@@ -463,7 +463,7 @@ onUnmounted(() => {
   overflow-wrap: anywhere;
   &__header {
     text-wrap: balance;
-    margin-bottom: 24px;
+    margin: 0px 44px 24px 44px;
     text-align: center;
   }
 
@@ -542,13 +542,13 @@ onUnmounted(() => {
 
     th,
     td {
-      border: 1px solid #ccc;
+      border: 1px solid var(--app-grey-100);
       padding: 8px;
       text-align: left;
     }
 
     th {
-      background: #f5f5f5;
+      background: var(--app-grey-050);
       font-weight: 600;
     }
   }
@@ -559,8 +559,8 @@ onUnmounted(() => {
   left: 16px;
   width: 44px;
   height: 44px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--app-white);
+  border: 1px solid var(--app-grey-050);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -572,8 +572,8 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   z-index: 100;
   &:hover {
-    background: #f9fafb;
-    border-color: #d1d5db;
+    background: var(--app-grey-050);
+    border-color: var(--app-grey-050);
     box-shadow:
       0 4px 6px -1px rgba(0, 0, 0, 0.1),
       0 2px 4px -1px rgba(0, 0, 0, 0.06);

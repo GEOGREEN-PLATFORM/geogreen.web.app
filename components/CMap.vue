@@ -888,6 +888,7 @@ watch(
 .g-green-map {
   height: 100%;
   width: 100%;
+  position: relative;
   // &:not(.is-active) * {
   //   pointer-events: none;
   // }
@@ -1193,6 +1194,9 @@ watch(
     left: unset;
     top: 50%;
     transform: translateY(-50%);
+    @media screen and (max-height: 500px) {
+      gap: 0px;
+    }
     button {
       width: 40px;
       height: 40px;
@@ -1216,8 +1220,8 @@ watch(
   }
   .geolocation-control {
     position: absolute;
-    right: 24px;
-    bottom: 24px;
+    right: 8px;
+    bottom: 8px;
     z-index: 100;
     .geolocation-btn {
       width: 40px;

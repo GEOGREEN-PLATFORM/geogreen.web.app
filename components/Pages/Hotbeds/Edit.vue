@@ -1,10 +1,12 @@
 <template>
-  <CDialog v-model="dialogVisible" class="b-dialog" @show="formBindValidation">
-    <q-card class="b-dialog__container" :class="`b-dialog__container--step-${currentStep}`">
-      <header class="b-dialog__header">
-        <h2 class="b-dialog__title gg-h2">Изменение очага</h2>
-        <p v-if="subTitle" class="b-dialog__subtitle">{{ subTitle }}</p>
-      </header>
+  <CDialog
+    v-model="dialogVisible"
+    class="b-dialog"
+    title="Изменение очага"
+    :sub-title="subTitle"
+    @show="formBindValidation"
+  >
+    <div class="b-dialog__container" :class="`b-dialog__container--step-${currentStep}`">
       <q-form
         v-if="localHotbed"
         ref="formRef"
@@ -75,7 +77,7 @@
           <CButton :label="applyLabel" :disabled="formHasError" type="submit" />
         </footer>
       </q-form>
-    </q-card>
+    </div>
   </CDialog>
 </template>
 
@@ -244,24 +246,8 @@ $app-narrow-mobile: 364px;
     flex-direction: column;
     background-color: var(--app-white);
     border-radius: 12px;
-    padding: 24px 32px;
-    width: 90%;
-    max-width: 834px;
-    @media screen and (max-width: $app-mobile) {
-      padding: 12px 24px;
-      width: 100%;
-    }
-  }
-  &__header {
-    padding: 16px 0 20px;
-  }
-  &__title {
-    margin: 0;
-  }
-  &__subtitle {
-    margin-top: 10px;
-    font-size: 18px;
-    color: var(--app-grey-300);
+    width: 600px;
+    max-width: 100%;
   }
   &__form {
     display: flex;

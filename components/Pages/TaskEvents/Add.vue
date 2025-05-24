@@ -1,18 +1,22 @@
 <template>
-  <CDialog v-model="dialogVisible" class="b-dialog" @show="formBindValidation">
-    <q-card class="b-card" :class="`b-card--step-${currentStep}`">
-      <header class="b-card__header">
-        <h2 class="b-card__title gg-h2">Создание мероприятия</h2>
-        <p
-          v-if="subTitle"
-          class="b-card__subtitle"
-          :class="{
-            'b-card__subtitle--required': currentStep === 3,
-          }"
-        >
-          {{ subTitle }}
-        </p>
-      </header>
+  <CDialog
+    v-model="dialogVisible"
+    class="b-dialog"
+    title="Добавление мероприятия"
+    @show="formBindValidation"
+  >
+    <template #subtitle>
+      <p
+        v-if="subTitle"
+        class="b-dialog__subtitle"
+        :class="{
+          'b-dialog__subtitle--required': currentStep === 3,
+        }"
+      >
+        {{ subTitle }}
+      </p>
+    </template>
+    <div class="b-card" :class="`b-card--step-${currentStep}`">
       <q-form ref="formRef" novalidate greedy class="b-form" @submit="onSubmit">
         <template v-if="currentStep === 3">
           <section class="b-form__section b-form__map">
@@ -20,18 +24,20 @@
               Выберите существующий на карте очаг со статусом “Создан”, чтобы добавить его в
               мероприятие
             </p>
-            <CMap
-              :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
-              addMarker="hide"
-              addZone="hide"
-              :markers="existingHotbeds"
-              :shortInfoKeys="shortMarkerInfoNameKeys"
-              :selectedMarker="currentSelectedHotbed"
-              editable-markers="none"
-              selectable-markers="all"
-              @select-marker="handleHotbedSelected"
-              @cancel-marker-selection="handleHotbedDeselected"
-            ></CMap>
+            <q-card>
+              <CMap
+                :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
+                addMarker="hide"
+                addZone="hide"
+                :markers="existingHotbeds"
+                :shortInfoKeys="shortMarkerInfoNameKeys"
+                :selectedMarker="currentSelectedHotbed"
+                editable-markers="none"
+                selectable-markers="all"
+                @select-marker="handleHotbedSelected"
+                @cancel-marker-selection="handleHotbedDeselected"
+              ></CMap
+            ></q-card>
           </section>
         </template>
         <template v-else-if="currentStep === 1">
@@ -94,7 +100,7 @@
           />
         </footer>
       </q-form>
-    </q-card>
+    </div>
   </CDialog>
 </template>
 
@@ -264,6 +270,17 @@ $app-mobile: 600px;
 $app-narrow-mobile: 364px;
 
 .b-dialog {
+  &__subtitle {
+    margin-top: 10px;
+    font-size: 18px;
+    color: var(--app-grey-300);
+    &--required {
+      &::after {
+        content: "*";
+        color: var(--app-red-500);
+      }
+    }
+  }
 }
 .b-form {
   display: flex;
@@ -271,7 +288,10 @@ $app-narrow-mobile: 364px;
   &__map {
     height: 60vh;
     border-radius: 8px;
-    overflow: hidden;
+    div {
+      width: 100%;
+      height: 100%;
+    }
   }
   &__section-title {
     margin-bottom: 12px;
@@ -331,40 +351,15 @@ $app-narrow-mobile: 364px;
   flex-direction: column;
   background-color: var(--app-white);
   border-radius: 12px;
-  padding: 24px 32px;
-  width: 90%;
-  max-width: 834px;
-  @media screen and (max-width: $app-mobile) {
-    padding: 12px 24px;
-    width: 100%;
-  }
-  &--step-1 {
-    width: 50%;
-    max-width: 50%;
-  }
+  width: 600px;
+  max-width: 100%;
   &--step-3 {
+    width: 1200px;
     .b-form {
       &__section {
         display: flex;
         flex-direction: column;
         gap: 8px;
-      }
-    }
-  }
-  &__header {
-    padding: 16px 0 20px;
-  }
-  &__title {
-    margin: 0;
-  }
-  &__subtitle {
-    margin-top: 10px;
-    font-size: 18px;
-    color: var(--app-grey-300);
-    &--required {
-      &::after {
-        content: "*";
-        color: var(--app-red-500);
       }
     }
   }

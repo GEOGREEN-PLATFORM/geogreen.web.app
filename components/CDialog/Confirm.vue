@@ -1,6 +1,6 @@
 <template>
-  <CDialog :model-value="modelValue" @update:model-value="toggleOpenState">
-    <q-card class="confirm-dialog">
+  <CDialog :model-value="modelValue" @update:model-value="toggleOpenState" type="confirm">
+    <div class="confirm-dialog">
       <q-card-section class="confirm-dialog__title">
         <span>Подтверждение</span>
       </q-card-section>
@@ -18,7 +18,7 @@
           @click="confirmAction"
         />
       </q-card-actions>
-    </q-card>
+    </div>
   </CDialog>
 </template>
 
@@ -57,7 +57,6 @@ function toggleOpenState(newState: boolean) {
 
 <style scoped lang="scss">
 .confirm-dialog {
-  padding: 24px;
   &__title {
     font-size: 20px;
     font-weight: 600;

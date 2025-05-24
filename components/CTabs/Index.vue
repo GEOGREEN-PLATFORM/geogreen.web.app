@@ -124,6 +124,9 @@ watch(
     @media screen and (max-width: $app-laptop) {
       width: calc(90vw - 1px);
     }
+    @media screen and (max-height: 500px) {
+      border-radius: 8px 8px 0px 0px;
+    }
   }
   :global(.c-tabs__dropdown-content .c-tabs__dropdown-list .active) {
     background-color: var(--app-green-200);
@@ -162,9 +165,15 @@ watch(
       .c-tabs__item {
         justify-content: flex-end;
       }
+      .c-tabs__item-dropdown {
+        min-height: 64px;
+      }
       .c-tabs__content {
         height: 64px;
       }
+    }
+    :global(.c-tabs__dropdown-content) {
+      margin-top: 0px !important;
     }
   }
 }

@@ -22,7 +22,7 @@
             type="password"
             autocomplete="new-password"
             :rules="[validatePassword]"
-            hint="Пароль должен содержать от 8 до 20 символов"
+            hint="От 8 до 20 символов"
           />
           <CInput
             v-model="userData.repeatedPassword"
@@ -30,8 +30,13 @@
             autocomplete="new-password"
             type="password"
             :rules="[validatePassword, (val) => val === userData.password || 'Пароли не совпадают']"
-            hint="Пароль должен содержать от 8 до 20 символов"
+            hint="От 8 до 20 символов"
           />
+        </div>
+        <div class="form-content__accept-rules-block gg-cap text-center q-mt-lg">
+          Продолжая, вы соглашаетесь с&nbsp;<nuxt-link to="/docs/privacy" class="link-label"
+            >политикой конфидецинальности</nuxt-link
+          >
         </div>
       </div>
     </template>
@@ -39,10 +44,6 @@
       <div class="form-footer">
         <div class="form-footer__have-account">
           Уже есть аккаунт? <NuxtLink to="/auth/login" class="action-label">Войти</NuxtLink>
-        </div>
-        <div class="form-footer__accept-rules-block gg-cap">
-          Продолжая, вы соглашаетесь с
-          <nuxt-link to="/docs/privacy" class="link-label">политикой конфидецинальности</nuxt-link>
         </div>
       </div>
     </template>
@@ -131,6 +132,7 @@ $app-narrow-mobile: 364px;
 
 @use "@/assets/styles/pages/auth.scss";
 .form-content {
+  margin-bottom: 24px;
   &__inline-block {
     display: flex;
     min-width: 100%;
@@ -143,9 +145,6 @@ $app-narrow-mobile: 364px;
 }
 .form-footer {
   &__have-account {
-    text-align: center;
-  }
-  &__accept-rules-block {
     text-align: center;
   }
 }

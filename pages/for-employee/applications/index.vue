@@ -72,8 +72,8 @@
         </q-infinite-scroll>
       </q-scroll-area>
     </section>
-    <CDialog v-model="isMapOpen" class="b-dialog">
-      <div class="b-dialog__content">
+    <CDialog v-model="isMapOpen" full-content class="b-dialog">
+      <q-card class="b-dialog__content">
         <CMap
           :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
           :markers="existingHotbedsByType"
@@ -81,7 +81,7 @@
           hide-controls
           :selectedMarker="selectedHotbed"
         ></CMap>
-      </div>
+      </q-card>
     </CDialog>
   </main>
 </template>
@@ -405,9 +405,9 @@ onMounted(() => {
 }
 .b-dialog {
   &__content {
-    width: 80dvw;
-    height: 90dvh;
-    max-width: 80dvw;
+    height: 80dvh;
+    width: 1200px;
+    max-width: 100%;
   }
 }
 </style>
