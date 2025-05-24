@@ -93,14 +93,18 @@
           </ol-style-text>
         </ol-style>
       </ol-animated-clusterlayer>
-      <ol-geolocation :projection="gGreenOlMap.projection" @change:position="geoLocChange">
+      <ol-geolocation
+        ref="geolocationRef"
+        :projection="gGreenOlMap.projection"
+        @change:position="geoLocChange"
+      >
         <template>
           <ol-vector-layer :zIndex="2">
             <ol-source-vector>
               <ol-feature ref="positionFeature">
                 <ol-geom-point :coordinates="gGreenOlMap.geolocation"></ol-geom-point>
                 <ol-style>
-                  <ol-style-icon :src="markerIconGreenSrc" :scale="1"></ol-style-icon>
+                  <ol-style-icon :src="myLocationIcon" :scale="0.1"></ol-style-icon>
                 </ol-style>
               </ol-feature>
             </ol-source-vector>
@@ -274,8 +278,19 @@
           </ul>
         </div>
       </ol-overlay>
-      <ol-fullscreen-control />
+      <ol-fullscreen-control @click="checkFullscreenAvailability" />
       <ol-zoom-control :zoomInLabel="plusElem" :zoomOutLabel="minusElem" />
+      <div class="geolocation-control">
+        <button
+          class="geolocation-btn"
+          @click="centerOnGeolocation"
+          :title="
+            gGreenOlMap.geolocation.length ? 'Центрировать по геолокации' : 'Геолокация недоступна'
+          "
+        >
+          <q-icon :name="mdiCrosshairsGps" size="24px"></q-icon>
+        </button>
+      </div>
     </ol-map>
     <CDialogConfirm
       v-model="confirmationDialog.isOpened"
@@ -286,18 +301,6 @@
     <div v-show="false" class="html-control-elements">
       <img src="/icons/plus.svg" ref="plusElem" />
       <img src="/icons/minus.svg" ref="minusElem" />
-    </div>
-    <div class="geolocation-control">
-      <button
-        class="geolocation-btn"
-        @click="centerOnGeolocation"
-        :disabled="!gGreenOlMap.geolocation.length"
-        :title="
-          gGreenOlMap.geolocation.length ? 'Центрировать по геолокации' : 'Геолокация недоступна'
-        "
-      >
-        <q-icon :name="mdiCrosshairsGps" size="24px"></q-icon>
-      </button>
     </div>
   </ClientOnly>
 </template>
@@ -313,6 +316,7 @@ import {
 import type { Feature, MapBrowserEvent, View } from "ol";
 import type { MapControls, SelectCluster } from "ol-ext";
 import type { FeatureLike } from "ol/Feature";
+import type Geolocation from "ol/Geolocation";
 import type { ObjectEvent } from "ol/Object";
 import type { Coordinate } from "ol/coordinate";
 import { getCenter } from "ol/extent";
@@ -327,6 +331,7 @@ import markerIconDefaultSrc from "/icons/map_marker_default.png";
 import markerIconGreenSrc from "/icons/map_marker_green.png";
 import markerIconOrangeSrc from "/icons/map_marker_orange.png";
 import markerIconRedSrc from "/icons/map_marker_red.png";
+import myLocationIcon from "/icons/my_location.png";
 
 interface Props {
   markers: Marker[];
@@ -404,7 +409,9 @@ const isAllZonesVisible = ref(false);
 const upKey = ref(0);
 const controlBarRef = useTemplateRef<MapControls>("controlBar");
 const featureSelectRef = useTemplateRef<SelectCluster>("featureSelect");
-
+const geolocationRef = useTemplateRef<{ geoLoc: Geolocation }>(
+  "geolocationRef",
+);
 const gGreenOlMap = reactive({
   center: [4890670.38077, 7615726.876165] as Coordinate,
   resolution: 36,
@@ -412,7 +419,7 @@ const gGreenOlMap = reactive({
   interactionType: "none",
   projection: "EPSG:3857",
   url: "https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}@2x.png",
-  geolocation: [],
+  geolocation: [] as Coordinate,
 });
 
 const gGreenZone = reactive({
@@ -449,16 +456,58 @@ function convertMarkersToFeatures(markers: Marker[]) {
   };
   return gGreenCluster.geoJSON.readFeatures(providerFeatureCollection);
 }
-function centerOnGeolocation() {
-  if (gGreenOlMap.geolocation.length) {
-    if (mapRef.value?.map) {
-      const view = mapRef.value.map.getView();
-      view.animate({
-        center: gGreenOlMap.geolocation,
-        zoom: 16,
-        duration: 1000,
-      });
-    }
+async function centerOnGeolocation() {
+  const ok = await ensureGeolocationEnabled();
+  if (!ok) return;
+  const userPosition = geolocationRef.value?.geoLoc.getPosition();
+  if (userPosition) {
+    gGreenOlMap.center = userPosition;
+    gGreenOlMap.geolocation = userPosition;
+    nextTick(() => {
+      if (gGreenOlMap.geolocation.length) {
+        if (mapRef.value?.map) {
+          const view = mapRef.value.map.getView();
+          view.animate({
+            center: gGreenOlMap.geolocation,
+            zoom: 16,
+            duration: 1000,
+          });
+        }
+      }
+    });
+  }
+}
+async function ensureGeolocationEnabled() {
+  if (!("permissions" in navigator) || !("geolocation" in navigator)) {
+    alert("Геолокация не поддерживается вашим браузером.");
+    return false;
+  }
+  const status = await navigator.permissions.query({ name: "geolocation" });
+  if (status.state === "granted") {
+    return true;
+  }
+  if (status.state === "prompt") {
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        () => resolve(true),
+        () => {
+          alert("Без доступа к геолокации функционал будет ограничен.");
+          resolve(false);
+        },
+      );
+    });
+  }
+  if (status.state === "denied") {
+    alert(
+      "Не можем определить ваше местоположение.\n\n" +
+        "Включите геолокацию в настройках браузера или устройства.",
+    );
+    return false;
+  }
+}
+function checkFullscreenAvailability() {
+  if (!document.fullscreenEnabled) {
+    alert("Полноэкранный режим в вашем браузере отключён.");
   }
 }
 function convertZonesToFeatures(markers: Marker[]) {
@@ -488,7 +537,6 @@ function convertMarkersToDictionary(markers: Marker[]) {
 }
 const geoLocChange = (event: ObjectEvent) => {
   gGreenOlMap.geolocation = event.target.getPosition();
-  gGreenOlMap.center = event.target.getPosition();
 };
 function getMemberStyle(clusterMember: FeatureLike) {
   const features = clusterMember.get("features");
@@ -1100,23 +1148,26 @@ watch(
     button {
       background-color: var(--app-white);
       color: var(--app-white);
+      right: 1px;
+      position: absolute;
       cursor: pointer;
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
+      box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
       border-radius: 4px;
+      margin: 0;
       &::after {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         content: "";
-        background-size: 24px 24px;
         display: inline-block;
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center center;
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         filter: var(--app-filter-grey-300);
       }
       &.ol-full-screen-false::after {
@@ -1125,6 +1176,12 @@ watch(
       &.ol-full-screen-true::after {
         background-image: url("/icons/fullscreen_exit.svg");
       }
+      &:focus {
+        outline: unset;
+      }
+      &:hover {
+        outline: 1px solid var(--app-grey-400);
+      }
     }
   }
   .ol-zoom.ol-control {
@@ -1132,45 +1189,55 @@ watch(
     flex-direction: column;
     gap: 8px;
     background-color: transparent;
-    right: 8px;
+    right: 7px;
     left: unset;
     top: 50%;
     transform: translateY(-50%);
     button {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       background-color: var(--app-white);
       color: var(--app-white);
       cursor: pointer;
       box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
-      border-radius: 2px;
+      border-radius: 4px;
       img {
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         filter: var(--app-filter-grey-300);
+      }
+      &:focus {
+        outline: unset;
+      }
+      &:hover {
+        outline: 1px solid var(--app-grey-400);
       }
     }
   }
-}
-.geolocation-control {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
-  z-index: 100;
-  .geolocation-btn {
-    width: 40px;
-    height: 40px;
-    background-color: var(--app-white);
-    color: var(--app-white);
-    cursor: pointer;
-    box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
-    border-radius: 50%;
-    background-color: var(--app-white);
-    border: 1px var(--app-grey-100) solid;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
+  .geolocation-control {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    z-index: 100;
+    .geolocation-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      background-color: var(--app-white);
+      color: var(--app-white);
+      cursor: pointer;
+      box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
+      border-radius: 4px;
+      background-color: var(--app-white);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      &:hover {
+        text-decoration: none;
+        outline: 1px solid var(--app-grey-400);
+      }
+    }
   }
 }
 </style>
