@@ -13,42 +13,23 @@
         <div class="form-content__input-fields">
           <CInput
             v-if="pageState.step === 0"
-            v-model="userData.email"
+            v-model="userEmail"
             label="Почта"
             :rules="[validateEmail]"
             type="email"
             name="email"
           />
-          <!-- <CInputOTP
-            v-if="pageState.step === 1"
-            v-model:is-error="isWrongCode"
-            v-model="userData.confirmationCode"
-            @is-full="handleMainAction(pageState.step + 1)"
-          />
-          <CInput
-            v-if="pageState.step === 2"
-            v-model="userData.password"
-            type="password"
-            label="Новый пароль"
-            autocomplete="new-password"
-          />
-          <CInput
-            v-if="pageState.step === 2"
-            v-model="userData.repeatedPassword"
-            type="password"
-            label="Повторите пароль"
-            autocomplete="new-password"
-          /> -->
         </div>
       </div>
     </template>
-    <template
-      v-if="pageState.step === 1 && (isWrongCode || userData.confirmationCode.length < 4)"
-      #main-button
-    >
-      <CButton design-type="secondary" :disabled="sendCodeTimer !== 0"
+    <template v-if="pageState.step === 1" #main-button>
+      <CButton
+        design-type="secondary"
+        :disabled="sendCodeTimer !== 0"
+        :loading="pageState.buttonOpts.main.loading"
+        @click="sendEmail"
         ><div class="button-timer-slot">
-          {{ `Отправить код ${sendCodeTimer !== 0 ? "через" : ""}` }}
+          {{ `Отправить повторно ${sendCodeTimer !== 0 ? "через" : ""}` }}
           <span v-show="sendCodeTimer !== 0" class="button-timer-slot__time">
             {{ formattedSendTimer }}
           </span>
@@ -76,18 +57,12 @@ const defaultSubButton: ButtonOptions = {
   label: "Назад",
   show: true,
 };
-const userData = ref({
-  email: "",
-  password: "",
-  repeatedPassword: "",
-  confirmationCode: "",
-});
+const userEmail = shallowRef(store.user?.email || "");
 const codeSendingInterval = ref<NodeJS.Timeout>();
 const sendCodeTimer = ref(CODE_SENDING_TIMEOUT);
 const formattedSendTimer = computed(() => {
   return `00:${sendCodeTimer.value.toString().padStart(2, "0")}`;
 });
-const isWrongCode = ref(false);
 const stepConfig = reactive([
   {
     mainButton: { label: "Далее", show: true },
@@ -95,11 +70,8 @@ const stepConfig = reactive([
   },
   {
     mainButton: { label: "Далее", show: true },
-    hintText: "Введите код, отправленный на вашу почту",
-  },
-  {
-    mainButton: { label: "Сменить пароль", show: true },
-    hintText: "Придумайте новый пароль",
+    hintText: `На вашу электронную почту было направлено письмо, содержащее инструкцию по сбросу пароля. 
+Если письмо не приходит в течение 5 минут, проверьте папку "Спам".`,
   },
 ]);
 const pageState = reactive({
@@ -114,19 +86,10 @@ const pageState = reactive({
 async function updatePageState(newStep: number) {
   try {
     if (newStep === 1) {
-      pageState.buttonOpts.main.loading = true;
-      await sendCodeToEmail();
-      pageState.buttonOpts.main.loading = false;
+      await sendEmail();
     }
     pageState.step = newStep;
-    if (newStep === 1) {
-      codeSendingInterval.value = setInterval(() => {
-        sendCodeTimer.value -= 1;
-        if (sendCodeTimer.value === 0) {
-          clearInterval(codeSendingInterval.value);
-        }
-      }, 1000);
-    } else {
+    if (newStep !== 1) {
       sendCodeTimer.value = CODE_SENDING_TIMEOUT;
       clearInterval(codeSendingInterval.value);
     }
@@ -137,16 +100,13 @@ async function updatePageState(newStep: number) {
     };
     pageState.hintText = config.hintText;
   } catch (err) {
-    pageState.buttonOpts.main.loading = false;
     console.error(err);
   }
 }
 
 function handleMainAction(pageStep: number) {
-  if (pageStep <= 2) {
+  if (pageStep <= 1) {
     updatePageState(pageStep);
-  } else {
-    sendChangePassword();
   }
 }
 
@@ -157,14 +117,11 @@ function handleSubAction(pageStep: number) {
     goBack();
   }
 }
-
-function sendChangePassword() {
-  // Логика отправки запроса на смену пароля
-}
-async function sendCodeToEmail() {
+async function sendEmail() {
   try {
+    pageState.buttonOpts.main.loading = true;
     await $fetch(
-      `${store.apiV1}/user/register/forgot-password/${userData.value.email}`,
+      `${store.apiV1}/user/register/forgot-password/${userEmail.value}`,
       {
         headers: {
           Authorization: useGetToken(),
@@ -172,6 +129,14 @@ async function sendCodeToEmail() {
         method: "POST",
       },
     );
+    sendCodeTimer.value = CODE_SENDING_TIMEOUT;
+    clearInterval(codeSendingInterval.value);
+    codeSendingInterval.value = setInterval(() => {
+      sendCodeTimer.value -= 1;
+      if (sendCodeTimer.value === 0) {
+        clearInterval(codeSendingInterval.value);
+      }
+    }, 1000);
   } catch (err) {
     useState<Alert>("showAlert").value = {
       show: true,
@@ -179,6 +144,8 @@ async function sendCodeToEmail() {
       text: "Не удалось отправить письмо",
     };
     throw new Error("Не удалось отправить письмо");
+  } finally {
+    pageState.buttonOpts.main.loading = false;
   }
 }
 function goBack() {
