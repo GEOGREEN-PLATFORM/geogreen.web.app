@@ -74,7 +74,12 @@
 
         <footer class="b-dialog__footer">
           <CButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
-          <CButton :label="applyLabel" :disabled="formHasError" type="submit" />
+          <CButton
+            :label="applyLabel"
+            :loading="props.editState === 'loading'"
+            :disabled="formHasError"
+            type="submit"
+          />
         </footer>
       </q-form>
     </div>
@@ -87,6 +92,7 @@ import { useMainStore } from "~/store/main";
 interface Props {
   modelValue: boolean;
   hotbed: Marker;
+  editState: "success" | "loading" | "error";
 }
 
 const props = defineProps<Props>();
@@ -180,7 +186,6 @@ function nextStep() {
     updateLabels();
   } else if (currentStep.value === 2) {
     updateHotbed();
-    resetForm();
   }
 }
 
@@ -232,6 +237,14 @@ watch(
 watch(dialogVisible, (newVal) => {
   emits("update:modelValue", newVal);
 });
+watch(
+  () => props.editState,
+  (newVal, oldVal) => {
+    if (newVal === "success" && oldVal === "loading") {
+      resetForm();
+    }
+  },
+);
 </script>
 
 <style scoped lang="scss">

@@ -12,7 +12,7 @@
               accept="image/*"
             />
             <img
-              v-if="userData.image && avatarSrc"
+              v-if="pageData.userData.image && avatarSrc"
               :src="avatarSrc"
               alt="Аватар"
               class="b-avatar__item"
@@ -34,7 +34,7 @@
           <div class="b-name">
             <input
               type="text"
-              v-model="userData.fullName"
+              v-model="pageData.userData.fullName"
               placeholder="Введите ФИО"
               class="b-name__input gg-h1"
               :class="{ 'b-name__input--edit': editMode }"
@@ -64,12 +64,12 @@
           >
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Роль:</div>
-              <div class="b-labeled-field__value gg-t-base">{{ userData.role }}</div>
+              <div class="b-labeled-field__value gg-t-base">{{ pageData.userData.role }}</div>
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
               <CInputDate
-                v-model="userData.birthDate"
+                v-model="pageData.userData.birthDate"
                 class="b-labeled-field__input"
                 height="44px"
                 :required="false"
@@ -78,7 +78,7 @@
             <div class="b-labeled-field b-labeled-field--required">
               <div class="b-labeled-field__label gg-t-big">Email:</div>
               <CInput
-                v-model="userData.email"
+                v-model="pageData.userData.email"
                 type="email"
                 class="b-labeled-field__input"
                 height="44px"
@@ -87,7 +87,7 @@
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
               <CInput
-                v-model="userData.phone"
+                v-model="pageData.userData.phone"
                 class="b-labeled-field__input"
                 height="44px"
                 :required="false"
@@ -118,32 +118,32 @@
           <div v-else class="b-profile-card__info-list">
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Роль:</div>
-              <div class="b-labeled-field__value gg-t-base">{{ userData.role }}</div>
+              <div class="b-labeled-field__value gg-t-base">{{ pageData.userData.role }}</div>
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
               <div
                 class="b-labeled-field__value gg-t-base"
                 :class="{
-                  'b-labeled-field__value--empty': !userData.birthDate,
+                  'b-labeled-field__value--empty': !pageData.userData.birthDate,
                 }"
               >
-                {{ date.formatDate(userData.birthDate, "DD.MM.YYYY") || "Не указано" }}
+                {{ date.formatDate(pageData.userData.birthDate, "DD.MM.YYYY") || "Не указано" }}
               </div>
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Email:</div>
-              <div class="b-labeled-field__value gg-t-base">{{ userData.email }}</div>
+              <div class="b-labeled-field__value gg-t-base">{{ pageData.userData.email }}</div>
             </div>
             <div class="b-labeled-field">
               <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
               <div
                 class="b-labeled-field__value gg-t-base"
                 :class="{
-                  'b-labeled-field__value--empty': !userData.birthDate,
+                  'b-labeled-field__value--empty': !pageData.userData.birthDate,
                 }"
               >
-                {{ userData.phone || "Не указано" }}
+                {{ pageData.userData.phone || "Не указано" }}
               </div>
             </div>
             <CButton
@@ -179,7 +179,7 @@
           row-key="name"
           :slots="['statusCode']"
           @click:row="(row: any) => goToTaskEvent(row.id)"
-          @updateTable="getEmployeeTaskEvents"
+          @updateTable="updateTaskEventsTable"
           :loading="taskEventsLoading"
         >
           <template v-slot:body-cell-statusCode="slotProps">
@@ -215,8 +215,10 @@ import {
   mdiLockOutline,
   mdiUpload,
 } from "@quasar/extras/mdi-v6";
+import { date } from "quasar";
 import { ref } from "vue";
 import { useMainStore } from "~/store/main";
+import type { TaskEvent } from "~/types/interfaces/taskEvents";
 
 interface UserData {
   fullName: string;
@@ -225,6 +227,13 @@ interface UserData {
   email: string;
   phone: string;
   image: ImageObj | null;
+  enabled: boolean;
+}
+interface TaskEventsRequest extends ServerPagination {
+  content: TaskEvent[];
+}
+interface PageData {
+  userData: UserData;
 }
 const editMode = ref(false);
 const showBlockDialog = ref(false);
@@ -237,142 +246,6 @@ const fileInput = ref<HTMLInputElement>();
 const { openPhoto } = usePhotoViewer();
 const { formRef, formBindValidation, formHasError } = useFormValidation();
 const { uploadPhoto, getImageUrl } = useFiles();
-const initialUserData = ref<UserData>({
-  fullName: "",
-  role: "",
-  birthDate: "",
-  email: "",
-  phone: "",
-  image: null,
-});
-
-const userData = ref({ ...initialUserData.value });
-async function saveChanges() {
-  try {
-    await $fetch(`${store.apiV1}/user/search/${initialUserData.value.email}`, {
-      method: "PATCH",
-      headers: {
-        authorization: useGetToken(),
-      },
-      body: {
-        firstName: userData.value.fullName.split(" ")[1],
-        lastName: userData.value.fullName.split(" ")[0],
-        patronymic: userData.value.fullName.split(" ")[2],
-        email: userData.value.email,
-        number: userData.value.phone,
-        birthdate: userData.value.birthDate,
-        image: userData.value.image,
-      },
-    });
-    getUser();
-  } catch (error: any) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Не удалось сохранить изменения",
-    };
-  }
-  editMode.value = false;
-}
-async function getUser() {
-  const response = await $fetch<User>(
-    `${store.apiV1}/user/search/by-id/${route.params.id}`,
-    {
-      method: "GET",
-      headers: {
-        authorization: useGetToken(),
-      },
-    },
-  );
-  userData.value = {
-    role: response.role === "operator" ? "Оператор" : "Администратор",
-    email: response.email,
-    phone: response.number || "",
-    birthDate: response.birthdate || "",
-    fullName: `${response.lastName} ${response.firstName} ${response.patronymic}`,
-    image: response.image || null,
-  };
-  avatarSrc.value = userData.value.image
-    ? getImageUrl(userData.value.image.fullImageId)
-    : "";
-  initialUserData.value = { ...userData.value };
-  isEmployeeBlocked.value = !response.enabled;
-}
-async function confirmToggleBlockAction() {
-  await toggleBlockUser();
-  showBlockDialog.value = false;
-}
-async function toggleBlockUser() {
-  await $fetch(
-    `${store.apiV1}/user/register/${initialUserData.value.email}/enabled/${!isEmployeeBlocked.value}`,
-    {
-      method: "POST",
-      headers: {
-        authorization: useGetToken(),
-      },
-    },
-  );
-  isEmployeeBlocked.value = !isEmployeeBlocked.value;
-  useState<Alert>("showAlert").value = {
-    show: true,
-    type: "success",
-    text: `Учетная запись сотрудника ${isEmployeeBlocked.value ? "заблокирована" : "разблокирована"}`,
-  };
-}
-function toggleEditMode() {
-  editMode.value = !editMode.value;
-  if (editMode.value) {
-    formBindValidation();
-  }
-}
-function cancelEdit() {
-  userData.value = { ...initialUserData.value };
-  editMode.value = false;
-}
-
-async function onFileSelected(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const fileList = input.files;
-  if (!fileList || fileList.length === 0) {
-    console.warn("Файл не выбран");
-    return;
-  }
-  const file = fileList[0];
-  isAvatarUploading.value = true;
-
-  try {
-    const uploadedUrl = await uploadPhoto(file);
-    userData.value.image = uploadedUrl;
-    avatarSrc.value = getImageUrl(uploadedUrl.fullImageId);
-  } catch (error) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Не удалось загрузить фотографию",
-    };
-  } finally {
-    isAvatarUploading.value = false;
-  }
-}
-function triggerFileUpload() {
-  fileInput.value?.click();
-}
-function openToggleBlockDialog() {
-  showBlockDialog.value = true;
-}
-
-function cancelToggleBlockAction() {
-  showBlockDialog.value = false;
-}
-onMounted(() => {
-  getUser();
-  getEmployeeTaskEvents();
-});
-import { date } from "quasar";
-import type { TaskEvent } from "~/types/interfaces/taskEvents";
-interface TaskEventsRequest extends ServerPagination {
-  content: TaskEvent[];
-}
 const { TASK_EVENT_STATUS_OPTIONS, TASK_EVENT_STATUS_STYLES } =
   useGetStatusOptions();
 const myTaskEvents = ref<TaskEvent[]>([]);
@@ -420,6 +293,15 @@ const tableHeaders: TableHeader[] = [
     field: "endDate",
   },
 ];
+const initialUserData = ref<UserData>({
+  fullName: "",
+  role: "",
+  birthDate: "",
+  email: "",
+  phone: "",
+  image: null,
+  enabled: true,
+});
 const tableRows: ComputedRef<TableRow[]> = computed(() =>
   myTaskEvents.value.map((e) => ({
     id: e.id,
@@ -433,8 +315,158 @@ const tableRows: ComputedRef<TableRow[]> = computed(() =>
     endDate: date.formatDate(new Date(e.endDate), "DD.MM.YYYY"),
   })),
 );
-async function getEmployeeTaskEvents() {
+const { data: taskEventsRequest } = await useLazyAsyncData(
+  `employee-task-events-${route.params.id}`,
+  async () => {
+    return await getEmployeeTaskEvents();
+  },
+);
+if (taskEventsRequest.value) {
+  myTaskEvents.value = taskEventsRequest.value.content;
+  updateTaskEventsRelatedData(taskEventsRequest.value.totalItems);
+  taskEventsLoading.value = false;
+}
+const { data: pageData } = await useAsyncData<PageData>(
+  `employee-page-${route.params.id}`,
+  async () => {
+    const [userData] = await Promise.all([getUser()]);
+    return { userData };
+  },
+  {
+    dedupe: "defer",
+    default: () => ({
+      userData: { ...initialUserData.value },
+    }),
+  },
+);
+if (pageData.value) {
+  updateRelatedUserData();
+}
+async function saveChanges() {
+  try {
+    const response = await $fetch<User>(
+      `${store.apiV1}/user/search/${initialUserData.value.email}`,
+      {
+        method: "PATCH",
+        headers: {
+          authorization: useGetToken(),
+        },
+        body: {
+          firstName: pageData.value.userData.fullName.split(" ")[1],
+          lastName: pageData.value.userData.fullName.split(" ")[0],
+          patronymic: pageData.value.userData.fullName.split(" ")[2],
+          email: pageData.value.userData.email,
+          number: pageData.value.userData.phone,
+          birthdate: pageData.value.userData.birthDate,
+          image: pageData.value.userData.image,
+        },
+      },
+    );
+    pageData.value.userData = getFormattedUserData(response);
+    updateRelatedUserData();
+  } catch (error: any) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось сохранить изменения",
+    };
+  }
+  editMode.value = false;
+}
+async function getUser() {
+  const response = await $fetch<User>(
+    `${store.apiV1}/user/search/by-id/${route.params.id}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+    },
+  );
+  return getFormattedUserData(response);
+}
+function getFormattedUserData(userRaw: User) {
+  return {
+    role: userRaw.role === "operator" ? "Оператор" : "Администратор",
+    email: userRaw.email,
+    phone: userRaw.number || "",
+    birthDate: userRaw.birthdate || "",
+    fullName: `${userRaw.lastName} ${userRaw.firstName} ${userRaw.patronymic}`,
+    image: userRaw.image || null,
+    enabled: userRaw.enabled,
+  };
+}
+function updateRelatedUserData() {
+  avatarSrc.value = pageData.value.userData.image
+    ? getImageUrl(pageData.value.userData.image.fullImageId)
+    : "";
+  initialUserData.value = { ...pageData.value.userData };
+  isEmployeeBlocked.value = pageData.value.userData.enabled;
+}
+async function confirmToggleBlockAction() {
+  await toggleBlockUser();
+  showBlockDialog.value = false;
+}
+async function toggleBlockUser() {
+  await $fetch(
+    `${store.apiV1}/user/register/${initialUserData.value.email}/enabled/${!isEmployeeBlocked.value}`,
+    {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+    },
+  );
+  isEmployeeBlocked.value = !isEmployeeBlocked.value;
+  useState<Alert>("showAlert").value = {
+    show: true,
+    type: "success",
+    text: `Учетная запись сотрудника ${isEmployeeBlocked.value ? "заблокирована" : "разблокирована"}`,
+  };
+}
+function toggleEditMode() {
+  editMode.value = !editMode.value;
+  if (editMode.value) {
+    formBindValidation();
+  }
+}
+function cancelEdit() {
+  pageData.value.userData = { ...initialUserData.value };
+  editMode.value = false;
+}
+
+async function onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const fileList = input.files;
+  if (!fileList || fileList.length === 0) {
+    console.warn("Файл не выбран");
+    return;
+  }
+  const file = fileList[0];
+  isAvatarUploading.value = true;
+
+  try {
+    const uploadedUrl = await uploadPhoto(file);
+    pageData.value.userData.image = uploadedUrl;
+    avatarSrc.value = getImageUrl(uploadedUrl.fullImageId);
+  } catch (error) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось загрузить фотографию",
+    };
+  } finally {
+    isAvatarUploading.value = false;
+  }
+}
+async function updateTaskEventsTable() {
   taskEventsLoading.value = true;
+  const data = await getEmployeeTaskEvents();
+  myTaskEvents.value = data.content;
+  updateTaskEventsRelatedData(data.totalItems);
+  taskEventsLoading.value = false;
+}
+async function getEmployeeTaskEvents() {
   const url = `${store.apiV1}/event/getAll`;
   const response = await $fetch<TaskEventsRequest>(url, {
     method: "GET",
@@ -445,14 +477,36 @@ async function getEmployeeTaskEvents() {
       operatorId: route.params.id,
     },
   });
-  myTaskEvents.value = response.content;
-  pagination.value.rowsNumber = response.totalItems;
-  taskEventsLoading.value = false;
+  return {
+    content: response.content,
+    totalItems: response.totalItems,
+  };
 }
-
+function updateTaskEventsRelatedData(totalItems: number) {
+  pagination.value.rowsNumber = totalItems;
+}
 function goToTaskEvent(id: string) {
   navigateTo(`/for-employee/task-events/${id}`);
 }
+function triggerFileUpload() {
+  fileInput.value?.click();
+}
+function openToggleBlockDialog() {
+  showBlockDialog.value = true;
+}
+
+function cancelToggleBlockAction() {
+  showBlockDialog.value = false;
+}
+watch(
+  () => taskEventsRequest.value,
+  () => {
+    if (!taskEventsRequest.value) return;
+    myTaskEvents.value = taskEventsRequest.value.content;
+    updateTaskEventsRelatedData(taskEventsRequest.value.totalItems);
+    taskEventsLoading.value = false;
+  },
+);
 </script>
 
 <style scoped lang="scss">

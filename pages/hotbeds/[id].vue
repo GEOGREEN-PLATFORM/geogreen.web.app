@@ -1,91 +1,96 @@
 <template>
   <main class="b-page">
-    <div class="b-page__top-section">
-      <section class="b-main-editable-card">
-        <div class="b-main-editable-card__header">
-          <div class="b-name">
-            <div class="gg-h1">{{ hotbed?.details?.problemAreaType }}</div>
-            <span class="b-name__delete-icon" @click="openDeleteDialog">
-              <q-icon :name="mdiDeleteOutline" color="red-500" size="24px"></q-icon>
-            </span>
-          </div>
-        </div>
-        <div v-if="pageLoaded && hotbed" class="b-main-editable-card__content">
-          <div class="b-main-editable-card__fields">
-            <CInputTextarea
-              class="b-main-editable-card__comment"
-              placeholder="Оставьте комментарий по очагу"
-              v-model="hotbed.details.comment"
-              bg-color="transparent"
-              @blur="saveChanges()"
-            ></CInputTextarea>
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Мероприятие:</div>
-              <CInputSelect
-                v-model="hotbed.relatedTaskId"
-                disabled
-                :options="[]"
-                height="40px"
-                class="b-labeled-field__input"
-              ></CInputSelect>
-            </div>
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Статус работы:</div>
-              <CInputSelect
-                v-model="hotbed.details.workStage"
-                @update:model-value="saveChanges()"
-                height="40px"
-                :options="HOTBED_WORK_STAGE_OPTIONS"
-                class="b-labeled-field__input"
-              ></CInputSelect>
-            </div>
-            <div class="b-main-editable-card__actions">
-              <CButton
-                @click="toggleEditMode"
-                size="medium"
-                class="b-main-editable-card__button b-main-editable-card__button--more"
-              >
-                Еще
-              </CButton>
+    <div v-if="!pageError">
+      <div class="b-page__top-section">
+        <section class="b-main-editable-card">
+          <div class="b-main-editable-card__header">
+            <div class="b-name">
+              <div class="gg-h1">{{ pageData.hotbed?.details?.problemAreaType }}</div>
+              <span class="b-name__delete-icon" @click="openDeleteDialog">
+                <q-icon :name="mdiDeleteOutline" color="red-500" size="24px"></q-icon>
+              </span>
             </div>
           </div>
-        </div>
+          <div v-if="pageData.hotbed" class="b-main-editable-card__content">
+            <div class="b-main-editable-card__fields">
+              <CInputTextarea
+                class="b-main-editable-card__comment"
+                placeholder="Оставьте комментарий по очагу"
+                v-model="pageData.hotbed.details.comment"
+                bg-color="transparent"
+                @blur="saveChanges()"
+              ></CInputTextarea>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Мероприятие:</div>
+                <CInputSelect
+                  v-model="pageData.hotbed.relatedTaskId"
+                  disabled
+                  :options="[]"
+                  height="40px"
+                  class="b-labeled-field__input"
+                ></CInputSelect>
+              </div>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Статус работы:</div>
+                <CInputSelect
+                  v-model="pageData.hotbed.details.workStage"
+                  @update:model-value="saveChanges()"
+                  height="40px"
+                  :options="HOTBED_WORK_STAGE_OPTIONS"
+                  class="b-labeled-field__input"
+                ></CInputSelect>
+              </div>
+              <div class="b-main-editable-card__actions">
+                <CButton
+                  @click="toggleEditMode"
+                  size="medium"
+                  class="b-main-editable-card__button b-main-editable-card__button--more"
+                >
+                  Еще
+                </CButton>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="b-page__data-card">
+          <CCardData
+            :list="hotdebCardList"
+            :linksByLabel="linksByLabel"
+            :statusClassesByValue="HOTBED_WORK_STAGE_STYLES"
+          ></CCardData>
+        </section>
+      </div>
+      <section class="b-page__map-section">
+        <q-card>
+          <CMap
+            v-if="pageData.hotbed"
+            @add-marker=""
+            @edit-marker=""
+            :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
+            :markers="pageData.existingHotbeds"
+            :selected-marker="pageData.hotbed"
+            :non-checkable-markers="[pageData.hotbed.id]"
+            :shortInfoKeys="shortMarkerInfoNameKeys"
+          ></CMap
+        ></q-card>
       </section>
-      <section class="b-page__data-card">
-        <CCardData
-          :list="hotdebCardList"
-          :linksByLabel="linksByLabel"
-          :statusClassesByValue="HOTBED_WORK_STAGE_STYLES"
-        ></CCardData>
-      </section>
+      <CDialogConfirm
+        v-model="showDeleteDialog"
+        actionMainText="удалить очаг"
+        actionButtonConfirmText="Удалить"
+        :state="deleteDialogState"
+        @cancel="cancelDeleteAction"
+        @confirm="confirmDeleteAction"
+      />
+      <PagesHotbedsEdit
+        v-if="pageData.hotbed"
+        v-model="editMode"
+        :hotbed="pageData.hotbed"
+        @hotbed-updated="editHotbed"
+        :edit-state="fullDataEditState"
+      />
     </div>
-    <section class="b-page__map-section">
-      <q-card>
-        <CMap
-          v-if="!isHotbedsLoading && hotbed"
-          @add-marker=""
-          @edit-marker=""
-          :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
-          :markers="existingHotbeds"
-          :selected-marker="hotbed"
-          :non-checkable-markers="[hotbed.id]"
-          :shortInfoKeys="shortMarkerInfoNameKeys"
-        ></CMap
-      ></q-card>
-    </section>
-    <CDialogConfirm
-      v-model="showDeleteDialog"
-      actionMainText="удалить очаг"
-      actionButtonConfirmText="Удалить"
-      @cancel="cancelDeleteAction"
-      @confirm="confirmDeleteAction"
-    />
-    <PagesHotbedsEdit
-      v-if="hotbed"
-      v-model="editMode"
-      :hotbed="hotbed"
-      @hotbed-updated="editHotbed"
-    />
+    <CError v-else :error="pageError" @refresh="refresh"></CError>
   </main>
 </template>
 
@@ -94,18 +99,26 @@ import { mdiDeleteOutline } from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
 
+interface PageData {
+  hotbed: Marker | null;
+  existingHotbeds: Marker[];
+}
+
 const { HOTBED_WORK_STAGE_OPTIONS, HOTBED_WORK_STAGE_STYLES } =
   useGetStatusOptions();
 const store = useMainStore();
 const route = useRoute();
 const editMode = ref(false);
 const showDeleteDialog = ref(false);
-const hotbed = ref<Marker>();
 const hotdebCardList = ref<CardItem[]>([]);
 const linksByLabel = ref<Record<string, string>>({});
-const existingHotbeds = ref<Marker[]>([]);
-const isHotbedsLoading = ref(true);
-const pageLoaded = ref(false);
+const initialHotbed = ref<Marker | null>(null);
+const fullDataEditState = shallowRef<"success" | "error" | "loading">(
+  "success",
+);
+const deleteDialogState = shallowRef<"success" | "error" | "loading">(
+  "success",
+);
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
@@ -132,21 +145,73 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
     type: "text",
   },
 });
+
 function toggleEditMode() {
   editMode.value = !editMode.value;
 }
+const {
+  data: pageData,
+  error: pageError,
+  refresh,
+} = await useAsyncData<PageData>(
+  `hotbed-page-${route.params.id}`,
+  async () => {
+    const [hotbed, existingHotbeds] = await Promise.all([
+      getHotbed(),
+      getHotbeds(),
+    ]);
+    return { hotbed, existingHotbeds };
+  },
+  {
+    dedupe: "defer",
+    default: () => ({
+      hotbed: null,
+      existingHotbeds: [] as Marker[],
+    }),
+  },
+);
+if (pageData.value.hotbed) {
+  initialHotbed.value = structuredClone(toRaw(pageData.value.hotbed));
+  updateHotdedCardList();
+}
 async function getHotbeds() {
-  isHotbedsLoading.value = true;
-  const url = `${store.apiV1}/geo/info/getAll`;
-  const response = await $fetch<Marker[]>(url, {
-    method: "GET",
-    headers: { Authorization: useGetToken() },
-  });
-  existingHotbeds.value = response;
-  isHotbedsLoading.value = false;
+  try {
+    const url = `${store.apiV1}/geo/info/getAll`;
+    const response = await $fetch<Marker[]>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+    });
+    return response;
+  } catch (error: any) {
+    console.error(error);
+    throw new AppError("Не удалось получить данные очага", {
+      statusCode: error.response.status,
+    });
+  }
+}
+
+async function getHotbed() {
+  try {
+    const response = await $fetch<Marker>(
+      `${store.apiV1}/geo/info/${route.params.id}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    return response;
+  } catch (error: any) {
+    console.error(error);
+    throw new AppError("Не удалось получить данные очага", {
+      statusCode: error.response.status,
+    });
+  }
 }
 async function saveChanges(fullEditHotbed?: Marker) {
   try {
+    fullDataEditState.value = "loading";
     const response = await $fetch<Marker>(
       `${store.apiV1}/geo/info/${route.params.id}`,
       {
@@ -154,19 +219,23 @@ async function saveChanges(fullEditHotbed?: Marker) {
         headers: {
           authorization: useGetToken(),
         },
-        body: fullEditHotbed || hotbed.value,
+        body: fullEditHotbed || pageData.value.hotbed,
       },
     );
-    hotbed.value = response;
+    pageData.value.hotbed = response;
     updateHotdedCardList();
+    editMode.value = false;
+    fullDataEditState.value = "success";
   } catch (error: any) {
+    console.error(error);
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
       text: "Не удалось изменить данные очага",
     };
+    pageData.value.hotbed = structuredClone(toRaw(initialHotbed.value));
+    fullDataEditState.value = "error";
   }
-  editMode.value = false;
 }
 
 function openDeleteDialog() {
@@ -179,83 +248,82 @@ function cancelDeleteAction() {
 
 async function confirmDeleteAction() {
   await deleteHotbed();
-  showDeleteDialog.value = false;
 }
 async function deleteHotbed() {
-  await $fetch(`${store.apiV1}/geo/info/${route.params.id}`, {
-    method: "DELETE",
-    headers: {
-      authorization: useGetToken(),
-    },
-  });
-  useState<Alert>("showAlert").value = {
-    show: true,
-    type: "success",
-    text: "Очаг успешно удален",
-  };
-  navigateTo("/hotbeds");
-}
-async function getHotbed() {
-  const response = await $fetch<Marker>(
-    `${store.apiV1}/geo/info/${route.params.id}`,
-    {
-      method: "GET",
+  try {
+    deleteDialogState.value = "loading";
+    await $fetch(`${store.apiV1}/geo/info/${route.params.id}`, {
+      method: "DELETE",
       headers: {
         authorization: useGetToken(),
       },
-    },
-  );
-  hotbed.value = response;
-  updateHotdedCardList();
-  pageLoaded.value = true;
+    });
+    showDeleteDialog.value = false;
+    deleteDialogState.value = "success";
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "success",
+      text: "Очаг успешно удален",
+    };
+    navigateTo("/hotbeds");
+  } catch (error: any) {
+    console.error(error);
+    deleteDialogState.value = "error";
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось удалить очаг",
+    };
+  }
 }
 async function editHotbed(hotbedData: Marker) {
   saveChanges(hotbedData);
-  editMode.value = false;
 }
 function updateHotdedCardList() {
   hotdebCardList.value = [
     {
       label: "Статус работы",
-      value: hotbed.value?.details.workStage,
+      value: pageData.value.hotbed?.details.workStage,
       type: "status",
     },
     {
       label: "Мероприятие",
-      value: hotbed.value?.relatedTaskId ? "Подробнее" : "",
+      value: pageData.value.hotbed?.relatedTaskId ? "Подробнее" : "",
       type: "link",
     },
     {
       label: "Тип земель",
-      value: hotbed.value?.details.landType,
+      value: pageData.value.hotbed?.details.landType,
       type: "text",
     },
     {
       label: "Владелец",
-      value: hotbed.value?.details.owner,
+      value: pageData.value.hotbed?.details.owner,
       type: "text",
     },
     {
       label: "Метод по устранению",
-      value: hotbed.value?.details.eliminationMethod,
+      value: pageData.value.hotbed?.details.eliminationMethod,
       type: "text",
     },
     {
       label: "Дата создания",
-      value: date.formatDate(hotbed.value?.details?.creationDate, "DD.MM.YYYY"),
+      value: date.formatDate(
+        pageData.value.hotbed?.details?.creationDate,
+        "DD.MM.YYYY",
+      ),
       type: "text",
     },
     {
       label: "Дата изменения",
-      value: date.formatDate(hotbed.value?.details?.creationDate, "DD.MM.YYYY"),
+      value: date.formatDate(
+        pageData.value.hotbed?.details?.creationDate,
+        "DD.MM.YYYY",
+      ),
       type: "text",
     },
   ];
 }
-onMounted(() => {
-  getHotbed();
-  getHotbeds();
-});
 </script>
 
 <style scoped lang="scss">
