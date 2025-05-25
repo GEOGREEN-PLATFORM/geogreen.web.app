@@ -61,6 +61,7 @@
             :selectedMarker="addedHotbed"
             :non-checkable-markers="store.user?.role === 'user' ? 'all' : 'none'"
             :editableMarkers="store.user?.role === 'user' ? 'none' : 'all'"
+            :dataLoading="hotbedsLoading"
           >
             <template #custom-temp-action>
               <CButton
@@ -78,6 +79,7 @@
       :initial-hotbed="addedHotbed"
       :minimal="store.user?.role === 'user'"
       :from="store.user?.role === 'user' ? 'user' : 'employee'"
+      :addState="addHotbedDialogState"
       @hotbed-created="handleCreatedHotbed"
     ></PagesHotbedsAdd>
   </div>
@@ -104,7 +106,8 @@ const isMobile = ref(false);
 const { HOTBED_WORK_STAGE_STYLES } = useGetStatusOptions();
 const existingHotbeds = ref<Marker[]>([]);
 const dialogVisible = ref(false);
-const hotbedsLoading = ref(false);
+const addHotbedDialogState = ref<"loading" | "success" | "error">("success");
+const hotbedsLoading = ref(true);
 const route = useRoute();
 const hotbedData = ref<HotbedData>({
   problemAreaType: "",
@@ -152,15 +155,23 @@ const addedHotbed = computed(() => {
     : null;
 });
 async function getHotbeds() {
-  hotbedsLoading.value = true;
-  const url = `${store.apiV1}/geo/info/getAll`;
-  const response = await $fetch<Marker[]>(url, {
-    method: "GET",
-    headers: { Authorization: useGetToken() },
-  });
-  existingHotbeds.value = response;
-  // pagination.value.rowsNumber = response.totalItems;
-  hotbedsLoading.value = false;
+  try {
+    hotbedsLoading.value = true;
+    const url = `${store.apiV1}/geo/info/getAll`;
+    const response = await $fetch<Marker[]>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+    });
+    existingHotbeds.value = response;
+    hotbedsLoading.value = false;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить очаги проблем",
+    };
+  }
 }
 function scrollToMap() {
   const mapElement = document.getElementById("page-map");
@@ -235,6 +246,7 @@ function handleForbiddenAddTry() {
   };
 }
 async function handleCreatedHotbed(newHotbed: HotbedData) {
+  addHotbedDialogState.value = "loading";
   if (store.user?.role === "user") {
     try {
       await $fetch(`${store.apiV1}/user-marker/report`, {
@@ -257,12 +269,15 @@ async function handleCreatedHotbed(newHotbed: HotbedData) {
         type: "success",
         text: "Сообщение о проблеме успешно отправлено на модерацию",
       };
+      addHotbedDialogState.value = "success";
+      dialogVisible.value = false;
     } catch (err: any) {
       useState<Alert>("showAlert").value = {
         show: true,
         type: "error",
         text: `Невозможно отправить отчёт: ${err.message}`,
       };
+      addHotbedDialogState.value = "error";
     }
   } else if (store.user?.role === "admin" || store.user?.role === "operator") {
     try {
@@ -282,7 +297,7 @@ async function handleCreatedHotbed(newHotbed: HotbedData) {
             workStage: "Создано",
             problemAreaType: newHotbed.problemAreaType,
             comment: newHotbed.comment,
-            density: newHotbed.density,
+            density: newHotbed.density === "default" ? null : newHotbed.density,
           },
           coordinates: newHotbed.coordinates?.[0] || null,
         },
@@ -292,6 +307,8 @@ async function handleCreatedHotbed(newHotbed: HotbedData) {
         type: "success",
         text: "Очаг успешно добавлен на карту",
       };
+      addHotbedDialogState.value = "success";
+      dialogVisible.value = false;
       getHotbeds();
     } catch (error: any) {
       useState<Alert>("showAlert").value = {
@@ -299,6 +316,7 @@ async function handleCreatedHotbed(newHotbed: HotbedData) {
         type: "error",
         text: "Не удалось добавить очаг",
       };
+      addHotbedDialogState.value = "error";
     }
   }
   hotbedData.value = {

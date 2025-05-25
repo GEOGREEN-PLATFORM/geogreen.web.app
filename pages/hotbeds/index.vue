@@ -67,7 +67,6 @@
     </section>
     <PagesHotbedsAdd
       v-model="isHotbedDialogOpen"
-      :hotbeds="hotbeds"
       :addState="addHotbedDialogState"
       @hotbedCreated="handleHotbedCreated"
     />
@@ -263,7 +262,7 @@ async function getHotbeds() {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Не удалось получить очаги",
+      text: "Не удалось получить очаги проблем",
     };
   } finally {
     hotbedsLoading.value = false;

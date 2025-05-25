@@ -91,6 +91,7 @@
             :shortInfoKeys="shortMarkerInfoNameKeys"
             hide-controls
             :selectedMarker="selectedHotbed"
+            :dataLoading="hotbedsLoading"
           ></CMap>
         </q-card>
       </CDialog>
@@ -144,6 +145,7 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
 });
 const isMapOpen = shallowRef(false);
 const existingHotbedsByType = ref<Marker[]>([]);
+const hotbedsLoading = shallowRef(true);
 const selectedHotbed = ref<Marker>();
 const filters = ref<FilterItem[]>([
   {
@@ -263,6 +265,7 @@ async function loadMore(index: number, done: (stop?: boolean) => void) {
 }
 async function getExistingHotbedsOfProblemsByType(type: string) {
   try {
+    hotbedsLoading.value = true;
     const data = await $fetch<Marker[]>(
       `${store.apiV1}/geo/info/getAll/${type}`,
       {
@@ -280,6 +283,8 @@ async function getExistingHotbedsOfProblemsByType(type: string) {
       type: "error",
       text: "Не удалось получить список очагов проблем",
     };
+  } finally {
+    hotbedsLoading.value = false;
   }
 }
 async function approveRequest(id: string) {

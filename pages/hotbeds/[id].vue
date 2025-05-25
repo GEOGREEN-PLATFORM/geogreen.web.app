@@ -64,8 +64,6 @@
         <q-card>
           <CMap
             v-if="pageData.hotbed"
-            @add-marker=""
-            @edit-marker=""
             :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
             :markers="pageData.existingHotbeds"
             :selected-marker="pageData.hotbed"

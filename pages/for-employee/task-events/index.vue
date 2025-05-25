@@ -71,7 +71,6 @@
     </section>
     <PagesTaskEventsAdd
       v-model="isTaskEventDialogOpen"
-      :hotbeds="existingHotbeds"
       :employeesOptions="addDialogEmployeesOptions"
       :addState="addTaskEventDialogState"
       @taskEventCreated="handleTaskEventCreated"
@@ -95,7 +94,6 @@ const debounce = useDebounce();
 const { TASK_EVENT_STATUS_OPTIONS, TASK_EVENT_STATUS_STYLES } =
   useGetStatusOptions();
 
-const existingHotbeds = ref<Marker[]>([]);
 const addDialogEmployeesOptions = ref<ItemOption[]>([]);
 const searchTaskEventStr = ref("");
 const taskEventsLoading = ref(true);
@@ -367,23 +365,6 @@ async function getTaskEvents() {
     taskEventsLoading.value = false;
   }
 }
-async function getHotbeds() {
-  try {
-    const url = `${store.apiV1}/geo/info/getAll`;
-    const response = await $fetch<Marker[]>(url, {
-      method: "GET",
-      headers: { Authorization: useGetToken() },
-    });
-    existingHotbeds.value = response;
-  } catch (error: any) {
-    console.error(error);
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Не удалось получить список очагов проблем",
-    };
-  }
-}
 function searchTaskEvent() {
   debounce(getTaskEvents, 500, "searchTaskEvent");
 }
@@ -396,7 +377,6 @@ function goToTaskEvent(id: string) {
 onMounted(() => {
   getTaskEvents();
   getEmployees();
-  getHotbeds();
 });
 </script>
 

@@ -22,6 +22,7 @@
                 :shortInfoKeys="shortMarkerInfoNameKeys"
                 :selectedMarker="addedHotbed"
                 :editableMarkers="[props.from === 'user' ? '' : addedHotbed?.id || '']"
+                :dataLoading="hotbedsLoading"
               ></CMap>
             </q-card>
           </section>
@@ -143,7 +144,6 @@ import type { HotbedData } from "~/types/interfaces/hotbeds";
 
 interface Props {
   modelValue: boolean;
-  hotbeds?: Marker[];
   initialHotbed?: Marker | null;
   minimal?: boolean;
   from?: "user" | "employee";
@@ -168,6 +168,7 @@ const FILES_MAX_SIZE = 10_000_000;
 
 const dialogVisible = ref(props.modelValue);
 const existingHotbeds = ref<Marker[]>([]);
+const hotbedsLoading = ref(true);
 const hotbedEliminationMethods = ref<ItemOption[]>([]);
 const attachedFiles = ref<File[]>([]);
 const cancelLabel = ref("Отмена");
@@ -226,6 +227,25 @@ async function uploadFiles(files: File[]) {
   files.forEach((file) => {
     attachedFiles.value.push(file);
   });
+}
+async function getHotbeds() {
+  try {
+    hotbedsLoading.value = true;
+    const url = `${store.apiV1}/geo/info/getAll`;
+    const response = await $fetch<Marker[]>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+    });
+    existingHotbeds.value = response;
+    hotbedsLoading.value = false;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить очаги проблем",
+    };
+  }
 }
 function handleExternalHotbed(marker?: Marker | null) {
   if (!marker) return;
@@ -429,12 +449,6 @@ function resetForm() {
   isAddMarker.value = !!props.initialHotbed;
 }
 watch(
-  () => props.hotbeds,
-  (newVal) => {
-    existingHotbeds.value = newVal ? [...newVal] : [];
-  },
-);
-watch(
   () => hotbedData.value,
   (newData) => {
     const details = addedHotbed.value?.details;
@@ -454,6 +468,7 @@ watch(
   (newVal, oldVal) => {
     if (newVal === "success" && oldVal === "loading") {
       resetForm();
+      getHotbeds();
     }
   },
 );
@@ -470,7 +485,7 @@ watch(
   },
 );
 onMounted(() => {
-  existingHotbeds.value = props.hotbeds || [];
+  getHotbeds();
   if (props.initialHotbed) {
     handleExternalHotbed(props.initialHotbed);
   }
