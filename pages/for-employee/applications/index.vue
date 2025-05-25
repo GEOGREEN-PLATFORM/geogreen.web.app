@@ -72,7 +72,13 @@
         </q-infinite-scroll>
       </q-scroll-area>
     </section>
-    <CDialog v-model="isMapOpen" full-content class="b-dialog">
+    <CDialog
+      v-model="isMapOpen"
+      full-content
+      close-icon-style="outlined"
+      close-align="left"
+      class="b-dialog"
+    >
       <q-card class="b-dialog__content">
         <CMap
           :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"

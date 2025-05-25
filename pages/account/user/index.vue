@@ -129,8 +129,8 @@
       :user="store.user"
       @managedAccount="handleaAccountManaged"
     ></PagesAccountManage>
-    <CDialog v-model="isRequestDetailsOpen" class="b-dialog">
-      <q-card v-if="selectedDetailsRequest" class="b-request-card">
+    <CDialog v-model="isRequestDetailsOpen" center-content class="b-dialog">
+      <div v-if="selectedDetailsRequest" class="b-request-card">
         <header class="b-request-card__header">
           <div class="b-request-card__title-wrapper">
             <h2 class="b-request-card__title gg-h2">
@@ -171,9 +171,16 @@
             </div>
           </section>
         </section>
-      </q-card>
+      </div>
     </CDialog>
-    <CDialog v-model="isRequestMapOpen" class="b-dialog">
+    <CDialog
+      v-model="isRequestMapOpen"
+      full-content
+      show-close
+      close-align="left"
+      close-icon-style="outlined"
+      class="b-dialog"
+    >
       <div class="b-dialog__content">
         <CMap
           :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"

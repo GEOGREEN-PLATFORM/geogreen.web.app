@@ -1,5 +1,5 @@
 <template>
-  <CDialog v-model="isOpen" full-content class="c-photo-dialog">
+  <CDialog v-model="isOpen" full-content close-icon-style="outlined" class="c-photo-dialog">
     <NuxtImg class="c-photo-dialog__image" :src="photoUrl" @click="closePhoto" />
   </CDialog>
 </template>

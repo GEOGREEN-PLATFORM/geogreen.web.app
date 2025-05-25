@@ -13,7 +13,10 @@
   >
     <q-card
       class="c-dialog__content-wrapper"
-      :class="{ 'c-dialog__content-wrapper--full': props.fullContent }"
+      :class="{
+        'c-dialog__content-wrapper--full': props.fullContent,
+        'c-dialog__content-wrapper--centered': props.centerContent,
+      }"
     >
       <div
         class="c-dialog__content-container"
@@ -27,7 +30,17 @@
             <p v-if="props.subTitle" class="c-dialog__subtitle">{{ props.subTitle }}</p></slot
           >
         </header>
-        <div v-if="!props.fullContent" class="c-dialog__close-icon">
+        <div
+          v-if="props.showClose"
+          class="c-dialog__close-icon"
+          :style="{
+            left: props.closeAlign === 'left' ? '12px' : 'unset',
+            right: props.closeAlign === 'right' ? '12px' : 'unset',
+          }"
+          :class="{
+            'c-dialog__close-icon--outlined': props.closeIconStyle === 'outlined',
+          }"
+        >
           <q-icon @click="toggleOpenState(false)" :name="mdiClose" size="32px"></q-icon>
         </div>
         <div class="c-dialog__content">
@@ -47,9 +60,15 @@ interface Props {
   subTitle?: string;
   fullContent?: boolean;
   type?: "default" | "confirm";
+  centerContent?: boolean;
+  showClose?: boolean;
+  closeAlign?: "left" | "right";
+  closeIconStyle?: "plain" | "outlined";
 }
 const props = withDefaults(defineProps<Props>(), {
   type: "default",
+  closeAlign: "right",
+  showClose: true,
 });
 const emits = defineEmits<{
   "update:model-value": [boolean];
@@ -74,6 +93,43 @@ $app-narrow-mobile: 364px;
     right: 12px;
     top: 12px;
     cursor: pointer;
+    i {
+      transition: color 0.3s ease;
+    }
+    &:hover {
+      i {
+        color: var(--app-grey-400);
+      }
+    }
+    &:active {
+      i {
+        color: var(--app-grey-500);
+      }
+    }
+    &--outlined {
+      background: var(--app-white);
+      border: 1px solid var(--app-grey-050);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+      z-index: 100;
+      &:hover {
+        background: var(--app-grey-050);
+        border-color: var(--app-grey-050);
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      &:active {
+        transform: translateY(4px);
+      }
+    }
   }
   &__content-wrapper {
     padding: 0;
@@ -93,6 +149,13 @@ $app-narrow-mobile: 364px;
         display: flex;
       }
       border-radius: 12px !important;
+    }
+    &--centered {
+      .c-dialog__content-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
   }
   &__content-container {

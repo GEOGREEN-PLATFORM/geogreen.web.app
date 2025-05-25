@@ -509,6 +509,9 @@ onMounted(() => {
     }
   }
   &__bottom-section {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
     .history-item {
       margin: 32px 0px 48px 0px;
     }
@@ -621,6 +624,10 @@ onMounted(() => {
     }
   }
   &__data-card {
+    @media screen and (max-width: $app-laptop) {
+      display: flex;
+      justify-content: center;
+    }
   }
   &__map-section {
     border-radius: 8px;
