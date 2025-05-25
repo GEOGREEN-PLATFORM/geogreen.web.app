@@ -41,14 +41,21 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <style scoped lang="scss">
+$app-desktop: 1294px;
+$app-laptop: 960px;
+$app-mobile: 600px;
+$app-narrow-mobile: 364px;
+
 .c-card-container {
   height: max-content;
-  width: 100%;
-  max-width: 440px;
+  width: 440px;
+  max-width: 100%;
   background-color: var(--app-green-050);
   border-radius: 12px;
   padding: 12px;
-  min-width: 422px;
+  @media screen and (max-width: $app-mobile) {
+    padding: 0;
+  }
   .c-card-items {
     &__section {
       flex-direction: row;
@@ -56,6 +63,9 @@ const props = withDefaults(defineProps<Props>(), {
       align-items: center;
       flex-wrap: nowrap;
       gap: 32px;
+      @media screen and (max-width: $app-mobile) {
+        gap: 12px;
+      }
     }
     &__item {
       display: flex;
@@ -66,11 +76,19 @@ const props = withDefaults(defineProps<Props>(), {
       min-width: 144px;
       width: 144px;
       color: var(--app-grey-400);
+      @media screen and (max-width: $app-mobile) {
+        min-width: 124px;
+        width: 124px;
+        font-size: 14px;
+      }
     }
     &__value {
       font-size: 16px;
       color: var(--app-grey-900);
       overflow-wrap: anywhere;
+      @media screen and (max-width: $app-mobile) {
+        font-size: 14px;
+      }
       &--link {
         color: var(--app-blue-500);
       }

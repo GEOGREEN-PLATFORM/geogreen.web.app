@@ -86,6 +86,7 @@ $app-narrow-mobile: 364px;
   position: relative;
   width: 48px;
   height: 48px;
+  flex-shrink: 0;
   border-radius: 50%;
   overflow: hidden;
   background-color: var(--app-grey-050);

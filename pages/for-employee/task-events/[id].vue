@@ -102,6 +102,22 @@
     </div>
     <section class="b-page__bottom-section">
       <h2 class="gg-h2">История</h2>
+      <section class="b-page__history-container">
+        <div class="b-history-form">
+          <CInputEditor
+            class="b-history-form__editor"
+            v-model="currentHistory"
+            :files="currentHistoryFiles"
+            @update:files="loadFilesForHistory"
+          ></CInputEditor>
+          <CButton
+            @click="sendHistory"
+            class="b-history-form__send-button"
+            :icon="mdiSend"
+            stretch="hug"
+          ></CButton>
+        </div>
+      </section>
       <PagesTaskEventsHistoryItem
         v-for="item in taskEventHistory"
         class="history-item"
@@ -442,7 +458,6 @@ onMounted(() => {
   $app-narrow-mobile: 364px;
   display: flex;
   flex-direction: column;
-  height: 100%;
   background-color: var(--app-white);
   width: 100%;
   padding: 24px;
@@ -474,6 +489,9 @@ onMounted(() => {
     margin-top: 24px;
     width: 100%;
     max-width: 900px;
+    @media screen and (max-width: $app-laptop) {
+      display: none;
+    }
   }
   .b-history-form {
     display: flex;
@@ -493,6 +511,12 @@ onMounted(() => {
   &__bottom-section {
     .history-item {
       margin: 32px 0px 48px 0px;
+    }
+    .b-page__history-container {
+      display: none;
+      @media screen and (max-width: $app-laptop) {
+        display: block;
+      }
     }
   }
   .b-main-editable-card {
@@ -532,12 +556,16 @@ onMounted(() => {
       min-height: 64px;
       height: 64px;
       align-items: center;
+
+      gap: 12px;
+
       &__label {
         min-width: 196px;
         color: var(--app-grey-300);
         @media screen and (max-width: $app-mobile) {
           min-width: 140px;
           width: 140px;
+          font-size: 14px;
           overflow-wrap: break-word;
         }
       }
@@ -551,6 +579,10 @@ onMounted(() => {
         margin-left: -12px;
         margin-top: 20px;
         max-width: calc(100% - 196px);
+        @media screen and (max-width: $app-mobile) {
+          margin-left: 0px;
+          max-width: calc(100% - 140px - 12px);
+        }
       }
     }
     &__edit-button {
