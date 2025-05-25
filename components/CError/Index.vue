@@ -48,6 +48,7 @@ const emit = defineEmits<(e: "refresh") => void>();
     color: var(--app-red-600);
     font-size: 1.5rem;
     line-height: 1.2;
+    text-wrap: balance;
   }
 
   &__message {
