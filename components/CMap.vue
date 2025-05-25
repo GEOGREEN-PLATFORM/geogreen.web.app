@@ -296,6 +296,7 @@
       v-model="confirmationDialog.isOpened"
       :action-main-text="confirmationDialog.mainText"
       :action-button-confirm-text="confirmationDialog.buttonText"
+      :state="confirmationDialog.state"
       @confirm="deleteMarker"
     />
     <div v-show="false" class="html-control-elements">
@@ -350,6 +351,12 @@ interface Props {
   dataLoading?: boolean;
   defaultInteractionType?: "zone_add" | "marker_add" | "none";
 }
+interface ConfirmationDialog {
+  isOpened: boolean;
+  mainText: string;
+  buttonText: string;
+  state: "success" | "error" | "loading";
+}
 const store = useMainStore();
 const mapRef = ref();
 const view = ref<View>();
@@ -372,10 +379,11 @@ const emit = defineEmits<{
 }>();
 
 const $q = useQuasar();
-const confirmationDialog = reactive({
+const confirmationDialog = reactive<ConfirmationDialog>({
   isOpened: false,
   mainText: "",
   buttonText: "",
+  state: "success",
 });
 const plusElem = ref<HTMLElement>();
 const minusElem = ref<HTMLElement>();
@@ -567,8 +575,11 @@ function selectMarker(event: SelectEvent) {
 }
 
 function deleteMarker() {
+  confirmationDialog.state = "loading";
   emit("deleteMarker", gGreenCluster.currentSelectedMarkerId);
   closeMarkerPopup(gGreenCluster.currentSelectedMarkerId);
+  confirmationDialog.state = "success";
+  confirmationDialog.isOpened = false;
 }
 
 function addMakrer(coordinate: Coordinate, zone?: ZoneWithDensity) {

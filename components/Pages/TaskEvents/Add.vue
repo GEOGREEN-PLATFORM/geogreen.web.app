@@ -96,6 +96,7 @@
               (currentStep === 2 && formHasError) ||
               (currentStep === 3 && !taskEventData.relatedHotbedId)
             "
+            :loading="props.addState === 'loading'"
             type="submit"
           />
         </footer>
@@ -112,6 +113,7 @@ interface Props {
   modelValue: boolean;
   hotbeds: Marker[];
   employeesOptions: ItemOption[];
+  addState: "success" | "loading" | "error";
 }
 
 const props = defineProps<Props>();
@@ -180,9 +182,7 @@ function onBack() {
   }
 }
 async function createTaskEvent() {
-  dialogVisible.value = false;
   emits("taskEventCreated", taskEventData.value);
-  resetForm();
 }
 function handleHotbedSelected(hotbedId: string, hotbed: Marker) {
   taskEventData.value.relatedHotbedId = hotbedId;
@@ -261,6 +261,14 @@ watch(
 onMounted(() => {
   existingHotbeds.value = props.hotbeds;
 });
+watch(
+  () => props.addState,
+  (newVal, oldVal) => {
+    if (newVal === "success" && oldVal === "loading") {
+      resetForm();
+    }
+  },
+);
 </script>
 
 <style scoped lang="scss">

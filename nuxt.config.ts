@@ -48,7 +48,9 @@ export default defineNuxtConfig({
   build: {
     transpile: process.env.NODE_ENV === "test" ? ["vue3-openlayers", "ol"] : [],
   },
-
+  experimental: {
+    asyncContext: true,
+  },
   sentry: {
     sourceMapsUploadOptions: {
       org: "geogreen-cr",

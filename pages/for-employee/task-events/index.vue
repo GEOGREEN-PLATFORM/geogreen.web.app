@@ -73,6 +73,7 @@
       v-model="isTaskEventDialogOpen"
       :hotbeds="existingHotbeds"
       :employeesOptions="addDialogEmployeesOptions"
+      :addState="addTaskEventDialogState"
       @taskEventCreated="handleTaskEventCreated"
       @filterEmployees="searchEmployeesByName"
     />
@@ -99,6 +100,9 @@ const addDialogEmployeesOptions = ref<ItemOption[]>([]);
 const searchTaskEventStr = ref("");
 const taskEventsLoading = ref(true);
 const isTaskEventDialogOpen = ref(false);
+const addTaskEventDialogState = shallowRef<"success" | "error" | "loading">(
+  "success",
+);
 const taskEvents = ref<TaskEvent[]>([]);
 const pagination = ref<TablePagination>({
   page: 1,
@@ -199,6 +203,7 @@ const filters = ref<FilterItem[]>([
 ]);
 async function handleTaskEventCreated(newTaskEvent: TaskEventData) {
   try {
+    addTaskEventDialogState.value = "loading";
     await $fetch(`${store.apiV1}/event/create`, {
       method: "POST",
       headers: {
@@ -216,12 +221,15 @@ async function handleTaskEventCreated(newTaskEvent: TaskEventData) {
         startDate: new Date().toISOString(),
       },
     });
+    addTaskEventDialogState.value = "success";
+    isTaskEventDialogOpen.value = false;
     getTaskEvents();
   } catch (error: any) {
+    addTaskEventDialogState.value = "error";
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Не удалось создать мероприятие",
+      text: "Не удалось добавить мероприятие",
     };
   }
 }
@@ -250,6 +258,7 @@ async function getEmployees(
       );
     }
   } catch (error: any) {
+    console.error(error);
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
@@ -340,21 +349,40 @@ async function getTaskEvents() {
   params.append("page", String(pagination.value.page - 1));
   params.append("size", String(pagination.value.rowsPerPage));
   const url = `${store.apiV1}/event/getAll?${params.toString()}`;
-  const response = await $fetch<TaskEventsRequest>(url, {
-    method: "GET",
-    headers: { Authorization: useGetToken() },
-  });
-  taskEvents.value = response.content;
-  pagination.value.rowsNumber = response.totalItems;
-  taskEventsLoading.value = false;
+  try {
+    const response = await $fetch<TaskEventsRequest>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+    });
+    taskEvents.value = response.content;
+    pagination.value.rowsNumber = response.totalItems;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список мероприятий",
+    };
+  } finally {
+    taskEventsLoading.value = false;
+  }
 }
 async function getHotbeds() {
-  const url = `${store.apiV1}/geo/info/getAll`;
-  const response = await $fetch<Marker[]>(url, {
-    method: "GET",
-    headers: { Authorization: useGetToken() },
-  });
-  existingHotbeds.value = response;
+  try {
+    const url = `${store.apiV1}/geo/info/getAll`;
+    const response = await $fetch<Marker[]>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+    });
+    existingHotbeds.value = response;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список очагов проблем",
+    };
+  }
 }
 function searchTaskEvent() {
   debounce(getTaskEvents, 500, "searchTaskEvent");

@@ -1,18 +1,20 @@
 <template>
-  <Teleport to="body">
-    <Transition name="fade">
-      <q-banner v-if="item.show" class="c-alert-container" :class="item.type || 'info'">
-        <div class="c-alert-container__content">
-          <q-icon
-            class="c-alert-container__icon"
-            :name="evaAlertCircleOutline"
-            size="24px"
-          ></q-icon>
-          <div class="c-alert-container__text gg-t-big">{{ item.text }}</div>
-        </div>
-      </q-banner>
-    </Transition>
-  </Teleport>
+  <ClientOnly>
+    <Teleport to="body">
+      <Transition name="fade">
+        <q-banner v-if="item.show" class="c-alert-container" :class="item.type || 'info'">
+          <div class="c-alert-container__content">
+            <q-icon
+              class="c-alert-container__icon"
+              :name="evaAlertCircleOutline"
+              size="24px"
+            ></q-icon>
+            <div class="c-alert-container__text gg-t-big">{{ item.text }}</div>
+          </div>
+        </q-banner>
+      </Transition>
+    </Teleport>
+  </ClientOnly>
 </template>
 <script setup lang="ts">
 import { evaAlertCircleOutline } from "@quasar/extras/eva-icons";
