@@ -5,6 +5,7 @@ interface MainState {
   protocolWS: string;
   portalApiPort: string;
   portalApiHost: string;
+  portalKeycloakUrl: string;
   user: User | null;
   problemAreaTypes: string[];
   landTypes: string[];
@@ -25,6 +26,9 @@ export const useMainStore = defineStore("main", {
     portalApiHost:
       process.env?.PORTAL_API_HOST ||
       (useRuntimeConfig().public.PORTAL_API_HOST as string),
+    portalKeycloakUrl:
+      process.env?.PORTAL_KEYCLOAK_URL ||
+      (useRuntimeConfig().public.PORTAL_KEYCLOAK_URL as string),
     user: null,
     problemAreaTypes: [],
     landTypes: [],
@@ -33,6 +37,9 @@ export const useMainStore = defineStore("main", {
   getters: {
     apiV1: (state) => {
       return `${state.portalHttpProtocol}://${state.portalApiHost}:${state.portalApiPort}`;
+    },
+    apiKeycloak: (state) => {
+      return `${state.portalHttpProtocol}://${state.portalKeycloakUrl}`;
     },
     formattedProblemAreaTypes: (state) => {
       return state.problemAreaTypes.map((el) => ({
