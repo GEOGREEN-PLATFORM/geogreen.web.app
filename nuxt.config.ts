@@ -8,6 +8,7 @@ export default defineNuxtConfig({
       PORTAL_HTTP_PROTOCOL: "",
       PORTAL_API_HOST: "",
       PORTAL_API_PORT: "",
+      PORTAL_KEYCLOAK_URL: "",
     },
   },
 
