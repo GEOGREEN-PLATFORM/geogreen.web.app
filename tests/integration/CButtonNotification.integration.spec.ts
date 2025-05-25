@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick, ref } from "vue";
 
 // Стаб для q-icon
+// Стаб для q-icon
 const QIconStub = defineComponent({
   name: "q-icon",
   props: ["name", "size", "class"],
@@ -17,10 +18,15 @@ const QTooltipStub = defineComponent({
   name: "q-tooltip",
   setup(_, { slots }) {
     return () =>
-      h("div", { class: "g-green-hint q-tooltip" }, slots.default?.default());
+      h(
+        "div",
+        { class: "g-green-hint q-tooltip" },
+        slots.default ? slots.default() : [],
+      );
   },
 });
 
+// Глобальные стабы для q-icon и q-tooltip
 const globalStubs = {
   "q-icon": QIconStub,
   "q-tooltip": QTooltipStub,
