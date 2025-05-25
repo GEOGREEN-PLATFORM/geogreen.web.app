@@ -105,7 +105,7 @@ async function updateListWidth() {
 }
 onMounted(() => {
   if (props.required) {
-    validationRules.value = [(val) => !!val || "Поле не может быть пустым"];
+    validationRules.value = [(val) => !!val || "Не может быть пустым"];
   } else {
     validationRules.value = props.rules;
   }

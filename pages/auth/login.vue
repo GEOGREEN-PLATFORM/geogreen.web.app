@@ -19,7 +19,7 @@
             name="password"
           />
         </div>
-        <div class="form-content__forgot-password-block text-right">
+        <div class="form-content__forgot-password-block q-mt-sm text-right">
           <span class="action-label">
             <NuxtLink to="/auth/change-password">Забыли пароль?</NuxtLink>
           </span>
@@ -92,12 +92,7 @@ function goToMainPage() {
 @use "@/assets/styles/pages/auth.scss";
 .form-content {
   position: relative;
-  margin-bottom: 40px;
-  &__forgot-password-block {
-    position: absolute;
-    bottom: -12px;
-    right: 0;
-  }
+  margin-bottom: 28px;
 }
 .form-footer {
   &__no-account {

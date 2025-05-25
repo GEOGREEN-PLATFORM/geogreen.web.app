@@ -1,10 +1,12 @@
 <template>
-  <CDialog v-model="dialogVisible" class="b-dialog" @show="formBindValidation">
-    <q-card class="b-card">
-      <header class="b-card__header">
-        <h2 class="b-card__title gg-h2">Создание оператора</h2>
-        <p v-if="subTitle" class="b-card__subtitle">{{ subTitle }}</p>
-      </header>
+  <CDialog
+    v-model="dialogVisible"
+    class="b-dialog"
+    title="Добавление оператора"
+    :sub-title="subTitle"
+    @show="formBindValidation"
+  >
+    <div class="b-card">
       <q-form ref="formRef" novalidate greedy class="b-form" @submit="submitEmployeeData">
         <template v-if="currentStep === 1">
           <section class="b-form__section">
@@ -106,7 +108,7 @@
           />
         </footer>
       </q-form>
-    </q-card>
+    </div>
   </CDialog>
 </template>
 
@@ -285,26 +287,10 @@ $app-narrow-mobile: 364px;
 .b-card {
   display: flex;
   flex-direction: column;
-  width: 80%;
-  max-width: 784px;
+  max-width: 100%;
+  width: 600px;
   background-color: var(--app-white);
   border-radius: 12px;
-  padding: 24px 32px;
-  @media screen and (max-width: $app-mobile) {
-    padding: 12px 24px;
-    width: 100%;
-  }
-  &__header {
-    padding: 16px 0 20px;
-  }
-  &__title {
-    margin: 0;
-  }
-  &__subtitle {
-    margin-top: 10px;
-    font-size: 18px;
-    color: var(--app-grey-300);
-  }
 }
 .b-form {
   display: flex;

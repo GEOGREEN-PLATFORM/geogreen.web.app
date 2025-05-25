@@ -25,9 +25,9 @@
         }"
       />
     </div>
-    <span class="notification-button__tooltip" :class="{ show: showTooltip }">
+    <CHint :class="{ show: showTooltip }">
       {{ props.subscribed ? tooltipUnsubText : tooltipSubText }}
-    </span>
+    </CHint>
   </div>
 </template>
 
@@ -131,30 +131,6 @@ $hover-scale: 1.1;
 
   .notification-button__icon.click-animation {
     animation: swing 0.6s ease-out infinite;
-  }
-
-  &__tooltip {
-    position: absolute;
-    bottom: -36px;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    background-color: var(--app-grey-300);
-    color: var(--app-white);
-    padding: 4px 8px;
-    font-size: 12px;
-    border-radius: 4px;
-    white-space: nowrap;
-    opacity: 0;
-    z-index: 1000;
-    pointer-events: none;
-    transition:
-      opacity 0.3s ease,
-      transform 0.3s ease;
-
-    &.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
   }
 }
 

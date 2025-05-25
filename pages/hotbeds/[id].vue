@@ -60,16 +60,18 @@
       </section>
     </div>
     <section class="b-page__map-section">
-      <CMap
-        v-if="!isHotbedsLoading && hotbed"
-        @add-marker=""
-        @edit-marker=""
-        :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
-        :markers="existingHotbeds"
-        :selected-marker="hotbed"
-        :non-checkable-markers="[hotbed.id]"
-        :shortInfoKeys="shortMarkerInfoNameKeys"
-      ></CMap>
+      <q-card>
+        <CMap
+          v-if="!isHotbedsLoading && hotbed"
+          @add-marker=""
+          @edit-marker=""
+          :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
+          :markers="existingHotbeds"
+          :selected-marker="hotbed"
+          :non-checkable-markers="[hotbed.id]"
+          :shortInfoKeys="shortMarkerInfoNameKeys"
+        ></CMap
+      ></q-card>
     </section>
     <CDialogConfirm
       v-model="showDeleteDialog"
@@ -264,7 +266,6 @@ onMounted(() => {
   $app-narrow-mobile: 364px;
   display: flex;
   flex-direction: column;
-  height: 100%;
   background-color: var(--app-white);
   width: 100%;
   padding: 24px;
@@ -322,6 +323,9 @@ onMounted(() => {
       min-height: 64px;
       height: 64px;
       align-items: center;
+      @media screen and (max-width: $app-mobile) {
+        gap: 12px;
+      }
       &__label {
         min-width: 196px;
         color: var(--app-grey-300);
@@ -329,6 +333,7 @@ onMounted(() => {
           min-width: 140px;
           width: 140px;
           overflow-wrap: break-word;
+          font-size: 14px;
         }
       }
       &__value {
@@ -340,6 +345,10 @@ onMounted(() => {
       &__input {
         margin-left: -12px;
         margin-top: 20px;
+        @media screen and (max-width: $app-mobile) {
+          margin-left: 0px;
+          max-width: calc(100% - 140px - 12px);
+        }
       }
     }
     &__edit-button {
@@ -358,13 +367,26 @@ onMounted(() => {
     }
   }
   &__data-card {
+    @media screen and (max-width: $app-laptop) {
+      display: flex;
+      justify-content: center;
+    }
   }
   &__map-section {
-    border-radius: 8px;
-    overflow: hidden;
-    width: 100%;
     display: flex;
-    flex: 1 1 auto;
+    div {
+      border-radius: 8px;
+      overflow: hidden;
+      width: 100%;
+      display: flex;
+      flex: 1 1 auto;
+      min-height: 500px;
+      height: 600px;
+      max-height: calc(100dvh - 64px - 24px);
+      @media screen and (max-width: $app-mobile) {
+        min-height: calc(100dvh - 64px - 24px);
+      }
+    }
   }
 }
 </style>

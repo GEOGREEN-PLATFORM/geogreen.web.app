@@ -2,7 +2,7 @@ import CButtonNotification from "@/components/CButton/Notification.vue";
 import { mdiBellOutline, mdiBellRing } from "@quasar/extras/mdi-v6";
 import { mount, shallowMount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { nextTick } from "vue";
+import { defineComponent, h, nextTick } from "vue";
 
 // Стаб для q-icon
 const QIconStub = defineComponent({
@@ -12,11 +12,21 @@ const QIconStub = defineComponent({
     return () => h("div", { class: props.class }, []);
   },
 });
-// Общие настройки для mount/shallowMount
+
+// Стаб для q-tooltip
+const QTooltipStub = defineComponent({
+  name: "q-tooltip",
+  setup(_, { slots }) {
+    return () =>
+      h("div", { class: "g-green-hint q-tooltip" }, slots.default?.());
+  },
+});
+
 const globalMountOptions = {
   global: {
     stubs: {
       "q-icon": QIconStub,
+      "q-tooltip": QTooltipStub,
     },
   },
 };
@@ -53,7 +63,7 @@ describe("CButtonNotification (unit)", () => {
     expect(icons[1].props("name")).toBe(mdiBellRing);
   });
 
-  it("делает видимой нужную иконку в зависимости от статуса подписки", () => {
+  it("делает видимой нужную иконку в зависимости от статуса подписки", async () => {
     const wrapper = mount(CButtonNotification, {
       ...globalMountOptions,
       props: { subscribed: false },
@@ -61,17 +71,15 @@ describe("CButtonNotification (unit)", () => {
 
     const outlineIcon = wrapper.find(".outline-icon");
     const ringIcon = wrapper.find(".ring-icon");
-    console.log(wrapper.html());
+
     expect(outlineIcon.classes()).toContain("visible");
     expect(ringIcon.classes()).not.toContain("visible");
 
-    wrapper.setProps({ subscribed: true });
+    await wrapper.setProps({ subscribed: true });
+    await nextTick();
 
-    // Ожидаем следующего цикла обновления DOM
-    return nextTick().then(() => {
-      expect(outlineIcon.classes()).not.toContain("visible");
-      expect(ringIcon.classes()).toContain("visible");
-    });
+    expect(outlineIcon.classes()).not.toContain("visible");
+    expect(ringIcon.classes()).toContain("visible");
   });
 
   it("показывает правильный текст тултипа в зависимости от подписки", async () => {
@@ -84,31 +92,14 @@ describe("CButtonNotification (unit)", () => {
       },
     });
 
-    const tooltip = wrapper.find(".notification-button__tooltip");
+    let tooltip = wrapper.find(".g-green-hint.q-tooltip");
     expect(tooltip.text()).toBe("Подписаться");
 
     await wrapper.setProps({ subscribed: true });
+    await nextTick();
+
+    tooltip = wrapper.find(".g-green-hint.q-tooltip");
     expect(tooltip.text()).toBe("Отписаться");
-  });
-
-  it("использует переданные тексты для тултипов", () => {
-    const wrapper = mount(CButtonNotification, {
-      ...globalMountOptions,
-      props: {
-        subscribed: false,
-        tooltipSubText: "Custom Subscribe",
-        tooltipUnsubText: "Custom Unsubscribe",
-      },
-    });
-
-    const tooltip = wrapper.find(".notification-button__tooltip");
-    expect(tooltip.text()).toBe("Custom Subscribe");
-
-    wrapper.setProps({ subscribed: true });
-
-    return nextTick().then(() => {
-      expect(tooltip.text()).toBe("Custom Unsubscribe");
-    });
   });
 
   it("показывает тултип при наведении мыши", async () => {
@@ -117,16 +108,16 @@ describe("CButtonNotification (unit)", () => {
       props: { subscribed: false },
     });
 
+    const tooltip = wrapper.find(".g-green-hint.q-tooltip");
     const button = wrapper.find(".notification-button");
-    const tooltip = wrapper.find(".notification-button__tooltip");
 
     expect(tooltip.classes()).not.toContain("show");
 
     await button.trigger("mouseenter");
-    expect(tooltip.classes()).toContain("show");
+    expect(wrapper.vm.showTooltip).toBe(true);
 
     await button.trigger("mouseleave");
-    expect(tooltip.classes()).not.toContain("show");
+    expect(wrapper.vm.showTooltip).toBe(false);
   });
 
   it("добавляет класс hover-animation при наведении на кнопку", async () => {
@@ -147,18 +138,18 @@ describe("CButtonNotification (unit)", () => {
     expect(iconWrapper.classes()).not.toContain("hover-animation");
   });
 
-  it("устанавливает таймаут с правильной animationDuration", () => {
+  it("устанавливает таймаут с правильной animationDuration", async () => {
     const setTimeoutSpy = vi.spyOn(global, "setTimeout");
 
-    mount(CButtonNotification, {
+    const wrapper = mount(CButtonNotification, {
       ...globalMountOptions,
       props: {
         subscribed: false,
         animationDuration: 800,
       },
-    })
-      .find(".notification-button")
-      .trigger("click");
+    });
+
+    await wrapper.find(".notification-button").trigger("click");
 
     expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 800);
 

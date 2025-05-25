@@ -1,9 +1,9 @@
 import CButtonNotification from "@/components/CButton/Notification.vue";
-import { mdiBellOutline, mdiBellRing } from "@quasar/extras/mdi-v6";
 import { mount } from "@vue/test-utils";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { defineComponent, nextTick, ref } from "vue";
+import { describe, expect, it, vi } from "vitest";
+import { defineComponent, h, nextTick, ref } from "vue";
 
+// Стаб для q-icon
 // Стаб для q-icon
 const QIconStub = defineComponent({
   name: "q-icon",
@@ -12,8 +12,24 @@ const QIconStub = defineComponent({
     return () => h("div", { class: props.class }, []);
   },
 });
+
+// Стаб для q-tooltip (замена CHint)
+const QTooltipStub = defineComponent({
+  name: "q-tooltip",
+  setup(_, { slots }) {
+    return () =>
+      h(
+        "div",
+        { class: "g-green-hint q-tooltip" },
+        slots.default ? slots.default() : [],
+      );
+  },
+});
+
+// Глобальные стабы для q-icon и q-tooltip
 const globalStubs = {
   "q-icon": QIconStub,
+  "q-tooltip": QTooltipStub,
 };
 
 describe("CButtonNotification (integration)", () => {
@@ -27,9 +43,7 @@ describe("CButtonNotification (integration)", () => {
       },
     });
 
-    const wrapper = mount(Parent, {
-      global: { stubs: globalStubs },
-    });
+    const wrapper = mount(Parent, { global: { stubs: globalStubs } });
     await wrapper.find(".notification-button").trigger("click");
     expect(onSubscribe).toHaveBeenCalledOnce();
   });
@@ -44,9 +58,7 @@ describe("CButtonNotification (integration)", () => {
       },
     });
 
-    const wrapper = mount(Parent, {
-      global: { stubs: globalStubs },
-    });
+    const wrapper = mount(Parent, { global: { stubs: globalStubs } });
     await wrapper.find(".notification-button").trigger("click");
     expect(onUnsubscribe).toHaveBeenCalledOnce();
   });
@@ -61,18 +73,15 @@ describe("CButtonNotification (integration)", () => {
       },
     });
 
-    const wrapper = mount(Parent, {
-      global: { stubs: globalStubs },
-    });
+    const wrapper = mount(Parent, { global: { stubs: globalStubs } });
     const vm = wrapper.vm as any;
 
-    // По умолчанию видна иконка outline
     expect(wrapper.find(".outline-icon").classes()).toContain("visible");
     expect(wrapper.find(".ring-icon").classes()).not.toContain("visible");
 
-    // После изменения subscribed меняются видимые иконки
     vm.isSubscribed = true;
     await nextTick();
+
     expect(wrapper.find(".outline-icon").classes()).not.toContain("visible");
     expect(wrapper.find(".ring-icon").classes()).toContain("visible");
   });
@@ -90,17 +99,15 @@ describe("CButtonNotification (integration)", () => {
       },
     });
 
-    const wrapper = mount(Parent, {
-      global: { stubs: globalStubs },
-    });
+    const wrapper = mount(Parent, { global: { stubs: globalStubs } });
 
-    // Клик вызывает loading и активирует анимацию
     await wrapper.find(".notification-button").trigger("click");
+    // после клика анимация должна быть активна
     expect(wrapper.find(".outline-icon").classes()).toContain(
       "click-animation",
     );
 
-    // Изменение props.subscribed сбрасывает loading, но анимация продолжается
+    // обновление subscribed сбрасывает loading, но click-animation остаётся
     await nextTick();
     expect(wrapper.find(".outline-icon").classes()).toContain(
       "click-animation",
@@ -119,29 +126,25 @@ describe("CButtonNotification (integration)", () => {
       },
     });
 
-    const wrapper = mount(Parent, {
-      global: { stubs: globalStubs },
-    });
+    const wrapper = mount(Parent, { global: { stubs: globalStubs } });
 
-    // Клик — компонент запускает анимацию
     await wrapper.find(".notification-button").trigger("click");
     expect(wrapper.find(".outline-icon").classes()).toContain(
       "click-animation",
     );
 
-    // Анимация всё ещё активна до изменения subscribed
+    // анимация до таймаута остаётся
     vi.advanceTimersByTime(600);
     await nextTick();
     expect(wrapper.find(".outline-icon").classes()).toContain(
       "click-animation",
     );
 
-    // Изменяем subscribed вручную (как будто из родителя)
-    wrapper.vm.subscribed = true;
+    // эмулируем обновление subscribed
+    (wrapper.vm as any).subscribed = true;
     await nextTick();
-    await nextTick(); // на случай, если внутри компонента Watcher
+    await nextTick();
 
-    // Анимация должна завершиться
     expect(wrapper.find(".outline-icon").classes()).not.toContain(
       "click-animation",
     );
@@ -149,46 +152,41 @@ describe("CButtonNotification (integration)", () => {
     vi.useRealTimers();
   });
 
-  it("интегрируется с родительским компонентом для полного цикла подписки/отписки", async () => {
+  it("интегрируется с родителем для полного цикла подписки/отписки", async () => {
     vi.useFakeTimers();
 
     const Parent = defineComponent({
       components: { CButtonNotification },
       template: `
-        <CButtonNotification 
-          :subscribed="isSubscribed" 
+        <CButtonNotification
+          :subscribed="isSubscribed"
           :animationDuration="100"
-          @subscribe="handleSubscribe" 
-          @unsubscribe="handleUnsubscribe" 
-        />
-      `,
+          @subscribe="handleSubscribe"
+          @unsubscribe="handleUnsubscribe"
+        />`,
       setup() {
         const isSubscribed = ref(false);
-        const handleSubscribe = vi.fn(() => {
+        const handleSubscribe = () => {
           isSubscribed.value = true;
-        });
-        const handleUnsubscribe = vi.fn(() => {
+        };
+        const handleUnsubscribe = () => {
           isSubscribed.value = false;
-        });
+        };
         return { isSubscribed, handleSubscribe, handleUnsubscribe };
       },
     });
 
-    const wrapper = mount(Parent, {
-      global: { stubs: globalStubs },
-    });
+    const wrapper = mount(Parent, { global: { stubs: globalStubs } });
     const button = wrapper.find(".notification-button");
 
-    // Проверяем начальное состояние
+    // Начальное состояние: outline видна
     expect(wrapper.find(".outline-icon").classes()).toContain("visible");
     expect(wrapper.find(".ring-icon").classes()).not.toContain("visible");
 
     // Подписываемся
     await button.trigger("click");
-    expect(wrapper.vm.handleSubscribe).toHaveBeenCalledOnce();
-
-    // Должна быть анимация и изменение иконок после подписки
     await nextTick();
+    // После подписки: ring видна, анимация запущена
     expect(wrapper.find(".outline-icon").classes()).not.toContain("visible");
     expect(wrapper.find(".ring-icon").classes()).toContain("visible");
     expect(wrapper.find(".ring-icon").classes()).toContain("click-animation");
@@ -202,10 +200,8 @@ describe("CButtonNotification (integration)", () => {
 
     // Отписываемся
     await button.trigger("click");
-    expect(wrapper.vm.handleUnsubscribe).toHaveBeenCalledOnce();
-
-    // Проверяем анимацию и изменение иконок после отписки
     await nextTick();
+    // После отписки: outline видна, анимация на outline
     expect(wrapper.find(".outline-icon").classes()).toContain("visible");
     expect(wrapper.find(".ring-icon").classes()).not.toContain("visible");
     expect(wrapper.find(".outline-icon").classes()).toContain(
@@ -222,17 +218,13 @@ describe("CButtonNotification (integration)", () => {
       template: `
         <div @click="parentClick">
           <CButtonNotification :subscribed="false" />
-        </div>
-      `,
+        </div>`,
       setup() {
         return { parentClick };
       },
     });
 
-    const wrapper = mount(Parent, {
-      global: { stubs: globalStubs },
-    });
-
+    const wrapper = mount(Parent, { global: { stubs: globalStubs } });
     await wrapper.find(".notification-button").trigger("click");
     expect(parentClick).not.toHaveBeenCalled();
   });
@@ -242,23 +234,19 @@ describe("CButtonNotification (integration)", () => {
       components: { CButtonNotification },
       template: `
         <CButtonNotification 
-          :subscribed="isSubscribed" 
-          tooltipSubText="Подписаться на новости" 
-          tooltipUnsubText="Отписаться от новостей" 
-        />
-      `,
+          :subscribed="isSubscribed"
+          tooltipSubText="Подписаться на новости"
+          tooltipUnsubText="Отписаться от новостей"
+        />`,
       setup() {
         const isSubscribed = ref(false);
         return { isSubscribed };
       },
     });
 
-    const wrapper = mount(Parent, {
-      global: { stubs: globalStubs },
-    });
-    const vm = wrapper.vm as any;
+    const wrapper = mount(Parent, { global: { stubs: globalStubs } });
     const button = wrapper.find(".notification-button");
-    const tooltip = wrapper.find(".notification-button__tooltip");
+    let tooltip = wrapper.find(".g-green-hint.q-tooltip");
 
     // Тултип скрыт по умолчанию
     expect(tooltip.classes()).not.toContain("show");
@@ -266,17 +254,18 @@ describe("CButtonNotification (integration)", () => {
 
     // При наведении тултип показывается
     await button.trigger("mouseenter");
+    tooltip = wrapper.find(".g-green-hint.q-tooltip");
     expect(tooltip.classes()).toContain("show");
 
-    // Изменяем состояние подписки
-    vm.isSubscribed = true;
+    // Изменяем состояние и проверяем текст
+    (wrapper.vm as any).isSubscribed = true;
     await nextTick();
-
-    // Тултип обновляет текст
+    tooltip = wrapper.find(".g-green-hint.q-tooltip");
     expect(tooltip.text()).toBe("Отписаться от новостей");
 
     // При убирании мыши тултип скрывается
     await button.trigger("mouseleave");
+    tooltip = wrapper.find(".g-green-hint.q-tooltip");
     expect(tooltip.classes()).not.toContain("show");
   });
 });

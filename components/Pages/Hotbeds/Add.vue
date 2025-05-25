@@ -1,25 +1,29 @@
 <template>
-  <CDialog v-model="dialogVisible" class="b-dialog" @show="nextTick(formBindValidation)">
-    <q-card class="b-card" :class="`b-card--step-${currentStep}`">
-      <header class="b-card__header">
-        <h2 v-if="!props.minimal" class="b-card__title gg-h2">Добавление очага</h2>
-        <p v-if="subTitle" class="b-card__subtitle">{{ subTitle }}</p>
-      </header>
+  <CDialog
+    v-model="dialogVisible"
+    class="b-dialog"
+    :title="props.minimal ? '' : 'Добавление очага'"
+    :sub-title="subTitle"
+    @show="nextTick(formBindValidation)"
+  >
+    <div class="b-card" :class="`b-card--step-${currentStep}`">
       <q-form ref="formRef" novalidate greedy class="b-form" @submit="onSubmit">
         <template v-if="currentStep === 1 && !props.initialHotbed">
           <section class="b-form__section b-form__map">
-            <CMap
-              @add-marker="addTempHotbed"
-              @edit-marker="editTempHotbed"
-              @delete-marker="deleteTempHotbed"
-              @forbiddenAddMarker="handleForbiddenAddTry"
-              :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
-              :addMarker="isAddMarker ? 'forbid' : 'enable'"
-              :markers="existingHotbeds"
-              :shortInfoKeys="shortMarkerInfoNameKeys"
-              :selectedMarker="addedHotbed"
-              :editableMarkers="[props.from === 'user' ? '' : addedHotbed?.id || '']"
-            ></CMap>
+            <q-card>
+              <CMap
+                @add-marker="addTempHotbed"
+                @edit-marker="editTempHotbed"
+                @delete-marker="deleteTempHotbed"
+                @forbiddenAddMarker="handleForbiddenAddTry"
+                :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
+                :addMarker="isAddMarker ? 'forbid' : 'enable'"
+                :markers="existingHotbeds"
+                :shortInfoKeys="shortMarkerInfoNameKeys"
+                :selectedMarker="addedHotbed"
+                :editableMarkers="[props.from === 'user' ? '' : addedHotbed?.id || '']"
+              ></CMap>
+            </q-card>
           </section>
         </template>
         <template v-else-if="currentStep === 2 && !props.minimal">
@@ -127,7 +131,7 @@
           />
         </footer>
       </q-form>
-    </q-card>
+    </div>
   </CDialog>
 </template>
 
@@ -485,7 +489,10 @@ $app-narrow-mobile: 364px;
   &__map {
     height: 60vh;
     border-radius: 8px;
-    overflow: hidden;
+    div {
+      width: 100%;
+      height: 100%;
+    }
   }
   &__section-title {
     margin-bottom: 12px;
@@ -556,43 +563,21 @@ $app-narrow-mobile: 364px;
   flex-direction: column;
   background-color: var(--app-white);
   border-radius: 12px;
-  padding: 24px 32px;
-  width: 90%;
-  max-width: 834px;
-  @media screen and (max-width: $app-mobile) {
-    padding: 12px 24px;
-    width: 100%;
-  }
+  max-width: 100%;
   &--step-1 {
-    width: 80%;
-    max-width: 80%;
+    width: 1200px;
+  }
+  &--step-2 {
+    width: 600px;
   }
   &--step-3 {
+    width: 600px;
     .b-form {
       &__section {
         display: flex;
         flex-direction: column;
         gap: 8px;
       }
-    }
-  }
-  &__header {
-    padding: 16px 0 20px;
-  }
-  &__title {
-    margin: 0;
-  }
-  &__subtitle {
-    margin-top: 10px;
-    font-size: 18px;
-    color: var(--app-grey-300);
-  }
-  &:not(:has(.b-card__title)) {
-    .b-card__subtitle {
-      margin-top: 0px;
-    }
-    .b-card__header {
-      padding-top: 0px;
     }
   }
 }

@@ -246,6 +246,9 @@ async function dropCapture(e: DragEvent) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  :deep(.q-editor__content) {
+    max-height: 300px;
+  }
 }
 </style>
 <style>

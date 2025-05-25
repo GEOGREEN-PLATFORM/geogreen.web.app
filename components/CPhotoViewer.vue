@@ -1,13 +1,6 @@
 <template>
-  <CDialog v-model="isOpen" class="c-photo-dialog">
-    <q-card>
-      <NuxtImg
-        class="c-photo-dialog__image"
-        style="max-width: 80vw; max-height: 80vh"
-        :src="photoUrl"
-        @click="closePhoto"
-      />
-    </q-card>
+  <CDialog v-model="isOpen" full-content close-icon-style="outlined" class="c-photo-dialog">
+    <NuxtImg class="c-photo-dialog__image" :src="photoUrl" @click="closePhoto" />
   </CDialog>
 </template>
 
