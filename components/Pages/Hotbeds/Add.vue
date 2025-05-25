@@ -127,6 +127,7 @@
           <CButton
             :label="applyLabel"
             :disabled="(currentStep === 2 && formHasError) || !isAddMarker"
+            :loading="props.addState === 'loading'"
             type="submit"
           />
         </footer>
@@ -146,6 +147,7 @@ interface Props {
   initialHotbed?: Marker | null;
   minimal?: boolean;
   from?: "user" | "employee";
+  addState: "success" | "error" | "loading";
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -338,8 +340,6 @@ async function createHotbed() {
     hotbedData.value.images.push(image);
   }
   emits("hotbedCreated", hotbedData.value);
-  dialogVisible.value = false;
-  resetForm();
 }
 async function uploadPhoto(file: File) {
   try {
@@ -449,7 +449,14 @@ watch(
   },
   { deep: true },
 );
-
+watch(
+  () => props.addState,
+  (newVal, oldVal) => {
+    if (newVal === "success" && oldVal === "loading") {
+      resetForm();
+    }
+  },
+);
 watch(
   () => props.modelValue,
   (newVal) => {

@@ -231,7 +231,7 @@ async function addEmployee(newEmployee: EmployeeData) {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Не удалось создать оператора",
+      text: "Не удалось добавить оператора",
     };
   } finally {
     isAddLoading.value = false;
