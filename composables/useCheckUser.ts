@@ -30,6 +30,12 @@ export default function useCheckUser() {
       }
       return false;
     } catch (error) {
+      console.error(error);
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Не удалось получить данные пользователя",
+      };
       return false;
     }
   }

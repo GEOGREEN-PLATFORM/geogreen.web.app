@@ -219,7 +219,7 @@ async function addEmployee(newEmployee: EmployeeData) {
         firstName: newEmployee.personalData.firstName,
         lastName: newEmployee.personalData.lastName,
         patronymic: newEmployee.personalData.secondName,
-        email: newEmployee.contacts.email,
+        email: newEmployee.contacts.email.toLowerCase(),
         password: newEmployee.password,
         number: newEmployee.contacts.phoneNumber,
         birthdate: newEmployee.personalData.dateOfBirth,

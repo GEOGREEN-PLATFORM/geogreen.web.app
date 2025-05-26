@@ -65,6 +65,7 @@ const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
 
 async function sendLogin() {
   buttonOptions.value.main.loading = true;
+  userData.value.email = userData.value.email.toLowerCase();
   try {
     if (await setAccessToken(userData.value)) {
       saveUserEmail(userData.value.email);

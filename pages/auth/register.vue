@@ -88,7 +88,10 @@ async function sendRegister() {
   try {
     const user = await $fetch<User>(`${store.apiV1}/user/register/user`, {
       method: "POST",
-      body: userData.value,
+      body: {
+        ...userData.value,
+        email: userData.value.email.toLowerCase(),
+      },
     });
     if (user) {
       store.user = {

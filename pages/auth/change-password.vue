@@ -121,7 +121,7 @@ async function sendEmail() {
   try {
     pageState.buttonOpts.main.loading = true;
     await $fetch(
-      `${store.apiV1}/user/register/forgot-password/${userEmail.value}`,
+      `${store.apiV1}/user/register/forgot-password/${userEmail.value?.toLowerCase()}`,
       {
         headers: {
           Authorization: useGetToken(),

@@ -5,6 +5,13 @@
         <section class="b-main-editable-card">
           <div class="b-main-editable-card__header">
             <div class="b-name">
+              <CButtonNotification
+                :subscribed="isUserSubscribedToHotbedNotifications"
+                tooltipSubText="Уведомлять об изменениях на почту"
+                tooltip-unsub-text="Отписаться от уведомлений"
+                @subscribe="subscribeToHotbedNotifications"
+                @unsubscribe="deleteSubscriptionFromHotbedNotifications"
+              ></CButtonNotification>
               <div class="gg-h1">{{ pageData.hotbed?.details?.problemAreaType }}</div>
               <span class="b-name__delete-icon" @click="openDeleteDialog">
                 <q-icon :name="mdiDeleteOutline" color="red-500" size="24px"></q-icon>
@@ -58,6 +65,9 @@
             :linksByLabel="linksByLabel"
             :statusClassesByValue="HOTBED_WORK_STAGE_STYLES"
           ></CCardData>
+          <CButton @click="downloadReport" size="medium" :loading="isReportLoading"
+            >Скачать отчёт</CButton
+          >
         </section>
       </div>
       <section class="b-page__map-section">
@@ -109,6 +119,8 @@ const route = useRoute();
 const editMode = ref(false);
 const showDeleteDialog = ref(false);
 const hotdebCardList = ref<CardItem[]>([]);
+const isUserSubscribedToHotbedNotifications = ref(false);
+const isReportLoading = ref(false);
 const linksByLabel = ref<Record<string, string>>({});
 const initialHotbed = ref<Marker | null>(null);
 const fullDataEditState = shallowRef<"success" | "error" | "loading">(
@@ -172,6 +184,49 @@ if (pageData.value.hotbed) {
   initialHotbed.value = structuredClone(toRaw(pageData.value.hotbed));
   updateHotdedCardList();
 }
+async function downloadReport() {
+  try {
+    isReportLoading.value = true;
+    const report = await generateGeomarkerReport();
+    if (report.file) {
+      useFilesDownloader(report.file, report.name);
+    }
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось скачать отчёт",
+    };
+  } finally {
+    isReportLoading.value = false;
+  }
+}
+async function generateGeomarkerReport() {
+  try {
+    const file = await $fetch<Blob>(
+      `${store.apiV1}/report/geomarker-report/${route.params.id}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    return {
+      file,
+      name: "Отчет по очагу",
+    };
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось сгенерировать отчёт",
+    };
+    return {};
+  }
+}
 async function getHotbeds() {
   try {
     const url = `${store.apiV1}/geo/info/getAll`;
@@ -187,7 +242,48 @@ async function getHotbeds() {
     });
   }
 }
-
+async function subscribeToHotbedNotifications() {
+  try {
+    await $fetch(`${store.apiV1}/notification/subscribe`, {
+      method: "POST",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: {
+        elementId: route.params.id,
+        email: store.user?.email,
+        type: "Очаг",
+      },
+    });
+    isUserSubscribedToHotbedNotifications.value = true;
+  } catch (err) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось подписаться на уведомление",
+    };
+  }
+}
+async function deleteSubscriptionFromHotbedNotifications() {
+  try {
+    await $fetch(
+      `${store.apiV1}/notification/subscribe/${store.user?.email}/delete-by-element-id/${route.params.id}`,
+      {
+        method: "DELETE",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    isUserSubscribedToHotbedNotifications.value = false;
+  } catch (err) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось отписаться от уведомления",
+    };
+  }
+}
 async function getHotbed() {
   try {
     const response = await $fetch<Marker>(
@@ -433,9 +529,14 @@ function updateHotdedCardList() {
     }
   }
   &__data-card {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: fit-content;
+    max-width: 100%;
     @media screen and (max-width: $app-laptop) {
       display: flex;
-      justify-content: center;
+      margin: 0 auto;
     }
   }
   &__map-section {

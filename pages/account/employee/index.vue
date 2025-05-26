@@ -27,23 +27,38 @@
             >Добавить очаг</CButton
           >
         </q-card>
+        <q-card v-if="store.user?.role === 'admin'" class="b-card b-card--new-report">
+          <div class="b-card__title gg-h3">Отчёт по очагам</div>
+          <CButton @click="downloadReport" size="medium" stretch="fill" :loading="isReportLoading"
+            >Скачать</CButton
+          >
+        </q-card>
       </section>
       <section class="b-page__right-section">
         <q-card class="b-card b-card--statistics">
           <div class="b-card__title gg-h3">Моя статистика</div>
+          <div class="gg-t-base">
+            Всего добавлено очагов:&nbsp;
+            <strong>{{ hotbedsStatistics.allMyGeoPoints || 0 }}</strong>
+          </div>
           <div class="b-card__statistic-item">
             <div>
               <div class="gg-t-base">
-                Очагов создано:&nbsp;
-                <strong>{{ 10 }}</strong>
-              </div>
-              <div class="gg-t-base">
-                Обработано:&nbsp;
-                <strong>{{ 1 }} ({{ 10 }}%)</strong>
+                Ожидают обработки:&nbsp;
+                <strong
+                  >{{ hotbedsStatistics.createdGeoPoints || 0 }} ({{
+                    (
+                      (hotbedsStatistics.allMyGeoPoints || 0) /
+                      (hotbedsStatistics.createdGeoPoints || 1)
+                    ).toFixed(0)
+                  }}%)</strong
+                >
               </div>
             </div>
             <q-linear-progress
-              :value="10 / 100"
+              :value="
+                (hotbedsStatistics.allMyGeoPoints || 0) / (hotbedsStatistics.createdGeoPoints || 1)
+              "
               color="green-500"
               track-color="green-300"
               rounded
@@ -54,16 +69,47 @@
           <div class="b-card__statistic-item">
             <div>
               <div class="gg-t-base">
-                Всего мероприятий:&nbsp;
-                <strong>{{ 1 }}</strong>
-              </div>
-              <div class="gg-t-base">
-                Выполнено:&nbsp;
-                <strong>{{ 1 }} ({{ 10 }}%)</strong>
+                В работе:&nbsp;
+                <strong
+                  >{{ hotbedsStatistics.processedGeoPoints || 0 }} ({{
+                    (
+                      (hotbedsStatistics.allMyGeoPoints || 0) /
+                      (hotbedsStatistics.processedGeoPoints || 1)
+                    ).toFixed(0)
+                  }}%)</strong
+                >
               </div>
             </div>
             <q-linear-progress
-              :value="10 / 100"
+              :value="
+                (hotbedsStatistics.allMyGeoPoints || 0) /
+                (hotbedsStatistics.processedGeoPoints || 1)
+              "
+              color="green-500"
+              track-color="green-300"
+              rounded
+              size="10px"
+              class="b-statistics__progress"
+            />
+          </div>
+          <div class="b-card__statistic-item">
+            <div>
+              <div class="gg-t-base">
+                Закрыто:&nbsp;
+                <strong
+                  >{{ hotbedsStatistics.closedGeoPoints || 0 }} ({{
+                    (
+                      (hotbedsStatistics.allMyGeoPoints || 0) /
+                      (hotbedsStatistics.closedGeoPoints || 1)
+                    ).toFixed(0)
+                  }}%)</strong
+                >
+              </div>
+            </div>
+            <q-linear-progress
+              :value="
+                (hotbedsStatistics.allMyGeoPoints || 0) / (hotbedsStatistics.closedGeoPoints || 1)
+              "
               color="green-500"
               track-color="green-300"
               rounded
@@ -157,6 +203,12 @@ import type { TaskEvent } from "~/types/interfaces/taskEvents";
 interface TaskEventsRequest extends ServerPagination {
   content: TaskEvent[];
 }
+interface HotbedsStatistics {
+  createdGeoPoints: number;
+  processedGeoPoints: number;
+  closedGeoPoints: number;
+  allMyGeoPoints?: number;
+}
 const store = useMainStore();
 const { TASK_EVENT_STATUS_OPTIONS, TASK_EVENT_STATUS_STYLES } =
   useGetStatusOptions();
@@ -170,6 +222,12 @@ const pagination = ref<TablePagination>({
   rowsNumber: 0,
 });
 const taskEventsLoading = shallowRef(true);
+const hotbedsStatistics = ref<HotbedsStatistics>({
+  createdGeoPoints: 0,
+  processedGeoPoints: 0,
+  closedGeoPoints: 0,
+});
+const isReportLoading = shallowRef(false);
 const tableHeaders: TableHeader[] = [
   {
     name: "name",
@@ -233,6 +291,7 @@ async function getMyTaskEvents() {
         page: pagination.value.page - 1,
         size: pagination.value.rowsPerPage,
         operatorId: store.user?.id,
+        sortField: "endDate",
       },
     });
     myTaskEvents.value = response.content;
@@ -248,6 +307,75 @@ async function getMyTaskEvents() {
     taskEventsLoading.value = false;
   }
 }
+async function getHotbedsStatisctics() {
+  try {
+    const response = await $fetch<HotbedsStatistics>(
+      `${store.apiV1}/geo/info/get-statistic/${store.user?.id}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    hotbedsStatistics.value = {
+      createdGeoPoints: response.createdGeoPoints || 0,
+      processedGeoPoints: response.processedGeoPoints || 0,
+      closedGeoPoints: response.closedGeoPoints || 0,
+    };
+    hotbedsStatistics.value.allMyGeoPoints =
+      response.createdGeoPoints +
+      response.closedGeoPoints +
+      response.processedGeoPoints;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить данные для статистики",
+    };
+  }
+}
+async function downloadReport() {
+  try {
+    isReportLoading.value = true;
+    const report = await generateGeomarkerReport();
+    if (report.file) {
+      useFilesDownloader(report.file, report.name);
+    }
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось скачать отчёт",
+    };
+  } finally {
+    isReportLoading.value = false;
+  }
+}
+async function generateGeomarkerReport() {
+  try {
+    const file = await $fetch<Blob>(`${store.apiV1}/report/general-report`, {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+    });
+    return {
+      file,
+      name: "Общий отчёт",
+    };
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось сгенерировать отчёт",
+    };
+    return {};
+  }
+}
 function handleaAccountManaged(updatedUser: User) {
   store.user = updatedUser;
 }
@@ -260,6 +388,7 @@ function openManageAccountDialog() {
 }
 onMounted(() => {
   getMyTaskEvents();
+  getHotbedsStatisctics();
 });
 </script>
 

@@ -11,28 +11,36 @@
         <template v-if="currentStep === 1">
           <section class="b-form__section">
             <div class="b-form__section-content">
-              <div v-if="store.user?.role === 'user'" class="b-form__submit-email gg-t-base">
+              <div
+                v-if="store.user?.role === 'user' && !store.user.isEmailVerified"
+                class="b-form__submit-email gg-t-base"
+              >
                 <span
                   :class="{
-                    'text-orange-500': secondsLeft === 0,
-                    'text-blue-500': secondsLeft !== 0,
+                    'text-orange-500': mailSendingState === 'success' && secondsLeft === 0,
+                    'text-blue-500': mailSendingState === 'loading' || secondsLeft > 0,
+                    'text-red-500': mailSendingState === 'error',
                   }"
                   >{{
-                    secondsLeft === 0
-                      ? "Электронная почта не подтверждена."
-                      : "Ссылка для подтвержедния отправлена на вашу электронную почту."
+                    mailSendingState === "loading"
+                      ? "Подтверждение отправляется..."
+                      : mailSendingState === "error"
+                        ? "Не удалось отправить подтверждение."
+                        : secondsLeft === 0 && mailSendingState === "success"
+                          ? "Электронная почта не подтверждена."
+                          : "Ссылка для подтвержедния отправлена на вашу электронную почту."
                   }}</span
                 >
                 <span
-                  v-if="secondsLeft === 0"
+                  v-if="secondsLeft === 0 && mailSendingState !== 'loading'"
                   @click="verifyEmail"
                   class="text-green-500 cursor-pointer"
                 >
                   Нажмите, чтобы подтвердить
                 </span>
-                <span v-else class="text-grey-500">
-                  Отправить повторно через
-                  {{ secondsLeft }} с
+                <span v-else-if="mailSendingState !== 'loading'" class="text-grey-500">
+                  Повторная отправка будет доступна через
+                  {{ secondsLeft }} с.
                 </span>
               </div>
               <div class="b-form__avatar-container">
@@ -113,6 +121,7 @@ const emits = defineEmits<{
   (e: "managedAccount", user: User): void;
 }>();
 const dialogVisible = ref(props.modelValue);
+const mailSendingState = ref<"success" | "error" | "loading">("success");
 const { formRef, formBindValidation, formHasError } = useFormValidation();
 const { uploadPhoto } = useFiles();
 const userData = reactive<UserAccountData>({
@@ -199,9 +208,9 @@ async function manageAccount(updatedAccountData: UserAccountData) {
 }
 async function verifyEmail() {
   try {
-    if (!countdownInterval) startCountdown();
+    mailSendingState.value = "loading";
     await $fetch(
-      `${store.apiV1}/user/register/verify-email/${props.user.email}`,
+      `${store.apiV1}/user/register/verify-email/${props.user.email.toLowerCase()}`,
       {
         method: "POST",
         headers: {
@@ -209,13 +218,15 @@ async function verifyEmail() {
         },
       },
     );
+    if (!countdownInterval) startCountdown();
+    mailSendingState.value = "success";
   } catch (error: any) {
+    mailSendingState.value = "error";
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Не удалось подтвердить почту",
+      text: "Не удалось отправить подтверждающее письмо",
     };
-  } finally {
   }
 }
 function resetForm() {
