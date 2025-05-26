@@ -11,6 +11,8 @@ const { photoUrl, isOpen, closePhoto } = usePhotoViewer();
 .c-photo-dialog {
   &__image {
     border-radius: 8px;
+    object-fit: contain;
+    max-width: 100%;
   }
 }
 </style>

@@ -44,7 +44,7 @@
         <template v-else-if="currentStep === 1">
           <section class="b-form__section">
             <div class="b-form__section-content">
-              <CInput v-model="taskEventData.name" @update:model-value="" label="Название"></CInput>
+              <CInput v-model="taskEventData.name" label="Название"></CInput>
               <CInputTextarea
                 class="b-form__comment"
                 label="Описание"
@@ -55,6 +55,7 @@
                 v-model="taskEventData.expectedDateEnd"
                 label="Ожидаемая дата завершения"
                 class="b-form__field"
+                required
               />
               <CInputSelect
                 v-model="taskEventData.responsibleEmployee"

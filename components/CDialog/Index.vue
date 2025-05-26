@@ -144,10 +144,12 @@ $app-narrow-mobile: 364px;
       .c-dialog__content-container {
         height: fit-content !important;
         width: fit-content !important;
+        max-width: 100%;
       }
       .c-dialog__content {
         height: fit-content !important;
         width: fit-content !important;
+        max-width: 100%;
         display: flex;
       }
       border-radius: 12px !important;

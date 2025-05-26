@@ -223,20 +223,30 @@ const tableRows: ComputedRef<TableRow[]> = computed(() =>
 );
 const dialogManageAccount = shallowRef(false);
 async function getMyTaskEvents() {
-  taskEventsLoading.value = true;
-  const url = `${store.apiV1}/event/getAll`;
-  const response = await $fetch<TaskEventsRequest>(url, {
-    method: "GET",
-    headers: { Authorization: useGetToken() },
-    params: {
-      page: pagination.value.page - 1,
-      size: pagination.value.rowsPerPage,
-      operatorId: store.user?.id,
-    },
-  });
-  myTaskEvents.value = response.content;
-  pagination.value.rowsNumber = response.totalItems;
-  taskEventsLoading.value = false;
+  try {
+    taskEventsLoading.value = true;
+    const url = `${store.apiV1}/event/getAll`;
+    const response = await $fetch<TaskEventsRequest>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+      params: {
+        page: pagination.value.page - 1,
+        size: pagination.value.rowsPerPage,
+        operatorId: store.user?.id,
+      },
+    });
+    myTaskEvents.value = response.content;
+    pagination.value.rowsNumber = response.totalItems;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список мероприятий",
+    };
+  } finally {
+    taskEventsLoading.value = false;
+  }
 }
 function handleaAccountManaged(updatedUser: User) {
   store.user = updatedUser;

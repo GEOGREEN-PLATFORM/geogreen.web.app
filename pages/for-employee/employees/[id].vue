@@ -201,6 +201,7 @@
         "
         :actionButtonConfirmText="isEmployeeBlocked ? 'Разблокировать' : 'Заблокировать'"
         :negative="!isEmployeeBlocked"
+        :state="blockDialogState"
         @cancel="cancelToggleBlockAction"
         @confirm="confirmToggleBlockAction"
       />
@@ -245,6 +246,7 @@ const route = useRoute();
 const isEmployeeBlocked = ref(false);
 const fileInput = ref<HTMLInputElement>();
 const { openPhoto } = usePhotoViewer();
+const blockDialogState = ref<"success" | "error" | "loading">("success");
 const { formRef, formBindValidation, formHasError } = useFormValidation();
 const { uploadPhoto, getImageUrl } = useFiles();
 const { TASK_EVENT_STATUS_OPTIONS, TASK_EVENT_STATUS_STYLES } =
@@ -411,10 +413,10 @@ function updateRelatedUserData() {
 }
 async function confirmToggleBlockAction() {
   await toggleBlockUser();
-  showBlockDialog.value = false;
 }
 async function toggleBlockUser() {
   try {
+    blockDialogState.value = "loading";
     await $fetch(
       `${store.apiV1}/user/register/${initialUserData.value.email}/enabled/${!isEmployeeBlocked.value}`,
       {
@@ -425,6 +427,8 @@ async function toggleBlockUser() {
       },
     );
     isEmployeeBlocked.value = !isEmployeeBlocked.value;
+    blockDialogState.value = "success";
+    showBlockDialog.value = false;
     useState<Alert>("showAlert").value = {
       show: true,
       type: "success",
@@ -437,6 +441,7 @@ async function toggleBlockUser() {
       type: "error",
       text: `Не удалось ${isEmployeeBlocked.value ? "заблокировать" : "разблокировать"} сотрудника`,
     };
+    blockDialogState.value = "error";
   }
 }
 function toggleEditMode() {

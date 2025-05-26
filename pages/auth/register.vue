@@ -111,12 +111,20 @@ async function sendRegister() {
         text: "Не удалось создать аккаунт",
       };
     }
-  } catch (error) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Произошла непредвиденная ошибка",
-    };
+  } catch (error: any) {
+    if (error.status === 409) {
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Пользователь с такой электронной почтой уже существует",
+      };
+    } else {
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Произошла непредвиденная ошибка",
+      };
+    }
   } finally {
     buttonOptions.value.main.loading = false;
   }

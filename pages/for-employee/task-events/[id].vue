@@ -129,6 +129,7 @@
         v-model="showDeleteDialog"
         actionMainText="удалить мероприятие"
         actionButtonConfirmText="Удалить"
+        :state="deleteDialogState"
         @cancel="cancelDeleteAction"
         @confirm="confirmDeleteAction"
       />
@@ -171,6 +172,7 @@ const editMode = ref(false);
 const showDeleteDialog = ref(false);
 const currentHistoryFiles = ref<(File | ImageObj)[]>([]);
 const currentHistory = ref("");
+const deleteDialogState = ref<"success" | "error" | "loading">("success");
 const relatedHotbed = ref<Marker>();
 const hotdebCardList = ref<CardItem[]>([]);
 const linksByLabel = computed<Record<string, string>>(() => ({
@@ -454,16 +456,18 @@ function cancelDeleteAction() {
 
 async function confirmDeleteAction() {
   await deleteTaskEvent();
-  showDeleteDialog.value = false;
 }
 async function deleteTaskEvent() {
   try {
+    deleteDialogState.value = "loading";
     await $fetch(`${store.apiV1}/event/${route.params.id}`, {
       method: "DELETE",
       headers: {
         authorization: useGetToken(),
       },
     });
+    deleteDialogState.value = "success";
+    showDeleteDialog.value = false;
     useState<Alert>("showAlert").value = {
       show: true,
       type: "success",
@@ -477,6 +481,7 @@ async function deleteTaskEvent() {
       type: "error",
       text: "Не удалось удалить мероприятие",
     };
+    deleteDialogState.value = "error";
   }
 }
 async function filterEmployees(search: string) {

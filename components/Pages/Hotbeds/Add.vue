@@ -318,19 +318,29 @@ function onBack() {
   }
 }
 async function getEliminationMethodsByArea(area: string) {
-  hotbedData.value.eliminationMethod = "";
-  hotbedEliminationMethods.value = (
-    await $fetch<string[]>(
-      `${store.apiV1}/geo/dict/elimination-methods/${area}`,
-      {
-        method: "GET",
-        headers: { Authorization: useGetToken() },
-      },
-    )
-  ).map((elem) => ({
-    name: elem,
-    value: elem,
-  }));
+  try {
+    hotbedData.value.eliminationMethod = "";
+    hotbedEliminationMethods.value = (
+      await $fetch<string[]>(
+        `${store.apiV1}/geo/dict/elimination-methods/${area}`,
+        {
+          method: "GET",
+          headers: { Authorization: useGetToken() },
+        },
+      )
+    ).map((elem) => ({
+      name: elem,
+      value: elem,
+    }));
+  } catch (error: any) {
+    console.error(error);
+    hotbedEliminationMethods.value = [];
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить методы устранения проблем",
+    };
+  }
 }
 function deleteTempHotbed(id: string) {
   existingHotbeds.value = existingHotbeds.value.filter(
