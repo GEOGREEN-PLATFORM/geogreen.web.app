@@ -1,94 +1,102 @@
 <template>
   <main class="b-page">
-    <header class="b-page__header q-my-lg">
-      <div class="b-page__title-wrapper">
-        <h1 class="b-page__title gg-h1">Заявки</h1>
-      </div>
-    </header>
-    <section class="b-page__content">
-      <div class="b-filter q-mb-lg">
-        <CFilter
-          v-model="filters"
-          @apply-filters="applyFilters"
-          @reset-filters="applyFilters"
-        ></CFilter>
-      </div>
-      <q-scroll-area class="b-page__requests-container">
-        <q-infinite-scroll @load="loadMore" :offset="2000">
-          <section class="b-page__requests">
-            <q-card v-for="(request, index) in requests" :key="request.id" class="b-request-card">
-              <header class="b-request-card__header">
-                <div class="b-request-card__title-wrapper">
-                  <h2 class="b-request-card__title gg-h2">{{ request.problemAreaType }}</h2>
-                  <div class="b-request-card__reliability-icon">
-                    <q-icon
-                      :name="request.photoVerification ? mdiCheck : mdiAlert"
-                      size="24px"
-                      :color="request.photoVerification ? 'green-500' : 'red-500'"
-                    />
+    <div v-if="!pageError" class="b-page__content-wrapper">
+      <header class="b-page__header q-my-lg">
+        <div class="b-page__title-wrapper">
+          <h1 class="b-page__title gg-h1">Заявки</h1>
+        </div>
+      </header>
+      <section class="b-page__content">
+        <div class="b-filter q-mb-lg">
+          <CFilter
+            v-model="filters"
+            @apply-filters="applyFilters"
+            @reset-filters="applyFilters"
+          ></CFilter>
+        </div>
+        <q-scroll-area class="b-page__requests-container">
+          <q-infinite-scroll @load="loadMore" :offset="2000">
+            <section class="b-page__requests">
+              <q-card
+                v-for="(request, index) in pageData.requests"
+                :key="request.id"
+                class="b-request-card"
+              >
+                <header class="b-request-card__header">
+                  <div class="b-request-card__title-wrapper">
+                    <h2 class="b-request-card__title gg-h2">{{ request.problemAreaType }}</h2>
+                    <div class="b-request-card__reliability-icon">
+                      <q-icon
+                        :name="request.photoVerification ? mdiCheck : mdiAlert"
+                        size="24px"
+                        :color="request.photoVerification ? 'green-500' : 'red-500'"
+                      />
+                    </div>
                   </div>
-                </div>
-                <span class="b-request-card__timestamp gg-caption">
-                  Заявка создана {{ timeConverter(request.createDate) }}
-                </span>
-              </header>
-              <section class="b-request-card__content q-mb-lg">
-                <button
-                  class="b-request-card__open-map-button gg-t-small"
-                  @click="viewOnMap(request)"
-                >
-                  Посмотреть очаг на карте
-                </button>
-                <section class="b-request-card__main-info">
-                  <p class="b-request-card__comment gg-t-base">{{ request.userComment }}</p>
-                  <div class="b-request-card__images">
-                    <CFileContainers
-                      :files="request.images"
-                      :clearable="false"
-                      hide-caption
-                    ></CFileContainers>
-                  </div>
+                  <span class="b-request-card__timestamp gg-caption">
+                    Заявка создана {{ timeConverter(request.createDate) }}
+                  </span>
+                </header>
+                <section class="b-request-card__content q-mb-lg">
+                  <button
+                    class="b-request-card__open-map-button gg-t-small"
+                    @click="viewOnMap(request)"
+                  >
+                    Посмотреть очаг на карте
+                  </button>
+                  <section class="b-request-card__main-info">
+                    <p class="b-request-card__comment gg-t-base">{{ request.userComment }}</p>
+                    <div class="b-request-card__images">
+                      <CFileContainers
+                        :files="request.images"
+                        :clearable="false"
+                        hide-caption
+                      ></CFileContainers>
+                    </div>
+                  </section>
                 </section>
-              </section>
-              <footer class="b-request-card__footer justify-between">
-                <div>
-                  <CButton @click="approveRequest(request.id)" label="Принять заявку"></CButton>
-                </div>
-                <div>
-                  <CButton
-                    @click="rejectRequest(request.id)"
-                    label="Отклонить заявку"
-                    bg-color="var(--app-red-500)"
-                  ></CButton>
-                </div>
-              </footer>
-            </q-card>
-          </section>
-          <template v-slot:loading>
-            <div v-show="requestsLoading" class="row justify-center q-my-md">
-              <q-spinner-dots color="primary" size="40px" />
-            </div>
-          </template>
-        </q-infinite-scroll>
-      </q-scroll-area>
-    </section>
-    <CDialog
-      v-model="isMapOpen"
-      full-content
-      close-icon-style="outlined"
-      close-align="left"
-      class="b-dialog"
-    >
-      <q-card class="b-dialog__content">
-        <CMap
-          :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
-          :markers="existingHotbedsByType"
-          :shortInfoKeys="shortMarkerInfoNameKeys"
-          hide-controls
-          :selectedMarker="selectedHotbed"
-        ></CMap>
-      </q-card>
-    </CDialog>
+                <footer class="b-request-card__footer justify-between">
+                  <div>
+                    <CButton @click="approveRequest(request.id)" label="Принять заявку"></CButton>
+                  </div>
+                  <div>
+                    <CButton
+                      @click="rejectRequest(request.id)"
+                      label="Отклонить заявку"
+                      bg-color="var(--app-red-500)"
+                    ></CButton>
+                  </div>
+                </footer>
+              </q-card>
+            </section>
+            <template v-slot:loading>
+              <div v-show="requestsLoading" class="row justify-center q-my-md">
+                <q-spinner-dots color="primary" size="40px" />
+              </div>
+            </template>
+          </q-infinite-scroll>
+        </q-scroll-area>
+      </section>
+      <CDialog
+        v-model="isMapOpen"
+        full-content
+        close-icon-style="outlined"
+        close-align="left"
+        class="b-dialog"
+      >
+        <q-card class="b-dialog__content">
+          <CMap
+            :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
+            :markers="existingHotbedsByType"
+            :shortInfoKeys="shortMarkerInfoNameKeys"
+            hide-controls
+            :selectedMarker="selectedHotbed"
+            :dataLoading="hotbedsLoading"
+          ></CMap>
+        </q-card>
+      </CDialog>
+    </div>
+    <CError v-else :error="pageError" @refresh="refresh"></CError>
   </main>
 </template>
 
@@ -99,6 +107,11 @@ import type { ApplicationData } from "~/types/interfaces/applications";
 
 interface ApplicationsRequest extends ServerPagination {
   content: ApplicationData[];
+}
+interface PageData {
+  requests: ApplicationData[];
+  totalItems: number;
+  totalPages: number;
 }
 const store = useMainStore();
 const { timeConverter } = useFormatters();
@@ -132,6 +145,7 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
 });
 const isMapOpen = shallowRef(false);
 const existingHotbedsByType = ref<Marker[]>([]);
+const hotbedsLoading = shallowRef(true);
 const selectedHotbed = ref<Marker>();
 const filters = ref<FilterItem[]>([
   {
@@ -149,93 +163,181 @@ const filters = ref<FilterItem[]>([
   },
 ]);
 
-const requests = ref<ApplicationData[]>([]);
 const pagination = reactive({
   page: 0,
   size: 10,
   totalElements: 0,
   totalPages: 0,
 });
-function applyFilters() {
-  pagination.page = 0;
-  getUserRequests("filter");
+const {
+  data: pageData,
+  error: pageError,
+  refresh,
+} = await useAsyncData<PageData>(
+  "requests",
+  async () => {
+    return await getUserRequests();
+  },
+  {
+    dedupe: "defer",
+    default: () => ({
+      requests: [],
+      totalItems: 0,
+      totalPages: 0,
+    }),
+  },
+);
+if (pageData.value) {
+  pagination.totalElements = pageData.value.totalItems;
+  pagination.totalPages = pageData.value.totalPages;
 }
-async function getUserRequests(source?: "filter") {
-  requestsLoading.value = true;
-  const response = await $fetch<ApplicationsRequest>(
-    `${store.apiV1}/user-marker/getAll`,
-    {
-      method: "GET",
-      headers: {
-        authorization: useGetToken(),
-      },
-      params: {
-        page: pagination.page,
-        size: pagination.size,
-        problemType: filters.value[0].selected || undefined,
-        startDate: (filters.value[1].selected as DateRange)?.from || undefined,
-        endDate: (filters.value[1].selected as DateRange)?.to || undefined,
-      },
-    },
-  );
-  if (source === "filter") {
-    requests.value = [];
+async function applyFilters() {
+  pagination.page = 0;
+  try {
+    requestsLoading.value = true;
+    const data = await getUserRequests();
+    pageData.value.requests = data.requests;
+    pagination.totalElements = pageData.value.totalItems = data.totalItems;
+    pagination.totalPages = pageData.value.totalPages = data.totalPages;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список заявок",
+    };
+  } finally {
+    requestsLoading.value = false;
   }
-  requests.value = [...requests.value, ...response.content];
-  pagination.totalElements = response.totalItems;
-  pagination.totalPages = response.totalPages;
-  requestsLoading.value = false;
+}
+async function getUserRequests() {
+  try {
+    const response = await $fetch<ApplicationsRequest>(
+      `${store.apiV1}/user-marker/getAll`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+        params: {
+          page: pagination.page,
+          size: pagination.size,
+          problemType: filters.value[0].selected || undefined,
+          startDate:
+            (filters.value[1].selected as DateRange)?.from || undefined,
+          endDate: (filters.value[1].selected as DateRange)?.to || undefined,
+        },
+      },
+    );
+    return {
+      requests: response.content,
+      totalItems: response.totalItems,
+      totalPages: response.totalPages,
+    };
+  } catch (error: any) {
+    console.error(error);
+    throw new AppError("Не удалось получить список заявок", {
+      statusCode: error.response.status,
+    });
+  }
 }
 async function loadMore(index: number, done: (stop?: boolean) => void) {
   if (pagination.page < pagination.totalPages) {
     pagination.page++;
-    await getUserRequests();
+    try {
+      requestsLoading.value = true;
+      const data = await getUserRequests();
+      pageData.value.requests = [...pageData.value.requests, ...data.requests];
+      pagination.totalElements = pageData.value.totalItems = data.totalItems;
+      pagination.totalPages = pageData.value.totalPages = data.totalPages;
+    } catch (error: any) {
+      console.error(error);
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Не удалось получить список заявок",
+      };
+    } finally {
+      requestsLoading.value = false;
+    }
   }
   done();
 }
 async function getExistingHotbedsOfProblemsByType(type: string) {
-  const data = await $fetch<Marker[]>(
-    `${store.apiV1}/geo/info/getAll/${type}`,
-    {
-      method: "GET",
+  try {
+    hotbedsLoading.value = true;
+    const data = await $fetch<Marker[]>(
+      `${store.apiV1}/geo/info/getAll/${type}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    existingHotbedsByType.value = data;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список очагов проблем",
+    };
+  } finally {
+    hotbedsLoading.value = false;
+  }
+}
+async function approveRequest(id: string) {
+  try {
+    const response = await $fetch(`${store.apiV1}/user-marker/${id}`, {
+      method: "PATCH",
       headers: {
         authorization: useGetToken(),
       },
-    },
-  );
-  existingHotbedsByType.value = data;
-}
-async function approveRequest(id: string) {
-  const response = await $fetch(`${store.apiV1}/user-marker/${id}`, {
-    method: "PATCH",
-    headers: {
-      authorization: useGetToken(),
-    },
-    body: {
-      statusCode: "Одобрена",
-      operatorComment: "",
-      operatorId: store.user?.id || "",
-    },
-  });
-  rejectRequestFromList(id);
+      body: {
+        statusCode: "Одобрена",
+        operatorComment: "",
+        operatorId: store.user?.id || "",
+      },
+    });
+    removeRequestFromList(id);
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось одобрить заявку",
+    };
+  }
 }
 
 async function rejectRequest(id: string) {
-  const response = await $fetch(`${store.apiV1}/user-marker/${id}`, {
-    method: "PATCH",
-    headers: {
-      authorization: useGetToken(),
-    },
-    body: {
-      statusCode: "Отклонена",
-      operatorComment: "",
-      operatorId: store.user?.id || "",
-    },
-  });
-  rejectRequestFromList(id);
+  try {
+    const response = await $fetch(`${store.apiV1}/user-marker/${id}`, {
+      method: "PATCH",
+      headers: {
+        authorization: useGetToken(),
+      },
+      body: {
+        statusCode: "Отклонена",
+        operatorComment: "",
+        operatorId: store.user?.id || "",
+      },
+    });
+    removeRequestFromList(id);
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось отклонить заявку",
+    };
+  }
 }
-function rejectRequestFromList(id: string) {
-  requests.value = requests.value.filter((request) => request.id !== id);
+function removeRequestFromList(id: string) {
+  pageData.value.requests = pageData.value.requests.filter(
+    (request) => request.id !== id,
+  );
 }
 async function viewOnMap(request: ApplicationData) {
   await getExistingHotbedsOfProblemsByType(request.problemAreaType);
@@ -262,9 +364,6 @@ async function viewOnMap(request: ApplicationData) {
     existingHotbedsByType.value[existingHotbedsByType.value.length - 1];
   isMapOpen.value = true;
 }
-onMounted(() => {
-  getUserRequests();
-});
 </script>
 
 <style scoped lang="scss">
@@ -277,6 +376,11 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  &__content-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
   @media screen and (max-width: $app-mobile) {
     padding: 0px 16px;
   }

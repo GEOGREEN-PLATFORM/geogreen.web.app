@@ -123,6 +123,7 @@ watch(
   (newVal) => {
     filterItems.value = JSON.parse(JSON.stringify(newVal));
   },
+  { deep: true },
 );
 </script>
 

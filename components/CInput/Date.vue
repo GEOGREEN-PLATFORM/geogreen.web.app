@@ -3,7 +3,7 @@
     type="text"
     :model-value="formattedDate"
     placeholder="01.01.2024"
-    :required="false"
+    :required="props.required"
     :label="label"
     :maska="!range ? '##.##.####' : ''"
     :rules="dateRules"
@@ -44,9 +44,12 @@ interface Props {
   modelValue: string | DateRange;
   label?: string;
   range?: boolean;
+  required?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  required: false,
+});
 const emit = defineEmits(["update:modelValue"]);
 
 const formattedDate = computed(() => {
@@ -105,7 +108,8 @@ function isValidDate(dateStr: string): boolean {
 }
 const dateRules = [
   (val: string) => {
-    if (!val || val.length < 10) return true;
+    if (!props.required && !val) return true;
+    if (props.required && !val) return "Не может быть пустым";
     return isValidDate(val) || "Используйте формат ДД.ММ.ГГГГ";
   },
 ];

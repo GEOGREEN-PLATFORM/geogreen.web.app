@@ -34,8 +34,11 @@
           />
         </div>
         <div class="form-content__accept-rules-block gg-cap text-center q-mt-lg">
-          Продолжая, вы соглашаетесь с&nbsp;<nuxt-link to="/docs/privacy" class="link-label"
-            >политикой конфидецинальности</nuxt-link
+          Продолжая, вы соглашаетесь с&nbsp;<a
+            href="http://217.198.13.249:30099/docs/privacy"
+            target="privacy"
+            class="link-label"
+            >политикой конфидецинальности</a
           >
         </div>
       </div>
@@ -108,12 +111,20 @@ async function sendRegister() {
         text: "Не удалось создать аккаунт",
       };
     }
-  } catch (error) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Произошла непредвиденная ошибка",
-    };
+  } catch (error: any) {
+    if (error.status === 409) {
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Пользователь с такой электронной почтой уже существует",
+      };
+    } else {
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Произошла непредвиденная ошибка",
+      };
+    }
   } finally {
     buttonOptions.value.main.loading = false;
   }

@@ -269,15 +269,25 @@ const completionRate = computed(() =>
     : 0,
 );
 async function getHotbeds() {
-  hotbedsLoading.value = true;
-  const params = new URLSearchParams();
-  const url = `${store.apiV1}/geo/info/getAll?${params.toString()}`;
-  const response = await $fetch<Marker[]>(url, {
-    method: "GET",
-    headers: { Authorization: useGetToken() },
-  });
-  existingHotbeds.value = response;
-  hotbedsLoading.value = false;
+  try {
+    hotbedsLoading.value = true;
+    const params = new URLSearchParams();
+    const url = `${store.apiV1}/geo/info/getAll?${params.toString()}`;
+    const response = await $fetch<Marker[]>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+    });
+    existingHotbeds.value = response;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список очагов проблем",
+    };
+  } finally {
+    hotbedsLoading.value = false;
+  }
 }
 async function viewOnMap(request: ApplicationData) {
   await getHotbeds();
@@ -326,27 +336,42 @@ async function getMyNotifications() {
     paginationNotifications.totalElements = response.totalItems;
   } catch (error) {
     console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список уведомлений",
+    };
   }
 }
 async function getMyRequests() {
-  requestsLoading.value = true;
-  const response = await $fetch<ApplicationsRequest>(
-    `${store.apiV1}/user-marker/getAll`,
-    {
-      method: "GET",
-      headers: {
-        authorization: useGetToken(),
+  try {
+    requestsLoading.value = true;
+    const response = await $fetch<ApplicationsRequest>(
+      `${store.apiV1}/user-marker/getAll`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+        params: {
+          page: paginationApplications.page,
+          size: paginationApplications.size,
+        },
       },
-      params: {
-        page: paginationApplications.page,
-        size: paginationApplications.size,
-      },
-    },
-  );
-  reports.value = [...reports.value, ...response.content];
-  paginationApplications.totalElements = response.totalItems;
-  paginationApplications.totalPages = response.totalPages;
-  requestsLoading.value = false;
+    );
+    reports.value = [...reports.value, ...response.content];
+    paginationApplications.totalElements = response.totalItems;
+    paginationApplications.totalPages = response.totalPages;
+  } catch (error) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список сообщений о проблемах",
+    };
+  } finally {
+    requestsLoading.value = false;
+  }
 }
 async function subscribeToReportNotifications(userReportId: string) {
   try {
@@ -366,7 +391,7 @@ async function subscribeToReportNotifications(userReportId: string) {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Произошла ошибка при подписке на уведомления",
+      text: "Не удалось подписаться на уведомление",
     };
   }
 }
@@ -386,7 +411,7 @@ async function deleteSubscriptionIdByReportId(userReportId: string) {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Произошла ошибка при подписке на уведомления",
+      text: "Не удалось отписаться от уведомления",
     };
   }
 }

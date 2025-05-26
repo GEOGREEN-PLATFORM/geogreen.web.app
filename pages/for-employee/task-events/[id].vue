@@ -1,68 +1,107 @@
 <template>
   <main class="b-page">
-    <div v-if="pageLoaded && taskEvent" class="b-page__top-section">
-      <div class="b-page__top-left">
-        <section class="b-main-editable-card">
-          <div class="b-main-editable-card__header">
-            <div class="b-name">
-              <input
-                type="text"
-                v-model="taskEvent.name"
-                placeholder="Введите название мероприятия"
-                class="b-name__input gg-h1"
-                @blur="
-                  () => {
-                    store.user?.role === 'admin' && saveChanges();
-                  }
-                "
-                :readonly="store.user?.role !== 'admin'"
-              />
-              <span
-                v-if="store.user?.role === 'admin'"
-                class="b-name__delete-icon"
-                @click="openDeleteDialog"
-              >
-                <q-icon :name="mdiDeleteOutline" color="red-500" size="24px"></q-icon>
-              </span>
-            </div>
-          </div>
-          <div v-if="pageLoaded && taskEvent" class="b-main-editable-card__content">
-            <div class="b-main-editable-card__fields">
-              <CInputTextarea
-                class="b-main-editable-card__comment"
-                label="Описание мероприятия"
-                v-model="taskEvent.description"
-                bg-color="transparent"
-                @blur="saveChanges"
-                :readonly="store.user?.role !== 'admin'"
-              ></CInputTextarea>
-              <div class="b-labeled-field">
-                <div class="b-labeled-field__label gg-t-big">Ответственный:</div>
-                <CInputSelect
-                  v-model="taskEvent.responsibleEmployeeOption!"
-                  use-input
-                  @filter="filterEmployees"
-                  @update:model-value="saveChanges"
-                  :options="responsibleEmployeesOptions"
-                  returnObj
-                  height="40px"
-                  class="b-labeled-field__input"
+    <div v-if="!pageError">
+      <div v-if="pageData.taskEvent" class="b-page__top-section">
+        <div class="b-page__top-left">
+          <section class="b-main-editable-card">
+            <div class="b-main-editable-card__header">
+              <div class="b-name">
+                <input
+                  type="text"
+                  v-model="pageData.taskEvent.name"
+                  placeholder="Введите название мероприятия"
+                  class="b-name__input gg-h1"
+                  @blur="
+                    () => {
+                      store.user?.role === 'admin' && saveChanges();
+                    }
+                  "
                   :readonly="store.user?.role !== 'admin'"
-                ></CInputSelect>
-              </div>
-              <div class="b-labeled-field">
-                <div class="b-labeled-field__label gg-t-big">Статус:</div>
-                <CInputSelect
-                  v-model="taskEvent.statusCode"
-                  @update:model-value="saveChanges"
-                  :options="TASK_EVENT_STATUS_OPTIONS"
-                  height="40px"
-                  class="b-labeled-field__input"
-                ></CInputSelect>
+                />
+                <span
+                  v-if="store.user?.role === 'admin'"
+                  class="b-name__delete-icon"
+                  @click="openDeleteDialog"
+                >
+                  <q-icon :name="mdiDeleteOutline" color="red-500" size="24px"></q-icon>
+                </span>
               </div>
             </div>
-          </div>
+            <div v-if="pageData.taskEvent" class="b-main-editable-card__content">
+              <div class="b-main-editable-card__fields">
+                <CInputTextarea
+                  class="b-main-editable-card__comment"
+                  label="Описание мероприятия"
+                  v-model="pageData.taskEvent.description"
+                  bg-color="transparent"
+                  @blur="saveChanges"
+                  :readonly="store.user?.role !== 'admin'"
+                ></CInputTextarea>
+                <div class="b-labeled-field">
+                  <div class="b-labeled-field__label gg-t-big">Ответственный:</div>
+                  <CInputSelect
+                    v-model="pageData.taskEvent.responsibleEmployeeOption!"
+                    use-input
+                    @filter="filterEmployees"
+                    @update:model-value="saveChanges"
+                    :options="pageData.responsibleEmployeesOptions"
+                    returnObj
+                    height="40px"
+                    class="b-labeled-field__input"
+                    :readonly="store.user?.role !== 'admin'"
+                  ></CInputSelect>
+                </div>
+                <div class="b-labeled-field">
+                  <div class="b-labeled-field__label gg-t-big">Статус:</div>
+                  <CInputSelect
+                    v-model="pageData.taskEvent.statusCode"
+                    @update:model-value="saveChanges"
+                    :options="TASK_EVENT_STATUS_OPTIONS"
+                    height="40px"
+                    class="b-labeled-field__input"
+                  ></CInputSelect>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="b-page__history-container">
+            <div class="b-history-form">
+              <CInputEditor
+                class="b-history-form__editor"
+                v-model="currentHistory"
+                :files="currentHistoryFiles"
+                @update:files="loadFilesForHistory"
+              ></CInputEditor>
+              <CButton
+                @click="sendHistory"
+                class="b-history-form__send-button"
+                :icon="mdiSend"
+                stretch="hug"
+              ></CButton>
+            </div>
+          </section>
+        </div>
+
+        <section class="b-page__data-card">
+          <CCardData
+            :list="hotdebCardList"
+            :linksByLabel="linksByLabel"
+            :statusClassesByValue="TASK_EVENT_STATUS_STYLES"
+          >
+            <template #card-footer>
+              <div class="b-page__card-map-container q-mt-sm">
+                <CMap
+                  :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
+                  :markers="pageData.existingHotbeds"
+                  :selectedMarker="relatedHotbed"
+                  :shortInfoKeys="shortMarkerInfoNameKeys"
+                  hide-controls
+                ></CMap></div></template
+          ></CCardData>
         </section>
+      </div>
+      <section class="b-page__bottom-section">
+        <h2 class="gg-h2">История</h2>
         <section class="b-page__history-container">
           <div class="b-history-form">
             <CInputEditor
@@ -79,59 +118,23 @@
             ></CButton>
           </div>
         </section>
-      </div>
-
-      <section class="b-page__data-card">
-        <CCardData
-          :list="hotdebCardList"
-          :linksByLabel="linksByLabel"
-          :statusClassesByValue="TASK_EVENT_STATUS_STYLES"
-        >
-          <template #card-footer>
-            <div class="b-page__card-map-container q-mt-sm">
-              <CMap
-                v-if="!isHotbedsLoading"
-                :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
-                :markers="existingHotbeds"
-                :selectedMarker="relatedHotbed"
-                :shortInfoKeys="shortMarkerInfoNameKeys"
-                hide-controls
-              ></CMap></div></template
-        ></CCardData>
+        <PagesTaskEventsHistoryItem
+          v-for="item in pageData.taskEventHistory"
+          class="history-item"
+          :key="item.id"
+          :history="item"
+        ></PagesTaskEventsHistoryItem>
       </section>
+      <CDialogConfirm
+        v-model="showDeleteDialog"
+        actionMainText="удалить мероприятие"
+        actionButtonConfirmText="Удалить"
+        :state="deleteDialogState"
+        @cancel="cancelDeleteAction"
+        @confirm="confirmDeleteAction"
+      />
     </div>
-    <section class="b-page__bottom-section">
-      <h2 class="gg-h2">История</h2>
-      <section class="b-page__history-container">
-        <div class="b-history-form">
-          <CInputEditor
-            class="b-history-form__editor"
-            v-model="currentHistory"
-            :files="currentHistoryFiles"
-            @update:files="loadFilesForHistory"
-          ></CInputEditor>
-          <CButton
-            @click="sendHistory"
-            class="b-history-form__send-button"
-            :icon="mdiSend"
-            stretch="hug"
-          ></CButton>
-        </div>
-      </section>
-      <PagesTaskEventsHistoryItem
-        v-for="item in taskEventHistory"
-        class="history-item"
-        :key="item.id"
-        :history="item"
-      ></PagesTaskEventsHistoryItem>
-    </section>
-    <CDialogConfirm
-      v-model="showDeleteDialog"
-      actionMainText="удалить мероприятие"
-      actionButtonConfirmText="Удалить"
-      @cancel="cancelDeleteAction"
-      @confirm="confirmDeleteAction"
-    />
+    <CError v-else :error="pageError" @refresh="refresh"></CError>
   </main>
 </template>
 
@@ -147,7 +150,15 @@ import type {
 interface TaskEventsHistoryRequest extends ServerPagination {
   content: TaskEventHistory[];
 }
-
+interface PageData {
+  taskEvent: TaskEvent | null;
+  responsibleEmployeesOptions: ItemOption[];
+  existingHotbeds: Marker[];
+  taskEventHistory: TaskEventHistory[];
+  errEmployees: string | null;
+  errHotbeds: string | null;
+  errHistory: string | null;
+}
 const store = useMainStore();
 const route = useRoute();
 const {
@@ -159,21 +170,16 @@ const { uploadPhoto } = useFiles();
 
 const editMode = ref(false);
 const showDeleteDialog = ref(false);
-const taskEvent = ref<TaskEvent>();
 const currentHistoryFiles = ref<(File | ImageObj)[]>([]);
 const currentHistory = ref("");
-const taskEventHistory = ref<TaskEventHistory[]>([]);
+const deleteDialogState = ref<"success" | "error" | "loading">("success");
 const relatedHotbed = ref<Marker>();
-const pageLoaded = ref(false);
 const hotdebCardList = ref<CardItem[]>([]);
 const linksByLabel = computed<Record<string, string>>(() => ({
-  Ответственный: `/for-employee/employees/${taskEvent.value?.responsibleEmployeeOption?.value}`,
-  "Автор мероприятия": `/for-employee/employees/${taskEvent.value?.author?.id}`,
-  Очаг: `/hotbeds/${taskEvent.value?.geoPointId}`,
+  Ответственный: `/for-employee/employees/${pageData.value.taskEvent?.responsibleEmployeeOption?.value}`,
+  "Автор мероприятия": `/for-employee/employees/${pageData.value.taskEvent?.author?.id}`,
+  Очаг: `/hotbeds/${pageData.value.taskEvent?.geoPointId}`,
 }));
-const existingHotbeds = ref<Marker[]>([]);
-const responsibleEmployeesOptions = ref<ItemOption[]>([]);
-const isHotbedsLoading = ref(true);
 const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
   owner: {
     name: "Владелец",
@@ -200,41 +206,128 @@ const shortMarkerInfoNameKeys = ref<MapPopupShortInfoKeys>({
     type: "text",
   },
 });
-async function getEmployees(search?: string) {
-  try {
-    const res = await $fetch<EmployeesRequest>(`${store.apiV1}/user/search`, {
-      method: "GET",
-      headers: {
-        authorization: useGetToken(),
-      },
-      params: {
-        page: 0,
-        size: 1000,
-        role: "operator",
-        search: search,
-      },
-    });
-    responsibleEmployeesOptions.value = res.users.map((user: Employee) => ({
-      name: `${user.lastName} ${user.firstName} ${user.patronymic}`,
-      value: user.id,
-    }));
-  } catch (error: any) {
+const {
+  data: pageData,
+  error: pageError,
+  refresh,
+} = await useAsyncData<PageData>(
+  `task-event-page-${route.params.id}`,
+  async () => {
+    const taskEvent = await getTaskEvent();
+    const [rEmp, rHot, rHist] = await Promise.allSettled([
+      getEmployees(),
+      getHotbeds(),
+      getHistory(),
+    ]);
+    return {
+      taskEvent,
+      responsibleEmployeesOptions:
+        rEmp.status === "fulfilled" ? rEmp.value : [],
+      existingHotbeds: rHot.status === "fulfilled" ? rHot.value : [],
+      taskEventHistory: rHist.status === "fulfilled" ? rHist.value : [],
+      errEmployees:
+        rEmp.status === "rejected"
+          ? "Не удалось получить список сотрудников"
+          : null,
+      errHotbeds:
+        rHot.status === "rejected" ? "Не удалось получить очаги проблем" : null,
+      errHistory:
+        rHist.status === "rejected"
+          ? "Не удалось получить историю мероприятия"
+          : null,
+    };
+  },
+  {
+    dedupe: "defer",
+    default: () => ({
+      taskEvent: null,
+      responsibleEmployeesOptions: [],
+      existingHotbeds: [],
+      taskEventHistory: [],
+      errEmployees: null,
+      errHotbeds: null,
+      errHistory: null,
+    }),
+  },
+);
+if (pageData.value) {
+  if (pageData.value?.taskEvent) {
+    updateTaskEventCardList();
+    await getRelatedHotbed();
+  }
+  if (pageData.value.errEmployees) {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Нe удалось получить сотрудников",
+      text: pageData.value.errEmployees,
+    };
+  }
+  if (pageData.value.errHotbeds) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: pageData.value.errHotbeds,
+    };
+  }
+  if (pageData.value.errHistory) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: pageData.value.errHistory,
     };
   }
 }
+
+async function getTaskEvent() {
+  try {
+    const response = await $fetch<TaskEvent>(
+      `${store.apiV1}/event/${route.params.id}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    return {
+      ...response,
+      responsibleEmployeeOption: {
+        name: `${response.operator?.lastName} ${response.operator?.firstName} ${response.operator?.patronymic}`,
+        value: response.operator?.id,
+      },
+    };
+  } catch (error: any) {
+    console.error(error);
+    throw new AppError("Не удалось получить мероприятие", {
+      statusCode: error.response.status,
+    });
+  }
+}
+async function getEmployees(search?: string) {
+  const res = await $fetch<EmployeesRequest>(`${store.apiV1}/user/search`, {
+    method: "GET",
+    headers: {
+      authorization: useGetToken(),
+    },
+    params: {
+      page: 0,
+      size: 1000,
+      role: "operator",
+      search: search,
+    },
+  });
+  return res.users.map((user: Employee) => ({
+    name: `${user.lastName} ${user.firstName} ${user.patronymic}`,
+    value: user.id,
+  }));
+}
 async function getHotbeds() {
-  isHotbedsLoading.value = true;
   const url = `${store.apiV1}/geo/info/getAll`;
   const response = await $fetch<Marker[]>(url, {
     method: "GET",
     headers: { Authorization: useGetToken() },
   });
-  existingHotbeds.value = response;
-  isHotbedsLoading.value = false;
+  return response;
 }
 async function loadFilesForHistory(files: (File | ImageObj)[]) {
   const localFiles = files;
@@ -263,38 +356,28 @@ async function sendHistory() {
     });
     currentHistory.value = "";
     currentHistoryFiles.value = [];
-    getHistory();
+    try {
+      pageData.value.taskEventHistory = await getHistory();
+    } catch (error: any) {
+      console.error(error);
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Нe удалось получить историю мероприятия",
+      };
+    }
   } catch (error: any) {
+    console.error(error);
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Нe удалось отправить комментарии",
+      text: "Нe удалось обновить историю",
     };
   }
 }
 async function getHistory() {
-  try {
-    const response = await $fetch<TaskEventsHistoryRequest>(
-      `${store.apiV1}/event/${route.params.id}/history`,
-      {
-        method: "GET",
-        headers: {
-          authorization: useGetToken(),
-        },
-      },
-    );
-    taskEventHistory.value = response.content;
-  } catch (error: any) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Нe удалось получить комментарии",
-    };
-  }
-}
-async function getRelatedHotbed() {
-  const response = await $fetch<Marker>(
-    `${store.apiV1}/geo/info/${taskEvent.value?.geoPointId}`,
+  const response = await $fetch<TaskEventsHistoryRequest>(
+    `${store.apiV1}/event/${route.params.id}/history`,
     {
       method: "GET",
       headers: {
@@ -302,7 +385,28 @@ async function getRelatedHotbed() {
       },
     },
   );
-  relatedHotbed.value = response;
+  return response.content;
+}
+async function getRelatedHotbed() {
+  try {
+    const response = await $fetch<Marker>(
+      `${store.apiV1}/geo/info/${pageData.value.taskEvent?.geoPointId}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    relatedHotbed.value = response;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Нe удалось получить очаг проблемы, связанный с мероприятием",
+    };
+  }
 }
 async function saveChanges() {
   try {
@@ -314,30 +418,32 @@ async function saveChanges() {
           authorization: useGetToken(),
         },
         body: {
-          statusCode: taskEvent.value?.statusCode,
-          name: taskEvent.value?.name,
-          endDate: taskEvent.value?.endDate,
-          description: taskEvent.value?.description,
-          operatorId: taskEvent.value?.responsibleEmployeeOption?.value,
+          statusCode: pageData.value.taskEvent?.statusCode,
+          name: pageData.value.taskEvent?.name,
+          endDate: pageData.value.taskEvent?.endDate,
+          description: pageData.value.taskEvent?.description,
+          operatorId:
+            pageData.value.taskEvent?.responsibleEmployeeOption?.value,
         },
       },
     );
-    taskEvent.value = {
+    pageData.value.taskEvent = {
       ...response,
       responsibleEmployeeOption: {
         name: `${response.operator?.lastName} ${response.operator?.firstName} ${response.operator?.patronymic}`,
         value: response.operator?.id,
       },
     };
+    editMode.value = false;
     updateTaskEventCardList();
   } catch (error: any) {
+    console.error(error);
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
       text: "Не удалось изменить данные мероприятия",
     };
   }
-  editMode.value = false;
 }
 
 function openDeleteDialog() {
@@ -350,86 +456,92 @@ function cancelDeleteAction() {
 
 async function confirmDeleteAction() {
   await deleteTaskEvent();
-  showDeleteDialog.value = false;
 }
 async function deleteTaskEvent() {
-  await $fetch(`${store.apiV1}/event/${route.params.id}`, {
-    method: "DELETE",
-    headers: {
-      authorization: useGetToken(),
-    },
-  });
-  useState<Alert>("showAlert").value = {
-    show: true,
-    type: "success",
-    text: "Мероприятие успешно удалено",
-  };
-  navigateTo("/for-employee/task-events");
-}
-function filterEmployees(search: string) {
-  getEmployees(search);
-}
-async function getTaskEvent() {
-  const response = await $fetch<TaskEvent>(
-    `${store.apiV1}/event/${route.params.id}`,
-    {
-      method: "GET",
+  try {
+    deleteDialogState.value = "loading";
+    await $fetch(`${store.apiV1}/event/${route.params.id}`, {
+      method: "DELETE",
       headers: {
         authorization: useGetToken(),
       },
-    },
-  );
-  taskEvent.value = {
-    ...response,
-    responsibleEmployeeOption: {
-      name: `${response.operator?.lastName} ${response.operator?.firstName} ${response.operator?.patronymic}`,
-      value: response.operator?.id,
-    },
-  };
-  updateTaskEventCardList();
-  await getRelatedHotbed();
-  pageLoaded.value = true;
+    });
+    deleteDialogState.value = "success";
+    showDeleteDialog.value = false;
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "success",
+      text: "Мероприятие успешно удалено",
+    };
+    navigateTo("/for-employee/task-events");
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось удалить мероприятие",
+    };
+    deleteDialogState.value = "error";
+  }
+}
+async function filterEmployees(search: string) {
+  try {
+    pageData.value.responsibleEmployeesOptions = await getEmployees(search);
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Нe удалось получить список сотрудников",
+    };
+  }
 }
 function updateTaskEventCardList() {
   hotdebCardList.value = [
     {
       label: "Статус",
-      value: taskEvent.value?.statusCode,
+      value: pageData.value.taskEvent?.statusCode,
       type: "status",
     },
     {
       label: "Ответственный",
-      value: taskEvent.value?.operator?.id
-        ? `${taskEvent.value.operator?.lastName} ${taskEvent.value.operator?.firstName} ${taskEvent.value.operator?.patronymic}`
+      value: pageData.value.taskEvent?.operator?.id
+        ? `${pageData.value.taskEvent.operator?.lastName} ${pageData.value.taskEvent.operator?.firstName} ${pageData.value.taskEvent.operator?.patronymic}`
         : "",
       type: "link",
     },
     {
       label: "Автор мероприятия",
-      value: taskEvent.value?.author?.id
-        ? `${taskEvent.value.author?.lastName} ${taskEvent.value.author?.firstName} ${taskEvent.value.author?.patronymic}`
+      value: pageData.value.taskEvent?.author?.id
+        ? `${pageData.value.taskEvent.author?.lastName} ${pageData.value.taskEvent.author?.firstName} ${pageData.value.taskEvent.author?.patronymic}`
         : "",
       type: "link",
     },
     {
       label: "Дата создания",
-      value: taskEvent.value?.startDate
-        ? date.formatDate(new Date(taskEvent.value.startDate), "DD.MM.YYYY")
+      value: pageData.value.taskEvent?.startDate
+        ? date.formatDate(
+            new Date(pageData.value.taskEvent.startDate),
+            "DD.MM.YYYY",
+          )
         : "",
       type: "text",
     },
     {
       label: "Ожидаемая дата завершения",
-      value: taskEvent.value?.endDate
-        ? date.formatDate(new Date(taskEvent.value.endDate), "DD.MM.YYYY")
+      value: pageData.value.taskEvent?.endDate
+        ? date.formatDate(
+            new Date(pageData.value.taskEvent.endDate),
+            "DD.MM.YYYY",
+          )
         : "",
       type: "text",
     },
     {
       label: "Дата изменения",
-      value: taskEvent.value?.lastUpdateDate
+      value: pageData.value.taskEvent?.lastUpdateDate
         ? date.formatDate(
-            new Date(taskEvent.value.lastUpdateDate),
+            new Date(pageData.value.taskEvent.lastUpdateDate),
             "DD.MM.YYYY",
           )
         : "",
@@ -437,17 +549,11 @@ function updateTaskEventCardList() {
     },
     {
       label: "Очаг",
-      value: taskEvent.value?.geoPointId ? "Подробнее" : "",
+      value: pageData.value.taskEvent?.geoPointId ? "Подробнее" : "",
       type: "link",
     },
   ];
 }
-onMounted(() => {
-  getTaskEvent();
-  getHotbeds();
-  getEmployees();
-  getHistory();
-});
 </script>
 
 <style scoped lang="scss">

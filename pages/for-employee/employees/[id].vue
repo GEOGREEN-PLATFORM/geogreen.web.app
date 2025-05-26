@@ -1,210 +1,212 @@
 <template>
   <main class="b-page">
-    <div class="b-page__top-section">
-      <section class="b-profile-card">
-        <div class="b-profile-card__user-header">
-          <div class="b-avatar" @click="editMode && triggerFileUpload()">
-            <input
-              type="file"
-              ref="fileInput"
-              class="b-avatar__file-input"
-              @change="onFileSelected"
-              accept="image/*"
-            />
-            <img
-              v-if="userData.image && avatarSrc"
-              :src="avatarSrc"
-              alt="Аватар"
-              class="b-avatar__item"
-              @click="openPhoto(avatarSrc)"
-            />
-            <div v-else class="b-avatar__item b-avatar__item--placeholder">
-              <span class="b-avatar__item-icon">
+    <div v-if="!pageError">
+      <div class="b-page__top-section">
+        <section class="b-profile-card">
+          <div class="b-profile-card__user-header">
+            <div class="b-avatar" @click="editMode && triggerFileUpload()">
+              <input
+                type="file"
+                ref="fileInput"
+                class="b-avatar__file-input"
+                @change="onFileSelected"
+                accept="image/*"
+              />
+              <img
+                v-if="pageData.userData.image && avatarSrc"
+                :src="avatarSrc"
+                alt="Аватар"
+                class="b-avatar__item"
+                @click="openPhoto(avatarSrc)"
+              />
+              <div v-else class="b-avatar__item b-avatar__item--placeholder">
+                <span class="b-avatar__item-icon">
+                  <q-icon
+                    :name="editMode ? mdiUpload : mdiAccountOutline"
+                    color="grey-400"
+                    size="32px"
+                  ></q-icon>
+                </span>
+              </div>
+              <div v-if="editMode" class="b-avatar__item-overlay">
+                <q-icon :name="mdiUpload" color="grey-050" size="32px"></q-icon>
+              </div>
+            </div>
+            <div class="b-name">
+              <input
+                type="text"
+                v-model="pageData.userData.fullName"
+                placeholder="Введите ФИО"
+                class="b-name__input gg-h1"
+                :class="{ 'b-name__input--edit': editMode }"
+                :readonly="!editMode"
+              />
+              <span
+                v-if="!editMode && store.user?.role === 'admin'"
+                class="b-name__block-icon"
+                @click="openToggleBlockDialog"
+              >
                 <q-icon
-                  :name="editMode ? mdiUpload : mdiAccountOutline"
-                  color="grey-400"
-                  size="32px"
+                  :name="isEmployeeBlocked ? mdiLockOutline : mdiLockOpenOutline"
+                  :color="isEmployeeBlocked ? 'red-500' : 'green-500'"
+                  size="24px"
                 ></q-icon>
               </span>
             </div>
-            <div v-if="editMode" class="b-avatar__item-overlay">
-              <q-icon :name="mdiUpload" color="grey-050" size="32px"></q-icon>
-            </div>
           </div>
-          <div class="b-name">
-            <input
-              type="text"
-              v-model="userData.fullName"
-              placeholder="Введите ФИО"
-              class="b-name__input gg-h1"
-              :class="{ 'b-name__input--edit': editMode }"
-              :readonly="!editMode"
-            />
-            <span
-              v-if="!editMode && store.user?.role === 'admin'"
-              class="b-name__block-icon"
-              @click="openToggleBlockDialog"
+          <div class="b-profile-card__content">
+            <q-form
+              v-if="editMode"
+              ref="formRef"
+              novalidate
+              greedy
+              @submit="saveChanges"
+              class="b-form"
             >
-              <q-icon
-                :name="isEmployeeBlocked ? mdiLockOutline : mdiLockOpenOutline"
-                :color="isEmployeeBlocked ? 'red-500' : 'green-500'"
-                size="24px"
-              ></q-icon>
-            </span>
-          </div>
-        </div>
-        <div class="b-profile-card__content">
-          <q-form
-            v-if="editMode"
-            ref="formRef"
-            novalidate
-            greedy
-            @submit="saveChanges"
-            class="b-form"
-          >
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Роль:</div>
-              <div class="b-labeled-field__value gg-t-base">{{ userData.role }}</div>
-            </div>
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
-              <CInputDate
-                v-model="userData.birthDate"
-                class="b-labeled-field__input"
-                height="44px"
-                :required="false"
-              ></CInputDate>
-            </div>
-            <div class="b-labeled-field b-labeled-field--required">
-              <div class="b-labeled-field__label gg-t-big">Email:</div>
-              <CInput
-                v-model="userData.email"
-                type="email"
-                class="b-labeled-field__input"
-                height="44px"
-              ></CInput>
-            </div>
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
-              <CInput
-                v-model="userData.phone"
-                class="b-labeled-field__input"
-                height="44px"
-                :required="false"
-                :rules="[(val: string) => !val || val.length === 18 || 'Неверный формат']"
-                maska="+7 (###) ###-##-##"
-              ></CInput>
-            </div>
-            <div class="b-form__actions">
-              <CButton
-                @click="cancelEdit"
-                size="medium"
-                design-type="secondary"
-                class="b-form__button b-form__button--cancel"
-              >
-                Отменить
-              </CButton>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Роль:</div>
+                <div class="b-labeled-field__value gg-t-base">{{ pageData.userData.role }}</div>
+              </div>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
+                <CInputDate
+                  v-model="pageData.userData.birthDate"
+                  class="b-labeled-field__input"
+                  height="44px"
+                  :required="false"
+                ></CInputDate>
+              </div>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Email:</div>
+                <div class="b-labeled-field__value gg-t-base">{{ pageData.userData.email }}</div>
+              </div>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
+                <CInput
+                  v-model="pageData.userData.phone"
+                  class="b-labeled-field__input"
+                  height="44px"
+                  :required="false"
+                  :rules="[(val: string) => !val || val.length === 18 || 'Неверный формат']"
+                  maska="+7 (###) ###-##-##"
+                ></CInput>
+              </div>
+              <div class="b-form__actions">
+                <CButton
+                  @click="cancelEdit"
+                  size="medium"
+                  design-type="secondary"
+                  class="b-form__button b-form__button--cancel"
+                >
+                  Отменить
+                </CButton>
 
+                <CButton
+                  size="medium"
+                  class="b-form__button b-form__button--save"
+                  type="submit"
+                  :disabled="formHasError || isAvatarUploading"
+                  :loading="editState === 'loading'"
+                >
+                  Сохранить
+                </CButton>
+              </div>
+            </q-form>
+            <div v-else class="b-profile-card__info-list">
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Роль:</div>
+                <div class="b-labeled-field__value gg-t-base">{{ pageData.userData.role }}</div>
+              </div>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
+                <div
+                  class="b-labeled-field__value gg-t-base"
+                  :class="{
+                    'b-labeled-field__value--empty': !pageData.userData.birthDate,
+                  }"
+                >
+                  {{ date.formatDate(pageData.userData.birthDate, "DD.MM.YYYY") || "Не указано" }}
+                </div>
+              </div>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Email:</div>
+                <div class="b-labeled-field__value gg-t-base">{{ pageData.userData.email }}</div>
+              </div>
+              <div class="b-labeled-field">
+                <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
+                <div
+                  class="b-labeled-field__value gg-t-base"
+                  :class="{
+                    'b-labeled-field__value--empty': !pageData.userData.birthDate,
+                  }"
+                >
+                  {{ pageData.userData.phone || "Не указано" }}
+                </div>
+              </div>
               <CButton
+                v-if="store.user?.role === 'admin'"
+                @click="toggleEditMode"
                 size="medium"
-                class="b-form__button b-form__button--save"
-                type="submit"
-                :disabled="formHasError || isAvatarUploading"
+                stretch="fill"
+                class="b-profile-card__edit-button"
               >
-                Сохранить
+                Редактировать
+              </CButton>
+              <CButton
+                v-if="store.user?.role === 'admin'"
+                @click="openToggleBlockDialog"
+                size="medium"
+                stretch="fill"
+                :bg-color="isEmployeeBlocked ? 'var(--app-red-500)' : 'var(--app-green-500)'"
+                class="b-profile-card__toggle-block-button"
+              >
+                Заблокировать
               </CButton>
             </div>
-          </q-form>
-          <div v-else class="b-profile-card__info-list">
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Роль:</div>
-              <div class="b-labeled-field__value gg-t-base">{{ userData.role }}</div>
-            </div>
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Дата рождения:</div>
-              <div
-                class="b-labeled-field__value gg-t-base"
-                :class="{
-                  'b-labeled-field__value--empty': !userData.birthDate,
-                }"
-              >
-                {{ date.formatDate(userData.birthDate, "DD.MM.YYYY") || "Не указано" }}
-              </div>
-            </div>
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Email:</div>
-              <div class="b-labeled-field__value gg-t-base">{{ userData.email }}</div>
-            </div>
-            <div class="b-labeled-field">
-              <div class="b-labeled-field__label gg-t-big">Номер телефона:</div>
-              <div
-                class="b-labeled-field__value gg-t-base"
-                :class="{
-                  'b-labeled-field__value--empty': !userData.birthDate,
-                }"
-              >
-                {{ userData.phone || "Не указано" }}
-              </div>
-            </div>
-            <CButton
-              v-if="store.user?.role === 'admin'"
-              @click="toggleEditMode"
-              size="medium"
-              stretch="fill"
-              class="b-profile-card__edit-button"
-            >
-              Редактировать
-            </CButton>
-            <CButton
-              v-if="store.user?.role === 'admin'"
-              @click="openToggleBlockDialog"
-              size="medium"
-              stretch="fill"
-              :bg-color="isEmployeeBlocked ? 'var(--app-red-500)' : 'var(--app-green-500)'"
-              class="b-profile-card__toggle-block-button"
-            >
-              Заблокировать
-            </CButton>
           </div>
+        </section>
+      </div>
+      <section class="b-page__table-section">
+        <div class="b-card__title gg-h3 q-mb-md">Мероприятия сотрудника</div>
+        <div class="b-table">
+          <CTable
+            :columns="tableHeaders"
+            :rows="tableRows"
+            v-model:pagination="pagination"
+            row-key="name"
+            :slots="['statusCode']"
+            @click:row="(row: any) => goToTaskEvent(row.id)"
+            @updateTable="updateTaskEventsTable"
+            :loading="taskEventsLoading"
+          >
+            <template v-slot:body-cell-statusCode="slotProps">
+              <div
+                class="base-status-container gg-t-small"
+                :class="
+                  TASK_EVENT_STATUS_STYLES[
+                    slotProps.row.statusCode as keyof typeof TASK_EVENT_STATUS_STYLES
+                  ]
+                "
+              >
+                {{ slotProps.row.statusCode }}
+              </div>
+            </template>
+          </CTable>
         </div>
       </section>
+      <CDialogConfirm
+        v-model="showBlockDialog"
+        :actionMainText="
+          isEmployeeBlocked ? 'разблокировать сотрудника' : 'заблокировать сотрудника'
+        "
+        :actionButtonConfirmText="isEmployeeBlocked ? 'Разблокировать' : 'Заблокировать'"
+        :negative="!isEmployeeBlocked"
+        :state="blockDialogState"
+        @cancel="cancelToggleBlockAction"
+        @confirm="confirmToggleBlockAction"
+      />
     </div>
-    <section class="b-page__table-section">
-      <div class="b-card__title gg-h3 q-mb-md">Мероприятия сотрудника</div>
-      <div class="b-table">
-        <CTable
-          :columns="tableHeaders"
-          :rows="tableRows"
-          v-model:pagination="pagination"
-          row-key="name"
-          :slots="['statusCode']"
-          @click:row="(row: any) => goToTaskEvent(row.id)"
-          @updateTable="getEmployeeTaskEvents"
-          :loading="taskEventsLoading"
-        >
-          <template v-slot:body-cell-statusCode="slotProps">
-            <div
-              class="base-status-container gg-t-small"
-              :class="
-                TASK_EVENT_STATUS_STYLES[
-                  slotProps.row.statusCode as keyof typeof TASK_EVENT_STATUS_STYLES
-                ]
-              "
-            >
-              {{ slotProps.row.statusCode }}
-            </div>
-          </template>
-        </CTable>
-      </div>
-    </section>
-    <CDialogConfirm
-      v-model="showBlockDialog"
-      :actionMainText="isEmployeeBlocked ? 'разблокировать сотрудника' : 'заблокировать сотрудника'"
-      :actionButtonConfirmText="isEmployeeBlocked ? 'Разблокировать' : 'Заблокировать'"
-      :negative="!isEmployeeBlocked"
-      @cancel="cancelToggleBlockAction"
-      @confirm="confirmToggleBlockAction"
-    />
+    <CError v-else :error="pageError" @refresh="refresh"></CError>
   </main>
 </template>
 
@@ -215,8 +217,10 @@ import {
   mdiLockOutline,
   mdiUpload,
 } from "@quasar/extras/mdi-v6";
+import { date } from "quasar";
 import { ref } from "vue";
 import { useMainStore } from "~/store/main";
+import type { TaskEvent } from "~/types/interfaces/taskEvents";
 
 interface UserData {
   fullName: string;
@@ -225,6 +229,13 @@ interface UserData {
   email: string;
   phone: string;
   image: ImageObj | null;
+  enabled: boolean;
+}
+interface TaskEventsRequest extends ServerPagination {
+  content: TaskEvent[];
+}
+interface PageData {
+  userData: UserData;
 }
 const editMode = ref(false);
 const showBlockDialog = ref(false);
@@ -235,147 +246,13 @@ const route = useRoute();
 const isEmployeeBlocked = ref(false);
 const fileInput = ref<HTMLInputElement>();
 const { openPhoto } = usePhotoViewer();
+const blockDialogState = ref<"success" | "error" | "loading">("success");
 const { formRef, formBindValidation, formHasError } = useFormValidation();
 const { uploadPhoto, getImageUrl } = useFiles();
-const initialUserData = ref<UserData>({
-  fullName: "",
-  role: "",
-  birthDate: "",
-  email: "",
-  phone: "",
-  image: null,
-});
-
-const userData = ref({ ...initialUserData.value });
-async function saveChanges() {
-  try {
-    await $fetch(`${store.apiV1}/user/search/${initialUserData.value.email}`, {
-      method: "PATCH",
-      headers: {
-        authorization: useGetToken(),
-      },
-      body: {
-        firstName: userData.value.fullName.split(" ")[1],
-        lastName: userData.value.fullName.split(" ")[0],
-        patronymic: userData.value.fullName.split(" ")[2],
-        email: userData.value.email,
-        number: userData.value.phone,
-        birthdate: userData.value.birthDate,
-        image: userData.value.image,
-      },
-    });
-    getUser();
-  } catch (error: any) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Не удалось сохранить изменения",
-    };
-  }
-  editMode.value = false;
-}
-async function getUser() {
-  const response = await $fetch<User>(
-    `${store.apiV1}/user/search/by-id/${route.params.id}`,
-    {
-      method: "GET",
-      headers: {
-        authorization: useGetToken(),
-      },
-    },
-  );
-  userData.value = {
-    role: response.role === "operator" ? "Оператор" : "Администратор",
-    email: response.email,
-    phone: response.number || "",
-    birthDate: response.birthdate || "",
-    fullName: `${response.lastName} ${response.firstName} ${response.patronymic}`,
-    image: response.image || null,
-  };
-  avatarSrc.value = userData.value.image
-    ? getImageUrl(userData.value.image.fullImageId)
-    : "";
-  initialUserData.value = { ...userData.value };
-  isEmployeeBlocked.value = !response.enabled;
-}
-async function confirmToggleBlockAction() {
-  await toggleBlockUser();
-  showBlockDialog.value = false;
-}
-async function toggleBlockUser() {
-  await $fetch(
-    `${store.apiV1}/user/register/${initialUserData.value.email}/enabled/${!isEmployeeBlocked.value}`,
-    {
-      method: "POST",
-      headers: {
-        authorization: useGetToken(),
-      },
-    },
-  );
-  isEmployeeBlocked.value = !isEmployeeBlocked.value;
-  useState<Alert>("showAlert").value = {
-    show: true,
-    type: "success",
-    text: `Учетная запись сотрудника ${isEmployeeBlocked.value ? "заблокирована" : "разблокирована"}`,
-  };
-}
-function toggleEditMode() {
-  editMode.value = !editMode.value;
-  if (editMode.value) {
-    formBindValidation();
-  }
-}
-function cancelEdit() {
-  userData.value = { ...initialUserData.value };
-  editMode.value = false;
-}
-
-async function onFileSelected(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const fileList = input.files;
-  if (!fileList || fileList.length === 0) {
-    console.warn("Файл не выбран");
-    return;
-  }
-  const file = fileList[0];
-  isAvatarUploading.value = true;
-
-  try {
-    const uploadedUrl = await uploadPhoto(file);
-    userData.value.image = uploadedUrl;
-    avatarSrc.value = getImageUrl(uploadedUrl.fullImageId);
-  } catch (error) {
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Не удалось загрузить фотографию",
-    };
-  } finally {
-    isAvatarUploading.value = false;
-  }
-}
-function triggerFileUpload() {
-  fileInput.value?.click();
-}
-function openToggleBlockDialog() {
-  showBlockDialog.value = true;
-}
-
-function cancelToggleBlockAction() {
-  showBlockDialog.value = false;
-}
-onMounted(() => {
-  getUser();
-  getEmployeeTaskEvents();
-});
-import { date } from "quasar";
-import type { TaskEvent } from "~/types/interfaces/taskEvents";
-interface TaskEventsRequest extends ServerPagination {
-  content: TaskEvent[];
-}
 const { TASK_EVENT_STATUS_OPTIONS, TASK_EVENT_STATUS_STYLES } =
   useGetStatusOptions();
 const myTaskEvents = ref<TaskEvent[]>([]);
+const editState = shallowRef<"success" | "error" | "loading">("success");
 const pagination = ref<TablePagination>({
   page: 1,
   rowsPerPage: 10,
@@ -420,6 +297,15 @@ const tableHeaders: TableHeader[] = [
     field: "endDate",
   },
 ];
+const initialUserData = ref<UserData>({
+  fullName: "",
+  role: "",
+  birthDate: "",
+  email: "",
+  phone: "",
+  image: null,
+  enabled: true,
+});
 const tableRows: ComputedRef<TableRow[]> = computed(() =>
   myTaskEvents.value.map((e) => ({
     id: e.id,
@@ -433,26 +319,219 @@ const tableRows: ComputedRef<TableRow[]> = computed(() =>
     endDate: date.formatDate(new Date(e.endDate), "DD.MM.YYYY"),
   })),
 );
-async function getEmployeeTaskEvents() {
-  taskEventsLoading.value = true;
-  const url = `${store.apiV1}/event/getAll`;
-  const response = await $fetch<TaskEventsRequest>(url, {
-    method: "GET",
-    headers: { Authorization: useGetToken() },
-    params: {
-      page: pagination.value.page - 1,
-      size: pagination.value.rowsPerPage,
-      operatorId: route.params.id,
-    },
-  });
-  myTaskEvents.value = response.content;
-  pagination.value.rowsNumber = response.totalItems;
-  taskEventsLoading.value = false;
+const {
+  data: pageData,
+  error: pageError,
+  refresh,
+} = await useAsyncData<PageData>(
+  `employee-page-${route.params.id}`,
+  async () => {
+    const [userData] = await Promise.all([getUser()]);
+    return { userData };
+  },
+  {
+    dedupe: "defer",
+    default: () => ({
+      userData: { ...initialUserData.value },
+    }),
+  },
+);
+if (pageData.value) {
+  updateRelatedUserData();
+}
+async function saveChanges() {
+  try {
+    editState.value = "loading";
+    const response = await $fetch<User>(
+      `${store.apiV1}/user/search/${initialUserData.value.email}`,
+      {
+        method: "PATCH",
+        headers: {
+          authorization: useGetToken(),
+        },
+        body: {
+          firstName: pageData.value.userData.fullName.split(" ")[1],
+          lastName: pageData.value.userData.fullName.split(" ")[0],
+          patronymic: pageData.value.userData.fullName.split(" ")[2],
+          email: pageData.value.userData.email,
+          number: pageData.value.userData.phone,
+          birthdate: pageData.value.userData.birthDate,
+          image: pageData.value.userData.image,
+        },
+      },
+    );
+    editState.value = "success";
+    editMode.value = false;
+    pageData.value.userData = getFormattedUserData(response);
+    updateRelatedUserData();
+  } catch (error: any) {
+    console.error(error);
+    editState.value = "error";
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось сохранить изменения",
+    };
+  }
+}
+async function getUser() {
+  try {
+    const response = await $fetch<User>(
+      `${store.apiV1}/user/search/by-id/${route.params.id}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    return getFormattedUserData(response);
+  } catch (error: any) {
+    console.error(error);
+    throw new AppError("Не удалось получить сотрудника", {
+      statusCode: error.response.status,
+    });
+  }
+}
+function getFormattedUserData(userRaw: User) {
+  return {
+    role: userRaw.role === "operator" ? "Оператор" : "Администратор",
+    email: userRaw.email,
+    phone: userRaw.number || "",
+    birthDate: userRaw.birthdate || "",
+    fullName: `${userRaw.lastName} ${userRaw.firstName} ${userRaw.patronymic}`,
+    image: userRaw.image || null,
+    enabled: userRaw.enabled,
+  };
+}
+function updateRelatedUserData() {
+  avatarSrc.value = pageData.value.userData.image
+    ? getImageUrl(pageData.value.userData.image.fullImageId)
+    : "";
+  initialUserData.value = { ...pageData.value.userData };
+  isEmployeeBlocked.value = pageData.value.userData.enabled;
+}
+async function confirmToggleBlockAction() {
+  await toggleBlockUser();
+}
+async function toggleBlockUser() {
+  try {
+    blockDialogState.value = "loading";
+    await $fetch(
+      `${store.apiV1}/user/register/${initialUserData.value.email}/enabled/${!isEmployeeBlocked.value}`,
+      {
+        method: "POST",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+    isEmployeeBlocked.value = !isEmployeeBlocked.value;
+    blockDialogState.value = "success";
+    showBlockDialog.value = false;
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "success",
+      text: `Учетная запись сотрудника ${isEmployeeBlocked.value ? "заблокирована" : "разблокирована"}`,
+    };
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: `Не удалось ${isEmployeeBlocked.value ? "заблокировать" : "разблокировать"} сотрудника`,
+    };
+    blockDialogState.value = "error";
+  }
+}
+function toggleEditMode() {
+  editMode.value = !editMode.value;
+  if (editMode.value) {
+    formBindValidation();
+  }
+}
+function cancelEdit() {
+  pageData.value.userData = { ...initialUserData.value };
+  editMode.value = false;
 }
 
+async function onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const fileList = input.files;
+  if (!fileList || fileList.length === 0) {
+    console.warn("Файл не выбран");
+    return;
+  }
+  const file = fileList[0];
+  isAvatarUploading.value = true;
+
+  try {
+    const uploadedUrl = await uploadPhoto(file);
+    pageData.value.userData.image = uploadedUrl;
+    avatarSrc.value = getImageUrl(uploadedUrl.fullImageId);
+  } catch (error) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось загрузить фотографию",
+    };
+  } finally {
+    isAvatarUploading.value = false;
+  }
+}
+async function updateTaskEventsTable() {
+  taskEventsLoading.value = true;
+  const data = await getEmployeeTaskEvents();
+  if (data) {
+    myTaskEvents.value = data.content;
+    updateTaskEventsRelatedData(data.totalItems);
+  }
+  taskEventsLoading.value = false;
+}
+async function getEmployeeTaskEvents() {
+  try {
+    const url = `${store.apiV1}/event/getAll`;
+    const response = await $fetch<TaskEventsRequest>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+      params: {
+        page: pagination.value.page - 1,
+        size: pagination.value.rowsPerPage,
+        operatorId: route.params.id,
+      },
+    });
+    return {
+      content: response.content,
+      totalItems: response.totalItems,
+    };
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список мероприятий сотрудника",
+    };
+  }
+}
+function updateTaskEventsRelatedData(totalItems: number) {
+  pagination.value.rowsNumber = totalItems;
+}
 function goToTaskEvent(id: string) {
   navigateTo(`/for-employee/task-events/${id}`);
 }
+function triggerFileUpload() {
+  fileInput.value?.click();
+}
+function openToggleBlockDialog() {
+  showBlockDialog.value = true;
+}
+
+function cancelToggleBlockAction() {
+  showBlockDialog.value = false;
+}
+onMounted(() => {
+  updateTaskEventsTable();
+});
 </script>
 
 <style scoped lang="scss">

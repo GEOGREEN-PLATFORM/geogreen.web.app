@@ -73,6 +73,12 @@ function updateValue(value: string | number | null) {
     emits("update:modelValue", value);
   });
 }
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    inputValue.value = newVal;
+  },
+);
 </script>
 
 <style lang="scss">

@@ -10,8 +10,8 @@
       <q-card-actions align="right" class="confirm-dialog__actions">
         <CButton v-close-popup label="Отмена" design-type="tertiary" @click="cancelAction" />
         <CButton
-          v-close-popup
           :label="actionButtonConfirmText"
+          :loading="props.state === 'loading'"
           design-type="primary"
           :bgColor="props.negative ? 'var(--app-red-500)' : 'var(--app-green-500)'"
           textColor="var(--app-white)"
@@ -28,12 +28,14 @@ interface Props {
   actionMainText?: string;
   actionButtonConfirmText?: string;
   negative?: boolean;
+  state?: "success" | "error" | "loading";
 }
 
 const props = withDefaults(defineProps<Props>(), {
   actionMainText: "подтвердить действие",
   actionButtonConfirmText: "Подтвердить",
   negative: true,
+  state: "success",
 });
 
 const emit = defineEmits<{

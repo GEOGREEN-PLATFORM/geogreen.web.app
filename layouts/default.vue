@@ -9,7 +9,7 @@
       </q-toolbar>
       <div class="hr-line"></div>
     </q-header>
-
+    <NuxtLoadingIndicator :height="5" color="var(--app-green-500)" />
     <q-page-container style="height: 100dvh">
       <NuxtPage></NuxtPage>
     </q-page-container>

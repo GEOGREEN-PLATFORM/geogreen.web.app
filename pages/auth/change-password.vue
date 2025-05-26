@@ -138,12 +138,12 @@ async function sendEmail() {
       }
     }, 1000);
   } catch (err) {
+    console.error(err);
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
       text: "Не удалось отправить письмо",
     };
-    throw new Error("Не удалось отправить письмо");
   } finally {
     pageState.buttonOpts.main.loading = false;
   }

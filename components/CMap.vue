@@ -1,306 +1,321 @@
 <template>
   <ClientOnly>
-    <ol-map
-      :load-tiles-while-animating="true"
-      :load-tiles-while-interacting="true"
-      class="g-green-map"
-      id="gg-map"
-      :controls="[]"
-      @click="handleMapClick"
-      @precompose.once="configureMap"
-      @pointermove="handleMapPointerMove"
-      ref="mapRef"
-    >
-      <ol-view
-        :center="gGreenOlMap.center"
-        :rotation="gGreenOlMap.rotation"
-        :resolution="gGreenOlMap.resolution"
-        :projection="gGreenOlMap.projection"
-      />
-      <ol-tile-layer>
-        <ol-source-xyz :url="gGreenOlMap.url" />
-      </ol-tile-layer>
-      <ol-control-bar ref="controlBar" v-if="!hideControls">
-        <ol-toggle-control
-          v-if="props.addMarker !== 'hide'"
-          html="Добавить маркер"
-          class-name="g-green-control-bar__item g-green-control-bar__marker"
-          :on-toggle="toggleMarkerAdd"
-        />
-        <ol-toggle-control
-          v-if="props.addZone !== 'hide'"
-          html="Добавить зону"
-          class-name="g-green-control-bar__item g-green-control-bar__zone"
-          :on-toggle="toggleZoneAdd"
-        />
-        <ol-toggle-control
-          v-if="props.toggleVisibility !== 'hide'"
-          :key="isAllZonesVisible"
-          :html="isAllZonesVisible ? 'Скрыть все зоны' : 'Показать все зоны'"
-          :class-name="`g-green-control-bar__item g-green-control-bar__zones-visible ${isAllZonesVisible ? 'g-green-control-bar__zones-visible--off' : ''}`"
-          :on-toggle="toggleAllZonesVisibility"
-        />
-      </ol-control-bar>
-      <ol-interaction-clusterselect
-        v-if="gGreenOlMap.interactionType !== 'zone_add'"
-        ref="featureSelect"
-        :point-radius="64"
-        @select="selectMarker"
+    <div class="map-container" style="position: relative; height: 100%; width: 100%">
+      <ol-map
+        :load-tiles-while-animating="true"
+        :load-tiles-while-interacting="true"
+        class="g-green-map"
+        id="gg-map"
+        :controls="[]"
+        @click="handleMapClick"
+        @precompose.once="configureMap"
+        @pointermove="handleMapPointerMove"
+        ref="mapRef"
+        :class="{ 'non-interactive': props.dataLoading }"
       >
-        <ol-style :override-style-function="overrideMarkerStyleFunction">
-          <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
-          <ol-style-circle :radius="48">
-            <ol-style-stroke color="black" :width="1" line-cap="round" />
-            <ol-style-fill color="black" />
-          </ol-style-circle>
-          <ol-style-text>
-            <ol-style-fill color="white" />
-          </ol-style-text>
-        </ol-style>
-      </ol-interaction-clusterselect>
+        <ol-view
+          :center="gGreenOlMap.center"
+          :rotation="gGreenOlMap.rotation"
+          :resolution="gGreenOlMap.resolution"
+          :projection="gGreenOlMap.projection"
+        />
+        <ol-tile-layer>
+          <ol-source-xyz :url="gGreenOlMap.url" />
+        </ol-tile-layer>
+        <ol-control-bar ref="controlBar" v-if="!hideControls">
+          <ol-toggle-control
+            v-if="props.addMarker !== 'hide'"
+            html="Добавить маркер"
+            class-name="g-green-control-bar__item g-green-control-bar__marker"
+            :on-toggle="toggleMarkerAdd"
+          />
+          <ol-toggle-control
+            v-if="props.addZone !== 'hide'"
+            html="Добавить зону"
+            class-name="g-green-control-bar__item g-green-control-bar__zone"
+            :on-toggle="toggleZoneAdd"
+          />
+          <ol-toggle-control
+            v-if="props.toggleVisibility !== 'hide'"
+            :key="isAllZonesVisible"
+            :html="isAllZonesVisible ? 'Скрыть все зоны' : 'Показать все зоны'"
+            :class-name="`g-green-control-bar__item g-green-control-bar__zones-visible ${isAllZonesVisible ? 'g-green-control-bar__zones-visible--off' : ''}`"
+            :on-toggle="toggleAllZonesVisibility"
+          />
+        </ol-control-bar>
+        <ol-interaction-clusterselect
+          v-if="gGreenOlMap.interactionType !== 'zone_add'"
+          ref="featureSelect"
+          :point-radius="64"
+          @select="selectMarker"
+        >
+          <ol-style :override-style-function="overrideMarkerStyleFunction">
+            <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
+            <ol-style-circle :radius="48">
+              <ol-style-stroke color="black" :width="1" line-cap="round" />
+              <ol-style-fill color="black" />
+            </ol-style-circle>
+            <ol-style-text>
+              <ol-style-fill color="white" />
+            </ol-style-text>
+          </ol-style>
+        </ol-interaction-clusterselect>
 
-      <ol-vector-layer>
-        <ol-source-vector :features="gGreenCluster.zonesFeatures" :format="gGreenCluster.geoJSON" />
-        <ol-style :override-style-function="overrideZoneStyleFunction" />
-      </ol-vector-layer>
-      <ol-vector-layer>
-        <ol-source-vector :key="upKey">
-          <ol-interaction-draw
-            v-if="gGreenOlMap.interactionType === 'zone_add'"
-            type="Polygon"
-            @drawend="createZone"
-          >
+        <ol-vector-layer>
+          <ol-source-vector
+            :features="gGreenCluster.zonesFeatures"
+            :format="gGreenCluster.geoJSON"
+          />
+          <ol-style :override-style-function="overrideZoneStyleFunction" />
+        </ol-vector-layer>
+        <ol-vector-layer>
+          <ol-source-vector :key="upKey">
+            <ol-interaction-draw
+              v-if="gGreenOlMap.interactionType === 'zone_add'"
+              type="Polygon"
+              @drawend="createZone"
+            >
+              <ol-style
+                :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density)"
+              />
+            </ol-interaction-draw>
             <ol-style
               :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density)"
             />
-          </ol-interaction-draw>
-          <ol-style :override-style-function="() => getPolygonStyleByDensity(gGreenZone.density)" />
-        </ol-source-vector>
-      </ol-vector-layer>
-      <ol-animated-clusterlayer :animation-duration="500" :distance="40">
-        <ol-source-vector
-          :features="gGreenCluster.markerFeatures"
-          :format="gGreenCluster.geoJSON"
-        />
-        <ol-style :override-style-function="overrideMarkerStyleFunction">
-          <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
-          <ol-style-circle :radius="48">
-            <ol-style-stroke color="black" :width="1" line-cap="round" />
-            <ol-style-fill color="black" />
-          </ol-style-circle>
-          <ol-style-text>
-            <ol-style-fill color="white" />
-          </ol-style-text>
-        </ol-style>
-      </ol-animated-clusterlayer>
-      <ol-geolocation
-        ref="geolocationRef"
-        :projection="gGreenOlMap.projection"
-        @change:position="geoLocChange"
-      >
-        <template>
-          <ol-vector-layer :zIndex="2">
-            <ol-source-vector>
-              <ol-feature ref="positionFeature">
-                <ol-geom-point :coordinates="gGreenOlMap.geolocation"></ol-geom-point>
-                <ol-style>
-                  <ol-style-icon :src="myLocationIcon" :scale="0.1"></ol-style-icon>
-                </ol-style>
-              </ol-feature>
-            </ol-source-vector>
-          </ol-vector-layer>
-        </template>
-      </ol-geolocation>
-      <ol-overlay
-        v-for="[id, marker] in Array.from(gGreenCluster.markersPopupOpened.entries())"
-        :key="id"
-        :position="marker.coordinate"
-        :auto-pan="true"
-        class-name="g-green-marker-popup-container"
-        positioning="bottom-center"
-      >
-        <div class="popup-marker">
-          <q-icon
-            class="popup-marker__close-img"
-            :name="mdiClose"
-            size="24px"
-            @click="handleCloseMarkerPopup(id)"
+          </ol-source-vector>
+        </ol-vector-layer>
+        <ol-animated-clusterlayer :animation-duration="500" :distance="40">
+          <ol-source-vector
+            :features="gGreenCluster.markerFeatures"
+            :format="gGreenCluster.geoJSON"
           />
-          <div
-            v-if="marker.isTempCreatedBy"
-            class="popup-marker__user-created text-center gg-t-base q-py-sm"
-          >
-            {{
-              marker.isTempCreatedBy === "user"
-                ? store.user?.role === "user"
-                  ? "Вы сообщаете об этом очаге"
-                  : "Пользователь сообщает об этом очаге"
-                : "Вы добавляете этот очаг"
-            }}
-          </div>
-          <ul v-if="marker.details" class="data-list">
-            <li
-              v-for="[name, value] in Object.entries(marker.details || {}).filter(
-                ([name, value]) =>
-                  marker.isTempCreatedBy === 'user'
-                    ? name === 'problemAreaType'
-                      ? true
-                      : false
-                    : shortInfoKeys[name],
-              )"
-              :key="name"
-              class="data-list__item"
-            >
-              <div class="data-list__name">{{ shortInfoKeys[name].name }}</div>
-              <div v-if="value" class="data-list__value">
-                <div v-if="shortInfoKeys[name].type === 'text'">{{ value }}</div>
-                <div
-                  v-else-if="shortInfoKeys[name].type === 'status' && typeof value === 'string'"
-                  :class="getStatusClasses(value)"
-                  class="data-list__status-block"
-                >
-                  {{ value }}
-                </div>
-              </div>
-              <div v-else class="data-list__value--empty">Не указано</div>
-            </li>
-          </ul>
-          <div v-else class="popup-marker__no-data">Данные не найдены</div>
-          <div
-            v-if="
-              store.user?.role !== 'user' || (marker.isTempCreatedBy && store.user?.role === 'user')
-            "
-            class="popup-marker__divider"
-          />
-          <ul class="actions-label">
-            <li
-              class="actions-label__action"
-              v-if="
-                props.editableMarkers === 'all' ||
-                (Array.isArray(props.editableMarkers) && props.editableMarkers?.includes(marker.id))
-              "
-            >
-              <q-icon
-                class="actions-label__icon actions-label__icon--blue"
-                :name="mdiInformation"
-                size="24px"
-              >
-                <CHint>
-                  Выбранный маркер будет автоматически перемещён внутрь
-                  {{ marker.coordinates?.length ? "измененной" : "добавленной" }} зоны
-                </CHint>
-              </q-icon>
-              <span class="actions-label__text" @click="addZone(id)"
-                >{{ marker.coordinates?.length ? "Изменить" : "Добавить" }} зону</span
-              >
-              <q-icon
-                class="actions-label__icon"
-                :name="marker.coordinates?.length ? mdiPencil : mdiPlus"
-              />
-            </li>
-            <li
-              class="actions-label__action"
-              v-if="
-                props.editableMarkers === 'all' ||
-                (Array.isArray(props.editableMarkers) && props.editableMarkers?.includes(marker.id))
-              "
-            >
-              <span class="actions-label__text">Плотность:</span>
-              <COptions
-                v-model="marker.details.density"
-                inline
-                :options="densityOptions"
-                @update:model-value="updateFeatures(id, marker)"
-              />
-            </li>
-            <li
-              class="actions-label__action"
-              v-if="
-                !marker.isTempCreatedBy &&
-                (props.nonCheckableMarkers === 'none' ||
-                  (Array.isArray(props.nonCheckableMarkers) &&
-                    !props.nonCheckableMarkers?.includes(marker.id)))
-              "
-            >
-              <CButton
-                label="Подробнее"
-                size="small"
-                stretch="fill"
-                design-type="secondary"
-                @click="checkDetailInfo(marker.id)"
-              ></CButton>
-            </li>
-            <li
-              class="actions-label__action"
-              v-if="
-                props.selectableMarkers === 'all' ||
-                (typeof Array.isArray(props.selectableMarkers) &&
-                  props.selectableMarkers?.includes(marker.id))
-              "
-            >
-              <CButton
-                v-if="marker.id !== props.selectedMarker?.id"
-                @click="externalSelectMarker(marker)"
-                label="Выбрать"
-                size="small"
-                stretch="fill"
-              ></CButton>
-              <CButton
-                v-else
-                @click="externalCancelMarkerSelection(marker)"
-                label="Отменить выбор"
-                size="small"
-                stretch="fill"
-                design-type="tertiary"
-              ></CButton>
-            </li>
-            <li
-              class="actions-label__action"
-              v-else-if="
-                (marker.isTempCreatedBy === 'employee' && store.user?.role !== 'user') ||
-                (marker.isTempCreatedBy === 'user' && store.user?.role === 'user')
-              "
-            >
-              <CButton
-                label="Удалить"
-                size="small"
-                stretch="fill"
-                bg-color="var(--app-red-500)"
-                @click="suggestDeleteMarker(marker.id)"
-              ></CButton>
-            </li>
-            <li class="actions-label__action">
-              <slot name="custom-action"></slot>
-            </li>
-            <li v-if="marker.isTempCreatedBy" class="actions-label__action">
-              <slot name="custom-temp-action"></slot>
-            </li>
-          </ul>
-        </div>
-      </ol-overlay>
-      <ol-fullscreen-control @click="checkFullscreenAvailability" />
-      <ol-zoom-control :zoomInLabel="plusElem" :zoomOutLabel="minusElem" />
-      <div class="geolocation-control">
-        <button
-          class="geolocation-btn"
-          @click="centerOnGeolocation"
-          :title="
-            gGreenOlMap.geolocation.length ? 'Центрировать по геолокации' : 'Геолокация недоступна'
-          "
+          <ol-style :override-style-function="overrideMarkerStyleFunction">
+            <ol-style-icon :src="markerIconDefaultSrc" :scale="1" />
+            <ol-style-circle :radius="48">
+              <ol-style-stroke color="black" :width="1" line-cap="round" />
+              <ol-style-fill color="black" />
+            </ol-style-circle>
+            <ol-style-text>
+              <ol-style-fill color="white" />
+            </ol-style-text>
+          </ol-style>
+        </ol-animated-clusterlayer>
+        <ol-geolocation
+          ref="geolocationRef"
+          :projection="gGreenOlMap.projection"
+          @change:position="geoLocChange"
         >
-          <q-icon :name="mdiCrosshairsGps" size="24px"></q-icon>
-        </button>
+          <template>
+            <ol-vector-layer :zIndex="2">
+              <ol-source-vector>
+                <ol-feature ref="positionFeature">
+                  <ol-geom-point :coordinates="gGreenOlMap.geolocation"></ol-geom-point>
+                  <ol-style>
+                    <ol-style-icon :src="myLocationIcon" :scale="0.1"></ol-style-icon>
+                  </ol-style>
+                </ol-feature>
+              </ol-source-vector>
+            </ol-vector-layer>
+          </template>
+        </ol-geolocation>
+        <ol-overlay
+          v-for="[id, marker] in Array.from(gGreenCluster.markersPopupOpened.entries())"
+          :key="id"
+          :position="marker.coordinate"
+          :auto-pan="true"
+          class-name="g-green-marker-popup-container"
+          positioning="bottom-center"
+        >
+          <div class="popup-marker">
+            <q-icon
+              class="popup-marker__close-img"
+              :name="mdiClose"
+              size="24px"
+              @click="handleCloseMarkerPopup(id)"
+            />
+            <div
+              v-if="marker.isTempCreatedBy"
+              class="popup-marker__user-created text-center gg-t-base q-py-sm"
+            >
+              {{
+                marker.isTempCreatedBy === "user"
+                  ? store.user?.role === "user"
+                    ? "Вы сообщаете об этом очаге"
+                    : "Пользователь сообщает об этом очаге"
+                  : "Вы добавляете этот очаг"
+              }}
+            </div>
+            <ul v-if="marker.details" class="data-list">
+              <li
+                v-for="[name, value] in Object.entries(marker.details || {}).filter(
+                  ([name, value]) =>
+                    marker.isTempCreatedBy === 'user'
+                      ? name === 'problemAreaType'
+                        ? true
+                        : false
+                      : shortInfoKeys[name],
+                )"
+                :key="name"
+                class="data-list__item"
+              >
+                <div class="data-list__name">{{ shortInfoKeys[name].name }}</div>
+                <div v-if="value" class="data-list__value">
+                  <div v-if="shortInfoKeys[name].type === 'text'">{{ value }}</div>
+                  <div
+                    v-else-if="shortInfoKeys[name].type === 'status' && typeof value === 'string'"
+                    :class="getStatusClasses(value)"
+                    class="data-list__status-block"
+                  >
+                    {{ value }}
+                  </div>
+                </div>
+                <div v-else class="data-list__value--empty">Не указано</div>
+              </li>
+            </ul>
+            <div v-else class="popup-marker__no-data">Данные не найдены</div>
+            <div
+              v-if="
+                store.user?.role !== 'user' ||
+                (marker.isTempCreatedBy && store.user?.role === 'user')
+              "
+              class="popup-marker__divider"
+            />
+            <ul class="actions-label">
+              <li
+                class="actions-label__action"
+                v-if="
+                  props.editableMarkers === 'all' ||
+                  (Array.isArray(props.editableMarkers) &&
+                    props.editableMarkers?.includes(marker.id))
+                "
+              >
+                <q-icon
+                  class="actions-label__icon actions-label__icon--blue"
+                  :name="mdiInformation"
+                  size="24px"
+                >
+                  <CHint>
+                    Выбранный маркер будет автоматически перемещён внутрь
+                    {{ marker.coordinates?.length ? "измененной" : "добавленной" }} зоны
+                  </CHint>
+                </q-icon>
+                <span class="actions-label__text" @click="addZone(id)"
+                  >{{ marker.coordinates?.length ? "Изменить" : "Добавить" }} зону</span
+                >
+                <q-icon
+                  class="actions-label__icon"
+                  :name="marker.coordinates?.length ? mdiPencil : mdiPlus"
+                />
+              </li>
+              <li
+                class="actions-label__action"
+                v-if="
+                  props.editableMarkers === 'all' ||
+                  (Array.isArray(props.editableMarkers) &&
+                    props.editableMarkers?.includes(marker.id))
+                "
+              >
+                <span class="actions-label__text">Плотность:</span>
+                <COptions
+                  v-model="marker.details.density"
+                  inline
+                  :options="densityOptions"
+                  @update:model-value="updateFeatures(id, marker)"
+                />
+              </li>
+              <li
+                class="actions-label__action"
+                v-if="
+                  !marker.isTempCreatedBy &&
+                  (props.nonCheckableMarkers === 'none' ||
+                    (Array.isArray(props.nonCheckableMarkers) &&
+                      !props.nonCheckableMarkers?.includes(marker.id)))
+                "
+              >
+                <CButton
+                  label="Подробнее"
+                  size="small"
+                  stretch="fill"
+                  design-type="secondary"
+                  @click="checkDetailInfo(marker.id)"
+                ></CButton>
+              </li>
+              <li
+                class="actions-label__action"
+                v-if="
+                  props.selectableMarkers === 'all' ||
+                  (typeof Array.isArray(props.selectableMarkers) &&
+                    props.selectableMarkers?.includes(marker.id))
+                "
+              >
+                <CButton
+                  v-if="marker.id !== props.selectedMarker?.id"
+                  @click="externalSelectMarker(marker)"
+                  label="Выбрать"
+                  size="small"
+                  stretch="fill"
+                ></CButton>
+                <CButton
+                  v-else
+                  @click="externalCancelMarkerSelection(marker)"
+                  label="Отменить выбор"
+                  size="small"
+                  stretch="fill"
+                  design-type="tertiary"
+                ></CButton>
+              </li>
+              <li
+                class="actions-label__action"
+                v-else-if="
+                  (marker.isTempCreatedBy === 'employee' && store.user?.role !== 'user') ||
+                  (marker.isTempCreatedBy === 'user' && store.user?.role === 'user')
+                "
+              >
+                <CButton
+                  label="Удалить"
+                  size="small"
+                  stretch="fill"
+                  bg-color="var(--app-red-500)"
+                  @click="suggestDeleteMarker(marker.id)"
+                ></CButton>
+              </li>
+              <li class="actions-label__action">
+                <slot name="custom-action"></slot>
+              </li>
+              <li v-if="marker.isTempCreatedBy" class="actions-label__action">
+                <slot name="custom-temp-action"></slot>
+              </li>
+            </ul>
+          </div>
+        </ol-overlay>
+        <ol-fullscreen-control @click="checkFullscreenAvailability" />
+        <ol-zoom-control :zoomInLabel="plusElem" :zoomOutLabel="minusElem" />
+        <div class="geolocation-control">
+          <button
+            class="geolocation-btn"
+            @click="centerOnGeolocation"
+            :title="
+              gGreenOlMap.geolocation.length
+                ? 'Центрировать по геолокации'
+                : 'Геолокация недоступна'
+            "
+          >
+            <q-icon :name="mdiCrosshairsGps" size="24px"></q-icon>
+          </button>
+        </div>
+      </ol-map>
+      <CDialogConfirm
+        v-model="confirmationDialog.isOpened"
+        :action-main-text="confirmationDialog.mainText"
+        :action-button-confirm-text="confirmationDialog.buttonText"
+        :state="confirmationDialog.state"
+        @confirm="deleteMarker"
+      />
+      <div v-show="false" class="html-control-elements">
+        <img src="/icons/plus.svg" ref="plusElem" />
+        <img src="/icons/minus.svg" ref="minusElem" />
       </div>
-    </ol-map>
-    <CDialogConfirm
-      v-model="confirmationDialog.isOpened"
-      :action-main-text="confirmationDialog.mainText"
-      :action-button-confirm-text="confirmationDialog.buttonText"
-      @confirm="deleteMarker"
-    />
-    <div v-show="false" class="html-control-elements">
-      <img src="/icons/plus.svg" ref="plusElem" />
-      <img src="/icons/minus.svg" ref="minusElem" />
+      <CLoader :visible="props.dataLoading" />
     </div>
   </ClientOnly>
 </template>
@@ -350,6 +365,12 @@ interface Props {
   dataLoading?: boolean;
   defaultInteractionType?: "zone_add" | "marker_add" | "none";
 }
+interface ConfirmationDialog {
+  isOpened: boolean;
+  mainText: string;
+  buttonText: string;
+  state: "success" | "error" | "loading";
+}
 const store = useMainStore();
 const mapRef = ref();
 const view = ref<View>();
@@ -372,10 +393,11 @@ const emit = defineEmits<{
 }>();
 
 const $q = useQuasar();
-const confirmationDialog = reactive({
+const confirmationDialog = reactive<ConfirmationDialog>({
   isOpened: false,
   mainText: "",
   buttonText: "",
+  state: "success",
 });
 const plusElem = ref<HTMLElement>();
 const minusElem = ref<HTMLElement>();
@@ -413,7 +435,7 @@ const geolocationRef = useTemplateRef<{ geoLoc: Geolocation }>(
   "geolocationRef",
 );
 const gGreenOlMap = reactive({
-  center: [4890670.38077, 7615726.876165] as Coordinate,
+  center: [5057923.391943933, 7726673.915596608] as Coordinate,
   resolution: 36,
   rotation: 0,
   interactionType: "none",
@@ -567,8 +589,11 @@ function selectMarker(event: SelectEvent) {
 }
 
 function deleteMarker() {
+  confirmationDialog.state = "loading";
   emit("deleteMarker", gGreenCluster.currentSelectedMarkerId);
   closeMarkerPopup(gGreenCluster.currentSelectedMarkerId);
+  confirmationDialog.state = "success";
+  confirmationDialog.isOpened = false;
 }
 
 function addMakrer(coordinate: Coordinate, zone?: ZoneWithDensity) {
@@ -885,6 +910,9 @@ watch(
 </script>
 
 <style scoped lang="scss">
+.map-container {
+  position: relative;
+}
 .g-green-map {
   height: 100%;
   width: 100%;
@@ -892,6 +920,9 @@ watch(
   // &:not(.is-active) * {
   //   pointer-events: none;
   // }
+  &.non-interactive {
+    pointer-events: none;
+  }
   .popup-marker {
     display: flex;
     flex-direction: column;

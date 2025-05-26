@@ -22,6 +22,7 @@
                 :shortInfoKeys="shortMarkerInfoNameKeys"
                 :selectedMarker="addedHotbed"
                 :editableMarkers="[props.from === 'user' ? '' : addedHotbed?.id || '']"
+                :dataLoading="hotbedsLoading"
               ></CMap>
             </q-card>
           </section>
@@ -127,6 +128,7 @@
           <CButton
             :label="applyLabel"
             :disabled="(currentStep === 2 && formHasError) || !isAddMarker"
+            :loading="props.addState === 'loading'"
             type="submit"
           />
         </footer>
@@ -142,10 +144,10 @@ import type { HotbedData } from "~/types/interfaces/hotbeds";
 
 interface Props {
   modelValue: boolean;
-  hotbeds?: Marker[];
   initialHotbed?: Marker | null;
   minimal?: boolean;
   from?: "user" | "employee";
+  addState: "success" | "error" | "loading";
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -166,6 +168,7 @@ const FILES_MAX_SIZE = 10_000_000;
 
 const dialogVisible = ref(props.modelValue);
 const existingHotbeds = ref<Marker[]>([]);
+const hotbedsLoading = ref(true);
 const hotbedEliminationMethods = ref<ItemOption[]>([]);
 const attachedFiles = ref<File[]>([]);
 const cancelLabel = ref("Отмена");
@@ -224,6 +227,25 @@ async function uploadFiles(files: File[]) {
   files.forEach((file) => {
     attachedFiles.value.push(file);
   });
+}
+async function getHotbeds() {
+  try {
+    hotbedsLoading.value = true;
+    const url = `${store.apiV1}/geo/info/getAll`;
+    const response = await $fetch<Marker[]>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+    });
+    existingHotbeds.value = response;
+    hotbedsLoading.value = false;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить очаги проблем",
+    };
+  }
 }
 function handleExternalHotbed(marker?: Marker | null) {
   if (!marker) return;
@@ -296,19 +318,29 @@ function onBack() {
   }
 }
 async function getEliminationMethodsByArea(area: string) {
-  hotbedData.value.eliminationMethod = "";
-  hotbedEliminationMethods.value = (
-    await $fetch<string[]>(
-      `${store.apiV1}/geo/dict/elimination-methods/${area}`,
-      {
-        method: "GET",
-        headers: { Authorization: useGetToken() },
-      },
-    )
-  ).map((elem) => ({
-    name: elem,
-    value: elem,
-  }));
+  try {
+    hotbedData.value.eliminationMethod = "";
+    hotbedEliminationMethods.value = (
+      await $fetch<string[]>(
+        `${store.apiV1}/geo/dict/elimination-methods/${area}`,
+        {
+          method: "GET",
+          headers: { Authorization: useGetToken() },
+        },
+      )
+    ).map((elem) => ({
+      name: elem,
+      value: elem,
+    }));
+  } catch (error: any) {
+    console.error(error);
+    hotbedEliminationMethods.value = [];
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить методы устранения проблем",
+    };
+  }
 }
 function deleteTempHotbed(id: string) {
   existingHotbeds.value = existingHotbeds.value.filter(
@@ -338,8 +370,6 @@ async function createHotbed() {
     hotbedData.value.images.push(image);
   }
   emits("hotbedCreated", hotbedData.value);
-  dialogVisible.value = false;
-  resetForm();
 }
 async function uploadPhoto(file: File) {
   try {
@@ -429,12 +459,6 @@ function resetForm() {
   isAddMarker.value = !!props.initialHotbed;
 }
 watch(
-  () => props.hotbeds,
-  (newVal) => {
-    existingHotbeds.value = newVal ? [...newVal] : [];
-  },
-);
-watch(
   () => hotbedData.value,
   (newData) => {
     const details = addedHotbed.value?.details;
@@ -449,7 +473,15 @@ watch(
   },
   { deep: true },
 );
-
+watch(
+  () => props.addState,
+  (newVal, oldVal) => {
+    if (newVal === "success" && oldVal === "loading") {
+      resetForm();
+      getHotbeds();
+    }
+  },
+);
 watch(
   () => props.modelValue,
   (newVal) => {
@@ -463,7 +495,7 @@ watch(
   },
 );
 onMounted(() => {
-  existingHotbeds.value = props.hotbeds || [];
+  getHotbeds();
   if (props.initialHotbed) {
     handleExternalHotbed(props.initialHotbed);
   }

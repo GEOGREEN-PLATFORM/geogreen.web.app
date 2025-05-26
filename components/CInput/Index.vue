@@ -13,7 +13,6 @@
       :label="label"
       :type="currentType"
       :rules="validationRules"
-      lazy-rules
       :no-error-icon="hideErrorIcon"
       :hide-bottom-space="hideBottomSpace"
       :placeholder="placeholder"

@@ -67,7 +67,7 @@
     </section>
     <PagesHotbedsAdd
       v-model="isHotbedDialogOpen"
-      :hotbeds="hotbeds"
+      :addState="addHotbedDialogState"
       @hotbedCreated="handleHotbedCreated"
     />
   </main>
@@ -135,6 +135,9 @@ const tableHeaders: TableHeader[] = [
     field: "dateUpdated",
   },
 ];
+const addHotbedDialogState = shallowRef<"success" | "error" | "loading">(
+  "success",
+);
 const hotbeds = ref<Marker[]>([]);
 const tableRows: ComputedRef<TableRow[]> = computed(() =>
   hotbeds.value.map((e) => ({
@@ -183,6 +186,7 @@ const hotbedsLoading = ref(true);
 const isHotbedDialogOpen = ref(false);
 async function handleHotbedCreated(newHotbed: HotbedData) {
   try {
+    addHotbedDialogState.value = "loading";
     await $fetch(`${store.apiV1}/geo/info`, {
       method: "POST",
       headers: {
@@ -199,13 +203,17 @@ async function handleHotbedCreated(newHotbed: HotbedData) {
           workStage: "Создано",
           problemAreaType: newHotbed.problemAreaType,
           comment: newHotbed.comment,
-          density: newHotbed.density,
+          density: newHotbed.density === "default" ? null : newHotbed.density,
         },
         coordinates: newHotbed.coordinates?.[0] || null,
       },
     });
+    addHotbedDialogState.value = "success";
+    isHotbedDialogOpen.value = false;
     getHotbeds();
   } catch (error: any) {
+    console.error(error);
+    addHotbedDialogState.value = "error";
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
@@ -214,41 +222,51 @@ async function handleHotbedCreated(newHotbed: HotbedData) {
   }
 }
 async function getHotbeds() {
-  hotbedsLoading.value = true;
-  let fromDateParam = "";
-  let toDateParam = "";
-  if (
-    filters.value[3].selected &&
-    typeof filters.value[3].selected === "string"
-  ) {
-    fromDateParam = filters.value[3].selected;
-    toDateParam = filters.value[3].selected;
-  } else {
-    const { from, to } = filters.value[3].selected as {
-      from: string | null;
-      to: string | null;
+  try {
+    hotbedsLoading.value = true;
+    let fromDateParam = "";
+    let toDateParam = "";
+    if (
+      filters.value[3].selected &&
+      typeof filters.value[3].selected === "string"
+    ) {
+      fromDateParam = filters.value[3].selected;
+      toDateParam = filters.value[3].selected;
+    } else {
+      const { from, to } = filters.value[3].selected as {
+        from: string | null;
+        to: string | null;
+      };
+      fromDateParam = from || "";
+      toDateParam = to || "";
+    }
+    const url = `${store.apiV1}/geo/info`;
+    const response = await $fetch<GeoPointsRequest>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+      params: {
+        search: searchHotbedStr.value || undefined,
+        workStage: filters.value[1].selected || undefined,
+        problemAreaType: filters.value[0].selected || undefined,
+        landType: filters.value[2].selected || undefined,
+        fromDate: fromDateParam ? fromDateParam : undefined,
+        toDate: toDateParam ? toDateParam : undefined,
+        page: pagination.value.page - 1,
+        size: pagination.value.rowsPerPage,
+      },
+    });
+    hotbeds.value = response.geoPoints;
+    pagination.value.rowsNumber = response.totalItems;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить очаги проблем",
     };
-    fromDateParam = from || "";
-    toDateParam = to || "";
+  } finally {
+    hotbedsLoading.value = false;
   }
-  const url = `${store.apiV1}/geo/info`;
-  const response = await $fetch<GeoPointsRequest>(url, {
-    method: "GET",
-    headers: { Authorization: useGetToken() },
-    params: {
-      search: searchHotbedStr.value || undefined,
-      workStage: filters.value[1].selected || undefined,
-      problemAreaType: filters.value[0].selected || undefined,
-      landType: filters.value[2].selected || undefined,
-      fromDate: fromDateParam ? fromDateParam : undefined,
-      toDate: toDateParam ? toDateParam : undefined,
-      page: pagination.value.page - 1,
-      size: pagination.value.rowsPerPage,
-    },
-  });
-  hotbeds.value = response.geoPoints;
-  pagination.value.rowsNumber = response.totalItems;
-  hotbedsLoading.value = false;
 }
 function searchHotbed() {
   debounce(getHotbeds, 500, "searchHotbed");

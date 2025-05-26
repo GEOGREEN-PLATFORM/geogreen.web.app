@@ -132,6 +132,8 @@ $app-narrow-mobile: 364px;
     }
   }
   &__content-wrapper {
+    display: flex;
+    flex-direction: column;
     padding: 0;
     overflow: hidden !important;
     border-radius: 12px;
@@ -142,10 +144,12 @@ $app-narrow-mobile: 364px;
       .c-dialog__content-container {
         height: fit-content !important;
         width: fit-content !important;
+        max-width: 100%;
       }
       .c-dialog__content {
         height: fit-content !important;
         width: fit-content !important;
+        max-width: 100%;
         display: flex;
       }
       border-radius: 12px !important;
@@ -163,6 +167,8 @@ $app-narrow-mobile: 364px;
     overflow: auto;
     will-change: scroll-position;
     height: 100%;
+    display: flex;
+    flex-direction: column;
     padding: 24px 32px;
     @media screen and (max-width: $app-mobile) {
       padding: 12px 24px;

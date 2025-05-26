@@ -41,6 +41,7 @@
               addZone="hide"
               :addMarker="isAddMarker ? 'forbid' : 'enable'"
               defaultInteractionType="marker_add"
+              :dataLoading="hotbedsLoading"
             ></CMap>
           </article>
         </fieldset>
@@ -100,6 +101,7 @@ const { uploadPhoto } = useFiles();
 const isFormSending = shallowRef(false);
 const store = useMainStore();
 const existingHotbeds = ref<Marker[]>([]);
+const hotbedsLoading = shallowRef(false);
 const requiredFieldsFilled = computed(
   () => userReport.details.problemAreaType && isAddMarker.value,
 );
@@ -151,16 +153,28 @@ function selectProblemAreaType(type: string) {
   }
 }
 async function getExistingHotbedsOfProblemsByType(type: string) {
-  const data = await $fetch<Marker[]>(
-    `${store.apiV1}/geo/info/getAll/${type}`,
-    {
-      method: "GET",
-      headers: {
-        authorization: useGetToken(),
+  try {
+    hotbedsLoading.value = true;
+    const data = await $fetch<Marker[]>(
+      `${store.apiV1}/geo/info/getAll/${type}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
       },
-    },
-  );
-  existingHotbeds.value = data;
+    );
+    existingHotbeds.value = data;
+  } catch (err: any) {
+    console.error(err);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список очагов проблем",
+    };
+  } finally {
+    hotbedsLoading.value = false;
+  }
 }
 async function sendReport() {
   isFormSending.value = true;
@@ -194,10 +208,11 @@ async function sendReport() {
     store.thanksForReport = true;
     navigateTo("/report-problem/thanks");
   } catch (err: any) {
+    console.error(err);
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: `Невозможно отправить отчёт: ${err.message}`,
+      text: `Невозможно отправить сообщение о проблеме: ${err.message}`,
     };
   } finally {
     isFormSending.value = false;

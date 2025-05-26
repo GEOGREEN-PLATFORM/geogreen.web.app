@@ -198,7 +198,7 @@ async function getEmployees() {
     useState<Alert>("showAlert").value = {
       show: true,
       type: "error",
-      text: "Не удалось загрузить сотрудников. Попробуйте ещё раз.",
+      text: "Не удалось получить сотрудников",
     };
   } finally {
     employeesLoading.value = false;

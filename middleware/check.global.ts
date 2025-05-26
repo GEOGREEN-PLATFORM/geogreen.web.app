@@ -30,6 +30,14 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     "account-employee",
     "account-user",
   ];
+  const allNames = [
+    ...noAuthAllowedPathNames,
+    ...userAllowedPathNames,
+    ...employeeAllowedPathNames,
+  ];
+  if (!allNames.includes(to.name as string)) {
+    return;
+  }
   if (
     !noAuthAllowedPathNames.includes(to.name as string) &&
     !(await getUserDataByEmail(getUserEmail()))

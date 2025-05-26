@@ -36,6 +36,7 @@
                 selectable-markers="all"
                 @select-marker="handleHotbedSelected"
                 @cancel-marker-selection="handleHotbedDeselected"
+                :dataLoading="hotbedsLoading"
               ></CMap
             ></q-card>
           </section>
@@ -43,7 +44,7 @@
         <template v-else-if="currentStep === 1">
           <section class="b-form__section">
             <div class="b-form__section-content">
-              <CInput v-model="taskEventData.name" @update:model-value="" label="Название"></CInput>
+              <CInput v-model="taskEventData.name" label="Название"></CInput>
               <CInputTextarea
                 class="b-form__comment"
                 label="Описание"
@@ -54,6 +55,7 @@
                 v-model="taskEventData.expectedDateEnd"
                 label="Ожидаемая дата завершения"
                 class="b-form__field"
+                required
               />
               <CInputSelect
                 v-model="taskEventData.responsibleEmployee"
@@ -96,6 +98,7 @@
               (currentStep === 2 && formHasError) ||
               (currentStep === 3 && !taskEventData.relatedHotbedId)
             "
+            :loading="props.addState === 'loading'"
             type="submit"
           />
         </footer>
@@ -106,15 +109,18 @@
 
 <script setup lang="ts">
 import { date } from "quasar";
+import { useMainStore } from "~/store/main";
 import type { TaskEventData } from "~/types/interfaces/taskEvents";
 
 interface Props {
   modelValue: boolean;
   hotbeds: Marker[];
   employeesOptions: ItemOption[];
+  addState: "success" | "loading" | "error";
 }
 
 const props = defineProps<Props>();
+const store = useMainStore();
 const emits = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
   (e: "taskEventCreated", taskEventData: TaskEventData): void;
@@ -125,6 +131,7 @@ const { formRef, formBindValidation, formHasError } = useFormValidation();
 
 const dialogVisible = ref(props.modelValue);
 const existingHotbeds = ref<Marker[]>([]);
+const hotbedsLoading = ref(true);
 const currentSelectedHotbed = ref<Marker | null>(null);
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
@@ -180,9 +187,7 @@ function onBack() {
   }
 }
 async function createTaskEvent() {
-  dialogVisible.value = false;
   emits("taskEventCreated", taskEventData.value);
-  resetForm();
 }
 function handleHotbedSelected(hotbedId: string, hotbed: Marker) {
   taskEventData.value.relatedHotbedId = hotbedId;
@@ -226,7 +231,26 @@ function updateLabels() {
       "Выберите существующий очаг проблемы для создания связи с задачей";
   }
 }
-
+async function getHotbeds() {
+  try {
+    hotbedsLoading.value = true;
+    const url = `${store.apiV1}/geo/info/getAll`;
+    const response = await $fetch<Marker[]>(url, {
+      method: "GET",
+      headers: { Authorization: useGetToken() },
+    });
+    existingHotbeds.value = response;
+  } catch (error: any) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось получить список очагов проблем",
+    };
+  } finally {
+    hotbedsLoading.value = false;
+  }
+}
 function resetForm() {
   currentStep.value = 1;
   subTitle.value = "";
@@ -241,12 +265,6 @@ function resetForm() {
   };
 }
 watch(
-  () => props.hotbeds,
-  (newVal) => {
-    existingHotbeds.value = newVal;
-  },
-);
-watch(
   () => props.modelValue,
   (newVal) => {
     dialogVisible.value = newVal;
@@ -259,8 +277,17 @@ watch(
   },
 );
 onMounted(() => {
-  existingHotbeds.value = props.hotbeds;
+  getHotbeds();
 });
+watch(
+  () => props.addState,
+  (newVal, oldVal) => {
+    if (newVal === "success" && oldVal === "loading") {
+      resetForm();
+      getHotbeds();
+    }
+  },
+);
 </script>
 
 <style scoped lang="scss">
