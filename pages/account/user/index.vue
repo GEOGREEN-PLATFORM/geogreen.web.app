@@ -11,10 +11,17 @@
             <span class="b-card__name-text text-center gg-h3">{{
               `${store.user?.firstName} ${store.user?.lastName}`
             }}</span>
-            <q-icon :name="mdiAlertCircleOutline" color="orange-500" size="24px">
+            <q-icon
+              :name="store.user?.isEmailVerified ? mdiCheckCircleOutline : mdiAlertCircleOutline"
+              :color="store.user?.isEmailVerified ? 'green-500' : 'orange-500'"
+              size="24px"
+            >
               <CHint>
-                Электронная почта не подтверждена. Для подтверждения перейдите в управление
-                аккаунтом
+                {{
+                  store.user?.isEmailVerified
+                    ? "Электронная почта подтверждена"
+                    : "Электронная почта не подтверждена. Для подтверждения перейдите в управление аккаунтом"
+                }}
               </CHint>
             </q-icon>
           </div>
@@ -195,7 +202,11 @@
 </template>
 
 <script setup lang="ts">
-import { mdiAlertCircleOutline } from "@quasar/extras/mdi-v6";
+import {
+  mdiAlertCircleOutline,
+  mdiCheckCircleOutline,
+  mdiCheckOutline,
+} from "@quasar/extras/mdi-v6";
 import { date } from "quasar";
 import { useMainStore } from "~/store/main";
 import type { ApplicationData } from "~/types/interfaces/applications";

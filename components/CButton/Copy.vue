@@ -50,14 +50,12 @@ function onCopyMouseLeave() {
   showTooltip.value = false;
 }
 
-function copyText() {
-  navigator.clipboard.writeText(props.text).then(() => {
+async function copyText() {
+  const performSuccess = () => {
     tooltipText.value = props.tooltipSuccessText;
     showTooltip.value = true;
     isAnimating.value = true;
-
     emit("copy-success");
-
     setTimeout(() => {
       isAnimating.value = false;
       showTooltip.value = false;
@@ -65,7 +63,62 @@ function copyText() {
         tooltipText.value = props.tooltipInitialText;
       }, props.resetDelay);
     }, props.animationDuration);
-  });
+  };
+
+  const performFailure = () => {
+    tooltipText.value = "Ошибка при копировании";
+    showTooltip.value = true;
+    isAnimating.value = true;
+    setTimeout(() => {
+      isAnimating.value = false;
+      showTooltip.value = false;
+      setTimeout(() => {
+        tooltipText.value = props.tooltipInitialText;
+      }, props.resetDelay);
+    }, props.animationDuration);
+  };
+
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(props.text);
+      performSuccess();
+    } catch (err) {
+      console.error("Clipboard API error:", err);
+      performFailure();
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Не удалось скопировать текст",
+      };
+    }
+    return;
+  }
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = props.text;
+    textarea.style.position = "fixed";
+    textarea.style.top = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    const successful = document.execCommand("copy");
+    document.body.removeChild(textarea);
+
+    if (successful) {
+      performSuccess();
+    } else {
+      throw new Error("execCommand returned false");
+    }
+  } catch (err) {
+    console.error("Fallback copy error:", err);
+    performFailure();
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось скопировать текст",
+    };
+  }
 }
 </script>
 

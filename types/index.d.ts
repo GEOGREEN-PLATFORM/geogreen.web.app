@@ -61,6 +61,7 @@ declare global {
     role: string;
     enabled: boolean;
     creationDate: string;
+    isEmailVerified?: boolean;
     password?: string;
   }
   interface ImageObj {
