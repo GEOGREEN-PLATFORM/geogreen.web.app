@@ -46,7 +46,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
       - name: Run unit tests
-        run: npm run test:unit
+        run: npx vitest run --dir tests/unit
 
   integration_test:
     runs-on: ubuntu-latest
@@ -67,7 +67,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
       - name: Run integration tests
-        run: npm run test:integration
+        run: npx vitest run --dir tests/integration
 
   build-and-publish:
     name: Build & Publish
