@@ -233,10 +233,10 @@ async function getUserRequests() {
           page: pagination.page,
           size: pagination.size,
           status: "Создана",
-          problemType: filters.value[0].selected || undefined,
+          problemType: filters.value[0]?.selected || undefined,
           startDate:
-            (filters.value[1].selected as DateRange)?.from || undefined,
-          endDate: (filters.value[1].selected as DateRange)?.to || undefined,
+            (filters.value[1]?.selected as DateRange)?.from || undefined,
+          endDate: (filters.value[1]?.selected as DateRange)?.to || undefined,
         },
       },
     );
