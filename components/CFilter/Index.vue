@@ -24,6 +24,7 @@
             <div class="filter-items__select" v-if="item.type === 'select' && item.data">
               <CInputSelect
                 v-model="item.selected"
+                @update:model-value="emits('update:modelValue', filterItems)"
                 :options="item.data"
                 :label="item.label"
                 :disabled="item.disabled"
@@ -36,6 +37,7 @@
               <CInputDate
                 :label="item.label"
                 v-model="item.selected"
+                @update:model-value="emits('update:modelValue', filterItems)"
                 :disabled="item.disabled"
                 :required="false"
                 range

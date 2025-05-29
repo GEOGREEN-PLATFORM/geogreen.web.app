@@ -191,6 +191,14 @@ async function manageAccount(updatedAccountData: UserAccountData) {
           lastName: updatedAccountData.lastName,
           number: updatedAccountData.phoneNumber,
           image: updatedAccountData.image,
+          patronymic:
+            store.user?.role === "admin" || store.user?.role === "operator"
+              ? updatedAccountData.secondName
+              : undefined,
+          birthdate:
+            store.user?.role === "admin" || store.user?.role === "operator"
+              ? updatedAccountData.dateOfBirth
+              : undefined,
         },
       },
     );

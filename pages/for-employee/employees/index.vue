@@ -190,6 +190,7 @@ async function getEmployees() {
         toDate: toDateParam ? toDateParam : undefined,
         page: pagination.value.page - 1,
         size: pagination.value.rowsPerPage,
+        operatorId: store.user?.id,
       },
     });
     employees.value = response.users;

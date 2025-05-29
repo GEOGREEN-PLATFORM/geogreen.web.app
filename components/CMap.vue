@@ -522,7 +522,8 @@ async function ensureGeolocationEnabled() {
   if (status.state === "denied") {
     alert(
       "Не можем определить ваше местоположение.\n\n" +
-        "Включите геолокацию в настройках браузера или устройства.",
+        "Включите геолокацию в настройках браузера или устройства.\n\n" +
+        "Или сайт не поддерживает HTTPS.",
     );
     return false;
   }
@@ -578,9 +579,20 @@ function selectMarker(event: SelectEvent) {
     gGreenCluster.currentSelectedMarkerId = markerId;
     const marker = gGreenCluster.markersDict.get(markerId);
     if (marker) {
-      gGreenCluster.zonesFeatures = convertZonesToFeatures(
-        Array.from(gGreenCluster.markersDict.values()),
+      // gGreenCluster.zonesFeatures = convertZonesToFeatures(
+      //   Array.from(gGreenCluster.markersDict.values()),
+      // );
+      const existingZoneFeature = gGreenCluster.zonesFeatures.find(
+        (feature) => feature.getId() === markerId,
       );
+      if (!existingZoneFeature) {
+        requestAnimationFrame(() => {
+          gGreenCluster.zonesFeatures = [
+            ...gGreenCluster.zonesFeatures,
+            ...convertZonesToFeatures([marker]),
+          ];
+        });
+      }
       openMarkerPopup(markerId);
     }
   } else {
@@ -707,7 +719,7 @@ function handleMapPointerMove(event: MapBrowserEvent<UIEvent>) {
 }
 
 function deselectFeatures() {
-  featureSelectRef.value.select.getFeatures().clear();
+  featureSelectRef.value.select?.getFeatures().clear();
 }
 
 function toggleMarkerAdd() {
@@ -803,7 +815,7 @@ function createZone(event: DrawEvent) {
     );
     if (marker) {
       marker.coordinate = getCenter(event.feature.getGeometry()!.getExtent());
-      marker.coordinates = event.feature.getGeometry()!.getCoordinates();
+      marker.coordinates = event.feature.getGeometry()!.getCoordinates()?.[0];
       if (marker.details) {
         marker.details.density = gGreenZone.density;
       }
@@ -813,7 +825,7 @@ function createZone(event: DrawEvent) {
     gGreenCluster.currentSelectedMarkerId = "";
   } else if (event.feature) {
     const coordinate = getCenter(event.feature.getGeometry()!.getExtent());
-    const zoneCoordinates = event.feature.getGeometry()!.getCoordinates();
+    const zoneCoordinates = event.feature.getGeometry()!.getCoordinates()?.[0];
     addMakrer(coordinate, {
       coordinates: zoneCoordinates,
       density: gGreenZone.density,
@@ -825,9 +837,9 @@ onMounted(() => {
   if (Array.isArray(props.markers)) {
     gGreenCluster.markersDict = convertMarkersToDictionary(props.markers);
     gGreenCluster.markerFeatures = convertMarkersToFeatures(props.markers);
-    gGreenCluster.zonesFeatures = convertZonesToFeatures(
-      Array.from(gGreenCluster.markersDict.values()),
-    );
+    // gGreenCluster.zonesFeatures = convertZonesToFeatures(
+    //   Array.from(gGreenCluster.markersDict.values()),
+    // );
   }
   if (props.defaultInteractionType) {
     nextTick(() => {
@@ -857,14 +869,22 @@ watch(
     if (Array.isArray(newMarkers)) {
       gGreenCluster.markersDict = convertMarkersToDictionary(newMarkers);
       gGreenCluster.markerFeatures = convertMarkersToFeatures(newMarkers);
-      gGreenCluster.zonesFeatures = convertZonesToFeatures(
-        Array.from(gGreenCluster.markersDict.values()),
-      );
+      // gGreenCluster.zonesFeatures = convertZonesToFeatures(
+      //   Array.from(gGreenCluster.markersDict.values()),
+      // );
       if (newMarkers.length === 0) {
         if (gGreenCluster.markersPopupOpened.size) {
           closeAllMarkerPopup();
           deselectFeatures();
         }
+      } else if (newMarkers[newMarkers.length - 1].isTempCreatedBy) {
+        nextTick(() => {
+          requestAnimationFrame(() => {
+            gGreenCluster.currentSelectedMarkerId =
+              newMarkers[newMarkers.length - 1].id;
+            openMarkerPopup(gGreenCluster.currentSelectedMarkerId);
+          });
+        });
       }
     }
   },
