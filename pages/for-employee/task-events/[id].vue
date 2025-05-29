@@ -11,18 +11,9 @@
                   v-model="pageData.taskEvent.name"
                   placeholder="Введите название мероприятия"
                   class="b-name__input gg-h1"
-                  @blur="
-                    () => {
-                      store.user?.role === 'admin' && saveChanges();
-                    }
-                  "
-                  :readonly="store.user?.role !== 'admin'"
+                  @blur="saveChanges"
                 />
-                <span
-                  v-if="store.user?.role === 'admin'"
-                  class="b-name__delete-icon"
-                  @click="openDeleteDialog"
-                >
+                <span class="b-name__delete-icon" @click="openDeleteDialog">
                   <q-icon :name="mdiDeleteOutline" color="red-500" size="24px"></q-icon>
                 </span>
               </div>
@@ -35,7 +26,6 @@
                   v-model="pageData.taskEvent.description"
                   bg-color="transparent"
                   @blur="saveChanges"
-                  :readonly="store.user?.role !== 'admin'"
                 ></CInputTextarea>
                 <div class="b-labeled-field">
                   <div class="b-labeled-field__label gg-t-big">Ответственный:</div>
@@ -48,7 +38,6 @@
                     returnObj
                     height="40px"
                     class="b-labeled-field__input"
-                    :readonly="store.user?.role !== 'admin'"
                   ></CInputSelect>
                 </div>
                 <div class="b-labeled-field">
@@ -89,14 +78,15 @@
             :statusClassesByValue="TASK_EVENT_STATUS_STYLES"
           >
             <template #card-footer>
-              <div class="b-page__card-map-container q-mt-sm">
+              <q-card class="b-page__card-map-container q-mt-sm">
                 <CMap
                   :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
                   :markers="pageData.existingHotbeds"
                   :selectedMarker="relatedHotbed"
                   :shortInfoKeys="shortMarkerInfoNameKeys"
+                  @check-detail-info="(hotbedId: string) => navigateTo(`/hotbeds/${hotbedId}`)"
                   hide-controls
-                ></CMap></div></template
+                ></CMap></q-card></template
           ></CCardData>
         </section>
       </div>

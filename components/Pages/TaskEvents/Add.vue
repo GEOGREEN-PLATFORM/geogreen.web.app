@@ -20,10 +20,6 @@
       <q-form ref="formRef" novalidate greedy class="b-form" @submit="onSubmit">
         <template v-if="currentStep === 3">
           <section class="b-form__section b-form__map">
-            <p class="b-form__hint gg-t-small">
-              Выберите существующий на карте очаг со статусом “Создан”, чтобы добавить его в
-              мероприятие
-            </p>
             <q-card>
               <CMap
                 :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
@@ -36,6 +32,7 @@
                 selectable-markers="all"
                 @select-marker="handleHotbedSelected"
                 @cancel-marker-selection="handleHotbedDeselected"
+                @checkDetailInfo="openDetailedHotbed"
                 :dataLoading="hotbedsLoading"
               ></CMap
             ></q-card>
@@ -191,6 +188,9 @@ async function createTaskEvent() {
 function handleHotbedSelected(hotbedId: string, hotbed: Marker) {
   taskEventData.value.relatedHotbedId = hotbedId;
   currentSelectedHotbed.value = hotbed;
+}
+function openDetailedHotbed(hotbedId: string) {
+  window.open(`/hotbeds/${hotbedId}`, "_blank");
 }
 function handleHotbedDeselected(hotbedId: string) {
   taskEventData.value.relatedHotbedId = "";

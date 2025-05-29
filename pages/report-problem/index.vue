@@ -40,6 +40,7 @@
               :shortInfoKeys="shortMarkerInfoNameKeys"
               addZone="hide"
               :addMarker="isAddMarker ? 'forbid' : 'enable'"
+              nonCheckableMarkers="all"
               defaultInteractionType="marker_add"
               :dataLoading="hotbedsLoading"
             ></CMap>
@@ -109,7 +110,7 @@ const userReport = reactive<UserReport>({
   coordinate: [],
   details: {
     images: [],
-    problemAreaType: "",
+    problemAreaType: "Борщевик",
     userId: store.user?.id || "",
     comment: "",
   },
@@ -267,7 +268,7 @@ function addUserHotbed(coordinate: Coordinate) {
         comment: "",
         density: null,
       },
-      relatedTaskId: null,
+      relatedTaskIds: null,
       coordinates: [],
     });
     isAddMarker.value = true;
@@ -319,14 +320,15 @@ $app-mobile: 600px;
 $app-narrow-mobile: 364px;
 .b-page {
   background-color: var(--app-white);
-  max-width: 75vw;
-  margin: 0 auto;
+  width: 100%;
   padding-bottom: 24px;
-  @media screen and (max-width: $app-mobile) {
-    max-width: 100%;
-  }
   &__content {
     padding: 16px;
+    margin: 0 auto;
+    max-width: 75vw;
+    @media screen and (max-width: $app-mobile) {
+      max-width: 100%;
+    }
   }
 }
 .b-header {

@@ -157,10 +157,10 @@
                 @click="openToggleBlockDialog"
                 size="medium"
                 stretch="fill"
-                :bg-color="isEmployeeBlocked ? 'var(--app-red-500)' : 'var(--app-green-500)'"
+                :bg-color="isEmployeeBlocked ? 'var(--app-green-500)' : 'var(--app-red-500)'"
                 class="b-profile-card__toggle-block-button"
               >
-                Заблокировать
+                {{ isEmployeeBlocked ? "Разблокировать" : "Заблокировать" }}
               </CButton>
             </div>
           </div>

@@ -76,9 +76,8 @@
                 maska="+7 (###) ###-##-##"
               />
               <CInputSwitch
-                v-if="store.user?.role === 'user'"
                 v-model="userData.sendNotificantions"
-                label="Хочу получать уведомления об изменениях по моим сообщениям о проблемах на электронную почту"
+                label="Отключить все текущие уведомления"
               />
             </div>
           </section>
@@ -119,6 +118,7 @@ const props = defineProps<Props>();
 const emits = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
   (e: "managedAccount", user: User): void;
+  (e: "updateNotifications"): void;
 }>();
 const dialogVisible = ref(props.modelValue);
 const mailSendingState = ref<"success" | "error" | "loading">("success");
@@ -165,7 +165,26 @@ function submitUserData() {
     }
   });
 }
-
+async function deleteAllNotifications() {
+  try {
+    await $fetch(
+      `${store.apiV1}/notification/subscribe/${store.user?.email}/delete-all`,
+      {
+        method: "DELETE",
+        headers: {
+          authorization: useGetToken(),
+        },
+      },
+    );
+  } catch (error) {
+    console.error(error);
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось отключить уведомления",
+    };
+  }
+}
 function onBack() {
   resetForm();
   dialogVisible.value = false;
@@ -178,6 +197,9 @@ async function manageAccount(updatedAccountData: UserAccountData) {
   try {
     if (updatedAccountData.changedImage) {
       userData.image = await uploadPhoto(updatedAccountData.changedImage);
+    }
+    if (updatedAccountData.sendNotificantions) {
+      await deleteAllNotifications();
     }
     const updatedUser = await $fetch<User>(
       `${store.apiV1}/user/search/${props.user.email}`,
@@ -204,6 +226,12 @@ async function manageAccount(updatedAccountData: UserAccountData) {
     );
     dialogVisible.value = false;
     emits("managedAccount", updatedUser);
+    emits("updateNotifications");
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "success",
+      text: "Данные аккаунта успешно изменены",
+    };
   } catch (error: any) {
     useState<Alert>("showAlert").value = {
       show: true,
@@ -212,6 +240,7 @@ async function manageAccount(updatedAccountData: UserAccountData) {
     };
   } finally {
     isDataSending.value = false;
+    userData.sendNotificantions = false;
   }
 }
 async function verifyEmail() {
@@ -242,6 +271,9 @@ function resetForm() {
   userData.lastName = props.user.lastName;
   userData.phoneNumber = props.user.number || "";
   userData.image = props.user.image || null;
+  userData.secondName = props.user.patronymic || "";
+  userData.dateOfBirth = props.user.birthdate || "";
+  userData.sendNotificantions = false;
   if (countdownInterval) {
     clearInterval(countdownInterval);
     countdownInterval = undefined;

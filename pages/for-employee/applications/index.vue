@@ -30,7 +30,17 @@
                         :name="request.photoVerification ? mdiCheck : mdiAlert"
                         size="24px"
                         :color="request.photoVerification ? 'green-500' : 'red-500'"
-                      />
+                      >
+                        <CHint>
+                          {{
+                            request.photoVerification
+                              ? "Загруженные изображения достоверны"
+                              : request.images.length > 0
+                                ? "Загруженные изображения не достоверны"
+                                : "Нет загруженных изображений"
+                          }}
+                        </CHint></q-icon
+                      >
                     </div>
                   </div>
                   <span class="b-request-card__timestamp gg-caption">
@@ -222,6 +232,7 @@ async function getUserRequests() {
         params: {
           page: pagination.page,
           size: pagination.size,
+          status: "Создана",
           problemType: filters.value[0].selected || undefined,
           startDate:
             (filters.value[1].selected as DateRange)?.from || undefined,
@@ -357,7 +368,7 @@ async function viewOnMap(request: ApplicationData) {
       comment: "",
       density: null,
     },
-    relatedTaskId: null,
+    relatedTaskIds: null,
     coordinates: [],
   });
   selectedHotbed.value =
