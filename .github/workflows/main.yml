@@ -7,32 +7,67 @@ on:
     branches: [master, develop]
 
 jobs:
-  lint_test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
           node-version: 20
-
       - name: Cache node_modules
         uses: actions/cache@v3
         with:
           path: node_modules
           key: ${{ runner.os }}-node-v20-deps-${{ hashFiles('**/package-lock.json') }}
-
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
-
       - name: Run lint
         run: npm run lint
 
-      - name: Run tests
-        run: npm run test
+  unit_test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-v20-deps-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm install
+      - name: Run unit tests
+        run: npx vitest run --dir tests/unit
+
+  integration_test:
+    runs-on: ubuntu-latest
+    needs: unit_test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-v20-deps-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm install
+      - name: Run integration tests
+        run: npx vitest run --dir tests/integration
 
   build-and-publish:
     name: Build & Publish
@@ -41,23 +76,19 @@ jobs:
       packages: write
       pull-requests: write
     runs-on: ubuntu-latest
-    needs: lint_test
-
+    needs: [integration_test]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
-
       - name: Extract version
         id: extract_version
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: Create & push Git tag
         if: github.ref == 'refs/heads/master'
         run: |
@@ -65,14 +96,12 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag v$VERSION
           git push origin v$VERSION
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
