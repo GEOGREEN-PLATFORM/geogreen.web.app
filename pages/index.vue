@@ -198,7 +198,7 @@ function addTempHotbed(coordinate: Coordinate, zone?: ZoneWithDensity) {
       comment: "",
       density: zone?.density || null,
     },
-    relatedTaskId: null,
+    relatedTaskIds: null,
     coordinates: zone?.coordinates || null,
   });
   isAddMarker.value = true;

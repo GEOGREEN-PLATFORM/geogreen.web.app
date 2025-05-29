@@ -30,6 +30,9 @@
             :on-toggle="toggleMarkerAdd"
           />
           <ol-toggle-control
+            class-name="g-green-control-bar__item g-green-control-bar__bug-placeholder"
+          />
+          <ol-toggle-control
             v-if="props.addZone !== 'hide'"
             html="Добавить зону"
             class-name="g-green-control-bar__item g-green-control-bar__zone"
@@ -169,7 +172,33 @@
                     {{ value }}
                   </div>
                 </div>
-                <div v-else class="data-list__value--empty">Не указано</div>
+                <div v-else class="data-list__value--empty">Нет данных</div>
+              </li>
+              <li v-if="store.user?.role !== 'user'" class="data-list__item">
+                <div class="data-list__name">Плотность</div>
+                <div
+                  v-if="marker.details?.density"
+                  class="data-list__value"
+                  :style="{
+                    color: `var(--app-${
+                      densityOptions.find((option) => option.value === marker.details?.density)
+                        ?.color
+                    }`,
+                  }"
+                >
+                  <div>
+                    {{
+                      marker.details?.density === "default"
+                        ? "Не указана"
+                        : marker.details?.density === "HIGH"
+                          ? "Высокая"
+                          : marker.details?.density === "LOW"
+                            ? "Низкая"
+                            : "Средняя"
+                    }}
+                  </div>
+                </div>
+                <div v-else class="data-list__value--empty">Нет данных</div>
               </li>
             </ul>
             <div v-else class="popup-marker__no-data">Данные не найдены</div>
@@ -199,13 +228,15 @@
                     {{ marker.coordinates?.length ? "измененной" : "добавленной" }} зоны
                   </CHint>
                 </q-icon>
-                <span class="actions-label__text" @click="addZone(id)"
-                  >{{ marker.coordinates?.length ? "Изменить" : "Добавить" }} зону</span
-                >
-                <q-icon
-                  class="actions-label__icon"
-                  :name="marker.coordinates?.length ? mdiPencil : mdiPlus"
-                />
+                <div @click="addZone(id)" style="display: flex; gap: 8px; align-items: center">
+                  <span class="actions-label__text"
+                    >{{ marker.coordinates?.length ? "Изменить" : "Добавить" }} зону</span
+                  >
+                  <q-icon
+                    class="actions-label__icon"
+                    :name="marker.coordinates?.length ? mdiPencil : mdiPlus"
+                  />
+                </div>
               </li>
               <li
                 class="actions-label__action"
@@ -268,14 +299,17 @@
                 class="actions-label__action"
                 v-else-if="
                   (marker.isTempCreatedBy === 'employee' && store.user?.role !== 'user') ||
-                  (marker.isTempCreatedBy === 'user' && store.user?.role === 'user')
+                  (marker.isTempCreatedBy === 'user' &&
+                    store.user?.role === 'user' &&
+                    marker.id !== 'from-account')
                 "
               >
                 <CButton
                   label="Удалить"
                   size="small"
                   stretch="fill"
-                  bg-color="var(--app-red-500)"
+                  design-type="secondary"
+                  bg-color="var(--app-red-050)"
                   @click="suggestDeleteMarker(marker.id)"
                 ></CButton>
               </li>
@@ -408,7 +442,6 @@ const markersSrcByDensity = ref({
   MIDDLE: markerIconOrangeSrc,
   HIGH: markerIconRedSrc,
 });
-
 const densityOptions = [
   {
     value: "LOW",
@@ -603,6 +636,9 @@ function selectMarker(event: SelectEvent) {
 function deleteMarker() {
   confirmationDialog.state = "loading";
   emit("deleteMarker", gGreenCluster.currentSelectedMarkerId);
+  gGreenCluster.zonesFeatures = gGreenCluster.zonesFeatures.filter(
+    (feature) => feature.getId() !== gGreenCluster.currentSelectedMarkerId,
+  );
   closeMarkerPopup(gGreenCluster.currentSelectedMarkerId);
   confirmationDialog.state = "success";
   confirmationDialog.isOpened = false;
@@ -610,6 +646,18 @@ function deleteMarker() {
 
 function addMakrer(coordinate: Coordinate, zone?: ZoneWithDensity) {
   if (props.addMarker === "enable") {
+    if (
+      gGreenOlMap.interactionType === "marker_add" &&
+      !props.markers.find((marker) => marker.isTempCreatedBy)
+    ) {
+      nextTick(() => {
+        (
+          document.querySelector(
+            ".g-green-control-bar__marker button",
+          ) as HTMLButtonElement
+        )?.click();
+      });
+    }
     emit("addMarker", coordinate, zone);
   } else {
     emit("forbiddenAddMarker");
@@ -689,9 +737,27 @@ function getStatusClasses(status: string) {
   return props.dataStatusClasses[status];
 }
 function updateFeatures(id: string, marker: Marker) {
-  gGreenCluster.zonesFeatures = convertZonesToFeatures(
-    Array.from(gGreenCluster.markersDict.values()),
+  const existingZoneFeature = gGreenCluster.zonesFeatures.find(
+    (feature) => feature.getId() === marker.id,
   );
+  if (!existingZoneFeature) {
+    requestAnimationFrame(() => {
+      gGreenCluster.zonesFeatures = [
+        ...gGreenCluster.zonesFeatures,
+        ...convertZonesToFeatures([marker]),
+      ];
+    });
+  } else {
+    requestAnimationFrame(() => {
+      gGreenCluster.zonesFeatures = gGreenCluster.zonesFeatures.filter(
+        (feature) => feature.getId() !== marker.id,
+      );
+      gGreenCluster.zonesFeatures = [
+        ...gGreenCluster.zonesFeatures,
+        ...convertZonesToFeatures([marker]),
+      ];
+    });
+  }
   gGreenCluster.markerFeatures = convertMarkersToFeatures(
     Array.from(gGreenCluster.markersDict.values()),
   );
@@ -819,7 +885,6 @@ function createZone(event: DrawEvent) {
       if (marker.details) {
         marker.details.density = gGreenZone.density;
       }
-      toggleZoneAdd();
       emit("editMarker", gGreenCluster.currentSelectedMarkerId, marker);
     }
     gGreenCluster.currentSelectedMarkerId = "";
@@ -831,6 +896,15 @@ function createZone(event: DrawEvent) {
       density: gGreenZone.density,
     });
   }
+  nextTick(() => {
+    if (!props.markers.find((marker) => marker.isTempCreatedBy)) {
+      (
+        document.querySelector(
+          ".g-green-control-bar__zone button",
+        ) as HTMLButtonElement
+      )?.click();
+    }
+  });
   upKey.value++;
 }
 onMounted(() => {
@@ -859,7 +933,6 @@ watch(
   () => props.selectedMarker,
   (newVal, oldVal) => {
     if (!newVal) {
-      closeMarkerPopup(oldVal?.id || "");
     }
   },
 );
@@ -877,11 +950,39 @@ watch(
           closeAllMarkerPopup();
           deselectFeatures();
         }
-      } else if (newMarkers[newMarkers.length - 1].isTempCreatedBy) {
+      } else if (newMarkers[newMarkers.length - 1]?.isTempCreatedBy) {
         nextTick(() => {
           requestAnimationFrame(() => {
             gGreenCluster.currentSelectedMarkerId =
               newMarkers[newMarkers.length - 1].id;
+            const existingZoneFeature = gGreenCluster.zonesFeatures.find(
+              (feature) =>
+                feature.getId() === gGreenCluster.currentSelectedMarkerId,
+            );
+            if (!existingZoneFeature) {
+              requestAnimationFrame(() => {
+                gGreenCluster.zonesFeatures = [
+                  ...gGreenCluster.zonesFeatures,
+                  ...convertZonesToFeatures([
+                    newMarkers[newMarkers.length - 1],
+                  ]),
+                ];
+              });
+            } else {
+              requestAnimationFrame(() => {
+                gGreenCluster.zonesFeatures =
+                  gGreenCluster.zonesFeatures.filter(
+                    (feature) =>
+                      feature.getId() !== gGreenCluster.currentSelectedMarkerId,
+                  );
+                gGreenCluster.zonesFeatures = [
+                  ...gGreenCluster.zonesFeatures,
+                  ...convertZonesToFeatures([
+                    newMarkers[newMarkers.length - 1],
+                  ]),
+                ];
+              });
+            }
             openMarkerPopup(gGreenCluster.currentSelectedMarkerId);
           });
         });
@@ -904,9 +1005,9 @@ onMounted(() => {
   if (props.markers?.length) {
     gGreenCluster.markersDict = convertMarkersToDictionary(props.markers);
     gGreenCluster.markerFeatures = convertMarkersToFeatures(props.markers);
-    gGreenCluster.zonesFeatures = convertZonesToFeatures(
-      Array.from(gGreenCluster.markersDict.values()),
-    );
+    // gGreenCluster.zonesFeatures = convertZonesToFeatures(
+    //   Array.from(gGreenCluster.markersDict.values()),
+    // );
   }
   if (props.selectedMarker?.id) {
     gGreenCluster.currentSelectedMarkerId = props.selectedMarker.id;
@@ -1114,12 +1215,12 @@ watch(
           content: "";
         }
         &:hover {
-          background-color: var(--app-grey-050);
+          background-color: var(--app-green-050);
         }
       }
       &.ol-active {
         button {
-          background-color: var(--app-grey-050);
+          background-color: var(--app-green-100);
         }
       }
     }
@@ -1133,6 +1234,9 @@ watch(
         width: 24px;
         height: 24px;
       }
+    }
+    .ol-button.g-green-control-bar__bug-placeholder {
+      display: none;
     }
     .ol-button.g-green-control-bar__zone {
       button::before {

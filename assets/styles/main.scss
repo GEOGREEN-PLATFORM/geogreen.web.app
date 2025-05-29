@@ -1,6 +1,8 @@
 html,
 body {
-  font-family: Montserrat;
+  font-family:
+    Montserrat, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+    "Open Sans", "Helvetica Neue", sans-serif;
   color: var(--app-grey-500);
   font-size: 14px;
   font-weight: 500;

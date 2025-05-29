@@ -28,16 +28,6 @@
                 @blur="saveChanges()"
               ></CInputTextarea>
               <div class="b-labeled-field">
-                <div class="b-labeled-field__label gg-t-big">Мероприятие:</div>
-                <CInputSelect
-                  v-model="pageData.hotbed.relatedTaskId"
-                  disabled
-                  :options="[]"
-                  height="40px"
-                  class="b-labeled-field__input"
-                ></CInputSelect>
-              </div>
-              <div class="b-labeled-field">
                 <div class="b-labeled-field__label gg-t-big">Статус работы:</div>
                 <CInputSelect
                   v-model="pageData.hotbed.details.workStage"
@@ -79,6 +69,9 @@
             :selected-marker="pageData.hotbed"
             :non-checkable-markers="[pageData.hotbed.id]"
             :shortInfoKeys="shortMarkerInfoNameKeys"
+            add-zone="hide"
+            add-marker="hide"
+            @check-detail-info="(id: string) => navigateTo(`/hotbeds/${id}`)"
           ></CMap
         ></q-card>
       </section>
@@ -121,7 +114,9 @@ const showDeleteDialog = ref(false);
 const hotdebCardList = ref<CardItem[]>([]);
 const isUserSubscribedToHotbedNotifications = ref(false);
 const isReportLoading = ref(false);
-const linksByLabel = ref<Record<string, string>>({});
+const linksByLabel = computed<Record<string, string>>(() => ({
+  Мероприятие: `/for-employee/task-events/${pageData.value.hotbed?.relatedTaskIds?.[0]}`,
+}));
 const initialHotbed = ref<Marker | null>(null);
 const fullDataEditState = shallowRef<"success" | "error" | "loading">(
   "success",
@@ -264,6 +259,23 @@ async function subscribeToHotbedNotifications() {
     };
   }
 }
+async function checkSubscribedToHotbedNotifications() {
+  try {
+    await $fetch(`${store.apiV1}/notification/subscribe/${route.params.id}`, {
+      method: "GET",
+      headers: {
+        authorization: useGetToken(),
+      },
+    });
+    isUserSubscribedToHotbedNotifications.value = true;
+  } catch (err) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Не удалось подписаться на уведомление",
+    };
+  }
+}
 async function deleteSubscriptionFromHotbedNotifications() {
   try {
     await $fetch(
@@ -382,7 +394,7 @@ function updateHotdedCardList() {
     },
     {
       label: "Мероприятие",
-      value: pageData.value.hotbed?.relatedTaskId ? "Подробнее" : "",
+      value: pageData.value.hotbed?.relatedTaskIds?.[0] ? "Подробнее" : "",
       type: "link",
     },
     {
@@ -418,6 +430,9 @@ function updateHotdedCardList() {
     },
   ];
 }
+onMounted(async () => {
+  checkSubscribedToHotbedNotifications();
+});
 </script>
 
 <style scoped lang="scss">

@@ -15,21 +15,6 @@
           ></CButton>
         </div>
       </div>
-      <div class="b-header__search">
-        <CInput
-          v-model="searchHotbedStr"
-          @update:model-value="searchHotbed"
-          label="Поиск очага"
-          hideBottomSpace
-          disabled
-          height="48px"
-          :required="false"
-        >
-          <template #append>
-            <q-icon :name="mdiMagnify" />
-          </template>
-        </CInput>
-      </div>
     </header>
     <section class="b-page__content">
       <div class="b-filter q-mb-lg">
@@ -157,7 +142,6 @@ const filters = ref<FilterItem[]>([
     key: "problemAreaType",
     label: "Тип проблемы",
     selected: "",
-    disabled: true,
     data: store.formattedProblemAreaTypes,
   },
   {

@@ -128,7 +128,7 @@
           <CButton
             :label="applyLabel"
             :disabled="(currentStep === 2 && formHasError) || !isAddMarker"
-            :loading="props.addState === 'loading'"
+            :loading="props.addState === 'loading' || isImagesUploading"
             type="submit"
           />
         </footer>
@@ -171,6 +171,7 @@ const existingHotbeds = ref<Marker[]>([]);
 const hotbedsLoading = ref(true);
 const hotbedEliminationMethods = ref<ItemOption[]>([]);
 const attachedFiles = ref<File[]>([]);
+const isImagesUploading = ref(false);
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
 const subTitle = ref("Отметьте на карте новый очаг проблемы");
@@ -291,7 +292,7 @@ function addTempHotbed(coordinate: Coordinate, zone?: ZoneWithDensity) {
       comment: "",
       density: zone?.density || null,
     },
-    relatedTaskId: null,
+    relatedTaskIds: null,
     coordinates: zone?.coordinates || null,
   });
   isAddMarker.value = true;
@@ -365,11 +366,13 @@ function changeHotbedDensity() {
   }
 }
 async function createHotbed() {
+  isImagesUploading.value = true;
   for (const file of attachedFiles.value) {
     const image = await uploadPhoto(file);
     hotbedData.value.images.push(image);
   }
   emits("hotbedCreated", hotbedData.value);
+  isImagesUploading.value = false;
 }
 async function uploadPhoto(file: File) {
   try {

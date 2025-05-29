@@ -120,7 +120,7 @@ declare global {
       creationDate?: string;
       updateDate?: string;
     };
-    relatedTaskId: string | null;
+    relatedTaskIds: string[] | null;
     coordinates: Coordinate[] | null;
     isTempCreatedBy?: string;
   }

@@ -20,7 +20,7 @@
 import { evaAlertCircleOutline } from "@quasar/extras/eva-icons";
 
 const item = ref(useState<Alert>("showAlert"));
-
+const $q = useQuasar();
 function closeAlert() {
   item.value = {
     show: false,
@@ -30,6 +30,11 @@ function closeAlert() {
 }
 watch(item, () => {
   if (item.value.show) {
+    if (document.fullscreenElement) {
+      document
+        .exitFullscreen()
+        .catch((err) => console.warn("Fullscreen exit failed:", err));
+    }
     setTimeout(() => {
       closeAlert();
     }, 5000);
@@ -38,7 +43,7 @@ watch(item, () => {
 </script>
 <style lang="scss" scoped>
 .c-alert-container {
-  z-index: 10000;
+  z-index: 100000;
   position: fixed;
   top: 0;
   left: 0;

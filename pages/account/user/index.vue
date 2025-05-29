@@ -41,6 +41,7 @@
             :dataStatusClasses="HOTBED_WORK_STAGE_STYLES"
             :markers="existingHotbeds"
             :shortInfoKeys="shortMarkerInfoNameKeys"
+            non-checkable-markers="all"
           ></CMap>
         </q-card>
 
@@ -135,6 +136,7 @@
       v-model="dialogManageAccount"
       :user="store.user"
       @managedAccount="handleaAccountManaged"
+      @updateNotifications="getMyNotifications"
     ></PagesAccountManage>
     <CDialog v-model="isRequestDetailsOpen" center-content class="b-dialog">
       <div v-if="selectedDetailsRequest" class="b-request-card">
@@ -195,6 +197,7 @@
           :shortInfoKeys="shortMarkerInfoNameKeys"
           hide-controls
           :selectedMarker="selectedRequestMapHotbed"
+          non-checkable-markers="all"
         ></CMap>
       </div>
     </CDialog>
@@ -303,7 +306,7 @@ async function getHotbeds() {
 async function viewOnMap(request: ApplicationData) {
   await getHotbeds();
   existingHotbeds.value.push({
-    id: "user-temp-created",
+    id: "from-account",
     coordinate: request.coordinates,
     isTempCreatedBy: "user",
     details: {
@@ -318,7 +321,7 @@ async function viewOnMap(request: ApplicationData) {
       comment: "",
       density: null,
     },
-    relatedTaskId: null,
+    relatedTaskIds: null,
     coordinates: [],
   });
   selectedRequestMapHotbed.value =
