@@ -1,7 +1,12 @@
 <template>
   <div class="c-menu-container">
     <div class="toolbar-left gg-logo">
-      <NuxtImg class="gg-logo__image" src="/icons/gg_logo.png" width="64px"></NuxtImg>
+      <NuxtImg
+        @click="navigateTo('/')"
+        class="gg-logo__image"
+        src="/icons/gg_logo.png"
+        width="64px"
+      ></NuxtImg>
       <div class="gg-logo__text">GeoGreen</div>
       <div
         class="burger"
@@ -242,16 +247,6 @@ async function selectNestedPage(page: Page, nestedKey: string) {
 }
 
 const visiblePages = computed(() => props.pages.filter((p) => p.visible));
-
-function handleAccountClick() {
-  if (store.user?.role === "user") {
-    navigateTo("/account/user");
-  } else if (store.user) {
-    navigateTo("/account/employee");
-  } else {
-    navigateTo("/auth/register");
-  }
-}
 </script>
 
 <style scoped lang="scss">
@@ -288,6 +283,7 @@ function handleAccountClick() {
     display: flex;
     align-items: center;
     &__image {
+      cursor: pointer;
     }
     &__text {
       font-size: 32px;

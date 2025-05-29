@@ -48,8 +48,9 @@
                 <strong
                   >{{ hotbedsStatistics.createdGeoPoints || 0 }} ({{
                     (
-                      (hotbedsStatistics.allMyGeoPoints || 0) /
-                      (hotbedsStatistics.createdGeoPoints || 1)
+                      (hotbedsStatistics.createdGeoPoints /
+                        (hotbedsStatistics.allMyGeoPoints || 1)) *
+                      100
                     ).toFixed(0)
                   }}%)</strong
                 >
@@ -57,7 +58,7 @@
             </div>
             <q-linear-progress
               :value="
-                (hotbedsStatistics.allMyGeoPoints || 0) / (hotbedsStatistics.createdGeoPoints || 1)
+                (hotbedsStatistics.createdGeoPoints / (hotbedsStatistics.allMyGeoPoints || 1)) * 100
               "
               color="green-500"
               track-color="green-300"
@@ -73,8 +74,9 @@
                 <strong
                   >{{ hotbedsStatistics.processedGeoPoints || 0 }} ({{
                     (
-                      (hotbedsStatistics.allMyGeoPoints || 0) /
-                      (hotbedsStatistics.processedGeoPoints || 1)
+                      (hotbedsStatistics.processedGeoPoints /
+                        (hotbedsStatistics.allMyGeoPoints || 1)) *
+                      100
                     ).toFixed(0)
                   }}%)</strong
                 >
@@ -82,8 +84,8 @@
             </div>
             <q-linear-progress
               :value="
-                (hotbedsStatistics.allMyGeoPoints || 0) /
-                (hotbedsStatistics.processedGeoPoints || 1)
+                (hotbedsStatistics.processedGeoPoints / (hotbedsStatistics.allMyGeoPoints || 1)) *
+                100
               "
               color="green-500"
               track-color="green-300"
@@ -99,8 +101,9 @@
                 <strong
                   >{{ hotbedsStatistics.closedGeoPoints || 0 }} ({{
                     (
-                      (hotbedsStatistics.allMyGeoPoints || 0) /
-                      (hotbedsStatistics.closedGeoPoints || 1)
+                      (hotbedsStatistics.closedGeoPoints /
+                        (hotbedsStatistics.allMyGeoPoints || 1)) *
+                      100
                     ).toFixed(0)
                   }}%)</strong
                 >
@@ -108,7 +111,7 @@
             </div>
             <q-linear-progress
               :value="
-                (hotbedsStatistics.allMyGeoPoints || 0) / (hotbedsStatistics.closedGeoPoints || 1)
+                (hotbedsStatistics.closedGeoPoints / (hotbedsStatistics.allMyGeoPoints || 1)) * 100
               "
               color="green-500"
               track-color="green-300"
@@ -121,7 +124,7 @@
         <q-card class="b-card b-card--my-reports">
           <div class="b-card__title gg-h3">Ближайшее мероприятие</div>
           <div v-if="closestTaskEvent" class="b-requests">
-            <div class="b-request-item" @click="goToTaskEvent(closestTaskEvent.id)">
+            <div class="b-request-item">
               <div class="b-request-item__left-section">
                 <div class="b-request-item__text-info">
                   <div class="b-request-item__name gg-t-base">{{ closestTaskEvent.name }}</div>
@@ -143,10 +146,7 @@
                 </div>
               </div>
               <div class="b-request-item__right-section">
-                <CButton
-                  @click.stop="navigateTo(`/task-events/${closestTaskEvent.id}`)"
-                  size="small"
-                >
+                <CButton @click.stop="goToTaskEvent(closestTaskEvent.id)" size="small">
                   Подробнее
                 </CButton>
               </div>

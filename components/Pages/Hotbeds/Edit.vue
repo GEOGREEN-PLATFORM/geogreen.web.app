@@ -76,7 +76,7 @@
           <CButton @click="onBack" design-type="tertiary" :label="cancelLabel" />
           <CButton
             :label="applyLabel"
-            :loading="props.editState === 'loading'"
+            :loading="props.editState === 'loading' || isFilesUploading"
             :disabled="formHasError"
             type="submit"
           />
@@ -112,6 +112,7 @@ const localHotbed = ref<Marker>();
 const dialogVisible = ref(props.modelValue);
 const hotbedEliminationMethods = ref<ItemOption[]>([]);
 const attachedFiles = ref<(ImageObj | File)[]>([]);
+const isFilesUploading = ref(false);
 const cancelLabel = ref("Отмена");
 const applyLabel = ref("Далее");
 const subTitle = ref("Измените данные по очагу");
@@ -179,6 +180,7 @@ async function getEliminationMethodsByArea(area: string) {
 async function updateHotbed() {
   if (!localHotbed.value) return;
   localHotbed.value.details.images = [];
+  isFilesUploading.value = true;
   for (const file of attachedFiles.value) {
     let image: ImageObj | null = null;
     if (file instanceof File) {
@@ -189,6 +191,9 @@ async function updateHotbed() {
     localHotbed.value.details.images.push(image);
   }
   emits("hotbedUpdated", localHotbed.value);
+  nextTick(() => {
+    isFilesUploading.value = false;
+  });
 }
 function nextStep() {
   if (currentStep.value === 1) {

@@ -204,8 +204,9 @@ async function handleHotbedCreated(newHotbed: HotbedData) {
           problemAreaType: newHotbed.problemAreaType,
           comment: newHotbed.comment,
           density: newHotbed.density === "default" ? null : newHotbed.density,
+          operatorId: store.user?.id,
         },
-        coordinates: newHotbed.coordinates?.[0] || null,
+        coordinates: newHotbed.coordinates || null,
       },
     });
     addHotbedDialogState.value = "success";
@@ -240,6 +241,22 @@ async function getHotbeds() {
       fromDateParam = from || "";
       toDateParam = to || "";
     }
+    if (fromDateParam && toDateParam && fromDateParam === toDateParam) {
+      const startDate = new Date(fromDateParam);
+      const endDate = new Date(toDateParam);
+      const startOfDay = new Date(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate(),
+      );
+      const endOfDay = new Date(
+        endDate.getFullYear(),
+        endDate.getMonth(),
+        endDate.getDate() + 1,
+      );
+      fromDateParam = startOfDay.toISOString();
+      toDateParam = endOfDay.toISOString();
+    }
     const url = `${store.apiV1}/geo/info`;
     const response = await $fetch<GeoPointsRequest>(url, {
       method: "GET",
@@ -249,8 +266,8 @@ async function getHotbeds() {
         workStage: filters.value[1].selected || undefined,
         problemAreaType: filters.value[0].selected || undefined,
         landType: filters.value[2].selected || undefined,
-        fromDate: fromDateParam ? fromDateParam : undefined,
-        toDate: toDateParam ? toDateParam : undefined,
+        fromDate: fromDateParam || undefined,
+        toDate: toDateParam || undefined,
         page: pagination.value.page - 1,
         size: pagination.value.rowsPerPage,
       },

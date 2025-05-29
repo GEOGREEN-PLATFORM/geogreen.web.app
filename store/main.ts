@@ -53,15 +53,6 @@ export const useMainStore = defineStore("main", {
         value: el,
       }));
     },
-    // wsURL: (state) => {
-    //   return `${state.protocolWS}://${state.host}/`;
-    // },
-    // wsRaw: (state) => {
-    //   return `${state.protocol}://${state.host}/webSocket`;
-    // },
-    // baseURL: (state) => {
-    //   return `${state.protocol}://${state.host}:`;
-    // },
   },
   actions: {
     async initDicts() {

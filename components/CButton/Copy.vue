@@ -51,7 +51,7 @@ function onCopyMouseLeave() {
 }
 
 async function copyText() {
-  const performSuccess = () => {
+  const success = () => {
     tooltipText.value = props.tooltipSuccessText;
     showTooltip.value = true;
     isAnimating.value = true;
@@ -65,7 +65,8 @@ async function copyText() {
     }, props.animationDuration);
   };
 
-  const performFailure = () => {
+  const failure = (msg: string) => {
+    alert(msg);
     tooltipText.value = "Ошибка при копировании";
     showTooltip.value = true;
     isAnimating.value = true;
@@ -78,46 +79,15 @@ async function copyText() {
     }, props.animationDuration);
   };
 
-  if (navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(props.text);
-      performSuccess();
-    } catch (err) {
-      console.error("Clipboard API error:", err);
-      performFailure();
-      useState<Alert>("showAlert").value = {
-        show: true,
-        type: "error",
-        text: "Не удалось скопировать текст",
-      };
-    }
-    return;
-  }
   try {
-    const textarea = document.createElement("textarea");
-    textarea.value = props.text;
-    textarea.style.position = "fixed";
-    textarea.style.top = "-9999px";
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-
-    const successful = document.execCommand("copy");
-    document.body.removeChild(textarea);
-
-    if (successful) {
-      performSuccess();
-    } else {
-      throw new Error("execCommand returned false");
+    if (!navigator.clipboard?.writeText) {
+      failure("Соединение не поддерживает HTTPS — скопируйте текст вручную");
+      return;
     }
-  } catch (err) {
-    console.error("Fallback copy error:", err);
-    performFailure();
-    useState<Alert>("showAlert").value = {
-      show: true,
-      type: "error",
-      text: "Не удалось скопировать текст",
-    };
+    await navigator.clipboard.writeText(props.text);
+    success();
+  } catch {
+    failure("Соединение не поддерживает HTTPS — скопируйте текст вручную");
   }
 }
 </script>

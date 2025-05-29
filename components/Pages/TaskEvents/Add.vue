@@ -114,7 +114,6 @@ import type { TaskEventData } from "~/types/interfaces/taskEvents";
 
 interface Props {
   modelValue: boolean;
-  hotbeds: Marker[];
   employeesOptions: ItemOption[];
   addState: "success" | "loading" | "error";
 }

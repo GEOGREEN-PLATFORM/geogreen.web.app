@@ -108,6 +108,7 @@ function isValidDate(dateStr: string): boolean {
 }
 const dateRules = [
   (val: string) => {
+    if (props.range) return true;
     if (!props.required && !val) return true;
     if (props.required && !val) return "Не может быть пустым";
     return isValidDate(val) || "Используйте формат ДД.ММ.ГГГГ";
@@ -118,6 +119,10 @@ function getISOFromFormattedDate(val: string) {
   return new Date(year, month - 1, day).toISOString();
 }
 function updateDate(val: number | string | DateRange) {
+  if (!val) {
+    emit("update:modelValue", "");
+    return;
+  }
   if (typeof val === "string" && !props.range) {
     if (isValidDate(val)) {
       emit("update:modelValue", getISOFromFormattedDate(val));

@@ -77,9 +77,9 @@ describe("CFilterContainer (integration)", () => {
 
     // Сбрасываем фильтры
     await wrapper.find(".filter-content__btn--reset").trigger("click");
-
+    await nextTick();
     // Проверяем сброс
-    const emittedData = wrapper.emitted("update:modelValue")?.[0][0];
+    const emittedData = wrapper.emitted("update:modelValue")?.at(-1)?.[0];
     expect(emittedData[0].selected).toBe("");
     expect(emittedData[1].selected).toEqual({ from: "", to: "" });
     expect(wrapper.find(".filter-button__active-count").isVisible()).toBe(

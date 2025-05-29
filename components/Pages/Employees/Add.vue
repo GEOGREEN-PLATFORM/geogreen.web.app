@@ -227,6 +227,7 @@ async function addEmployee(newEmployee: EmployeeData) {
     });
     dialogVisible.value = false;
     emits("employeeCreated");
+    nextTick(() => resetForm());
   } catch (error: any) {
     useState<Alert>("showAlert").value = {
       show: true,

@@ -220,13 +220,13 @@ async function editHotbed(hotbedId: string, marker: Marker) {
         headers: {
           authorization: useGetToken(),
         },
-        body: { ...marker, coordinates: marker.coordinates?.[0] || null },
+        body: { ...marker, coordinates: marker.coordinates || null },
       });
     } catch (err: any) {
       useState<Alert>("showAlert").value = {
         show: true,
         type: "error",
-        text: `Не удалось изменить данные очага: ${err.message}`,
+        text: "Не удалось изменить данные очага",
       };
     }
   }
@@ -299,7 +299,7 @@ async function handleCreatedHotbed(newHotbed: HotbedData) {
             comment: newHotbed.comment,
             density: newHotbed.density === "default" ? null : newHotbed.density,
           },
-          coordinates: newHotbed.coordinates?.[0] || null,
+          coordinates: newHotbed.coordinates || null,
         },
       });
       useState<Alert>("showAlert").value = {
