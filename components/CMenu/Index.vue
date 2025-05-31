@@ -397,4 +397,11 @@ const visiblePages = computed(() => props.pages.filter((p) => p.visible));
 .slide-left-leave-from {
   transform: translateX(0);
 }
+.body--dark {
+  .gg-logo__text {
+    background: linear-gradient(270deg, #03a80e 0%, #078d10 52%, #a9efa4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
 </style>

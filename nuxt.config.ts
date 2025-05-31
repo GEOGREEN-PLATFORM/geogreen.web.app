@@ -13,7 +13,23 @@ export default defineNuxtConfig({
   },
 
   ssr: true,
-
+  app: {
+    head: {
+      charset: "utf-8",
+      title: "GeoGreen",
+      meta: [
+        {
+          name: "description",
+          content:
+            "GeoGreen — интерактивная платформа для быстрого обнаружения и устранения очагов экологических угроз (борщевик, свалки и др.). Отмечайте проблемы на карте, объединяйтесь и сохраняйте природу чистой!",
+        },
+      ],
+      viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+      htmlAttrs: {
+        lang: "ru",
+      },
+    },
+  },
   modules: [
     "@pinia/nuxt",
     "nuxt-quasar-ui",
@@ -37,7 +53,7 @@ export default defineNuxtConfig({
     config: {
       brand: {
         primary: "var(--app-green-500)",
-        dark: "var(--app-grey-900)",
+        dark: "var(--app-grey-800)",
         negative: "var(--app-red-500)",
         positive: "var(--app-green-500)",
       },

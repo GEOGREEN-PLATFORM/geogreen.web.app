@@ -57,8 +57,13 @@ export function useFetchTokens() {
       );
       useSetToken(response);
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching token:", error);
+      useState<Alert>("showAlert").value = {
+        show: true,
+        type: "error",
+        text: "Войдите в аккаунт, чтобы продолжить",
+      };
       return false;
     }
   }

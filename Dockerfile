@@ -1,5 +1,5 @@
 # Используем официальный Node.js образ (LTS версия)
-FROM node:18-alpine
+FROM node:22-alpine
 
 # Задаём рабочую директорию внутри контейнера
 WORKDIR /app

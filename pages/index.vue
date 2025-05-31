@@ -355,19 +355,23 @@ $app-narrow-mobile: 364px;
 
 .b-page {
   width: 100%;
-  height: 120dvh;
-  @media screen and (max-width: $app-mobile) {
-    height: 100%;
-  }
+  height: calc(100vh - 64px);
+  position: relative;
   background-color: var(--app-green-050);
+  @media screen and (min-width: $app-desktop) {
+    height: calc(100vh + 5vh + 64px);
+  }
+  @media screen and (max-width: $app-desktop) {
+    height: 100vh;
+  }
   .b-hero-background {
     position: absolute;
-    top: 0;
+    top: -64px;
     left: 50%;
     will-change: width, top, transform, background-color;
     transform: translateX(-50%);
     width: 100%;
-    height: 100dvh;
+    height: 100vh;
     background-image: url("/public/images/hero_main_bg.jpg");
     background-repeat: no-repeat;
     background-size: cover;
@@ -385,7 +389,7 @@ $app-narrow-mobile: 364px;
     &.scrolled {
       @media screen and (min-width: $app-desktop) {
         width: 80%;
-        top: 10dvh;
+        top: 5vh;
         border-radius: 24px;
       }
     }
@@ -395,7 +399,7 @@ $app-narrow-mobile: 364px;
       gap: 32px;
       max-width: 668px;
       position: relative;
-      top: 20dvh;
+      top: 20vh;
       left: 15dvw;
       transition:
         top 0.3s ease,
@@ -448,18 +452,19 @@ $app-narrow-mobile: 364px;
   &__content {
     position: absolute;
     background-color: var(--app-green-050);
-    height: 100dvh;
+    height: calc(100vh - 64px);
     width: 100%;
-    top: 100dvh;
+    top: calc(100vh - 64px);
     left: 0;
     padding: 32px;
-    padding-top: calc(64px + 32px);
     @media screen and (min-width: $app-desktop) {
-      top: 120dvh;
+      top: calc(100vh + 5vh + 64px);
+    }
+    @media screen and (max-width: $app-desktop) {
+      top: 100vh;
     }
     @media screen and (max-width: $app-mobile) {
       padding: 8px;
-      padding-top: calc(64px + 8px);
     }
     .b-page__map-container {
       height: 100%;

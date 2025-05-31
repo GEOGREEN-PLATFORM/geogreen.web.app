@@ -109,11 +109,16 @@ $app-narrow-mobile: 364px;
   }
 }
 
-.dark-mode {
+.body--dark {
   .page-container {
     &::before {
       opacity: 1;
     }
+  }
+  .page-content__logo {
+    background: linear-gradient(270deg, #03a80e 0%, #078d10 52%, #a9efa4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 }
 </style>

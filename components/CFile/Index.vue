@@ -3,7 +3,7 @@
     <div class="file__preview">
       <NuxtImg
         @click="openPhoto(localUrl)"
-        v-if="isImage"
+        v-if="isImage && localUrl"
         :src="localUrl"
         alt="Файл"
         class="file__image"
@@ -37,7 +37,6 @@ interface Props {
   hideCaption?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
-  raw: false,
   clearable: true,
   hideCaption: false,
 });

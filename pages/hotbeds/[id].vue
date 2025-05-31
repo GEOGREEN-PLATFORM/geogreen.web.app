@@ -239,7 +239,7 @@ async function getHotbeds() {
 }
 async function subscribeToHotbedNotifications() {
   try {
-    await $fetch(`${store.apiV1}/notification/subscribe`, {
+    const response = await $fetch(`${store.apiV1}/notification/subscribe`, {
       method: "POST",
       headers: {
         authorization: useGetToken(),
@@ -261,13 +261,18 @@ async function subscribeToHotbedNotifications() {
 }
 async function checkSubscribedToHotbedNotifications() {
   try {
-    await $fetch(`${store.apiV1}/notification/subscribe/${route.params.id}`, {
-      method: "GET",
-      headers: {
-        authorization: useGetToken(),
+    const response = await $fetch(
+      `${store.apiV1}/notification/subscribe/${route.params.id}`,
+      {
+        method: "GET",
+        headers: {
+          authorization: useGetToken(),
+        },
       },
-    });
-    isUserSubscribedToHotbedNotifications.value = true;
+    );
+    if (response) {
+      isUserSubscribedToHotbedNotifications.value = true;
+    }
   } catch (err) {
     useState<Alert>("showAlert").value = {
       show: true,
