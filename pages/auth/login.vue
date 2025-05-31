@@ -1,48 +1,57 @@
 <template>
-  <AuthPageForm
-    :button-options="buttonOptions"
-    @main-button-click="sendLogin"
-    @sub-button-click="goToRegister"
-  >
+  <PagesAuthForm :button-options="buttonOptions" @main-button-click="sendLogin">
     <template #form-content>
+      <h1 class="form-content__head gg-h1">Войти в аккаунт</h1>
       <div class="form-content">
-        <div
-          v-show="showAuthError"
-          class="form-content__auth-error-block text-center"
-        >
-          <span class="form-content__info-text form-content__info-text--error">
-            Логин или пароль введены неверно
-          </span>
-        </div>
         <div class="form-content__input-fields">
-          <KTInput v-model="userData.login" label="Логин" name="login" />
-          <KTInput
+          <CInput
+            v-model="userData.email"
+            label="Почта"
+            :rules="[validateEmail]"
+            name="email"
+            type="email"
+          />
+          <CInput
             v-model="userData.password"
             label="Пароль"
+            :rules="[validatePassword]"
             type="password"
             name="password"
           />
         </div>
-        <div class="form-content__forgot-password-block text-right">
-          <span class="form-content__info-text">
+        <div class="form-content__forgot-password-block q-mt-sm text-right">
+          <span class="action-label">
             <NuxtLink to="/auth/change-password">Забыли пароль?</NuxtLink>
           </span>
         </div>
       </div>
     </template>
-  </AuthPageForm>
+    <template #form-footer>
+      <div class="form-footer">
+        <div class="form-footer__no-account">
+          Еще нет аккаунта?
+          <NuxtLink to="/auth/register" class="action-label">Зарегистрироваться </NuxtLink>
+        </div>
+      </div>
+    </template>
+  </PagesAuthForm>
 </template>
 
 <script setup lang="ts">
+import { useMainStore } from "~/store/main";
+import type { UserAuthData } from "~/types/interfaces/userAuth";
 definePageMeta({
   layout: "auth",
 });
 
+const store = useMainStore();
+const { setAccessToken } = useFetchTokens();
+const { validateEmail, validatePassword } = useRules();
+const { saveUserEmail, getUserDataByEmail } = useCheckUser();
 const userData = ref<UserAuthData>({
-  login: "",
+  email: "",
   password: "",
 });
-const showAuthError = ref(false);
 const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
   main: {
     designType: "primary",
@@ -50,34 +59,45 @@ const buttonOptions = ref<{ main: ButtonOptions; sub: ButtonOptions }>({
     loading: false,
   },
   sub: {
-    designType: "secondary",
-    label: "У меня нет аккаунта",
+    show: false,
   },
 });
 
-function sendLogin() {
-  // запрос к апи
+async function sendLogin() {
   buttonOptions.value.main.loading = true;
-  setTimeout(() => goToMainPage(), 5000);
+  userData.value.email = userData.value.email.toLowerCase();
+  try {
+    if (await setAccessToken(userData.value)) {
+      saveUserEmail(userData.value.email);
+      await getUserDataByEmail(userData.value.email);
+      goToMainPage();
+    } else {
+      buttonOptions.value.main.loading = false;
+    }
+  } catch (error) {
+    useState<Alert>("showAlert").value = {
+      show: true,
+      type: "error",
+      text: "Возникла ошибка во время авторизации",
+    };
+    buttonOptions.value.main.loading = false;
+  }
 }
 
 function goToMainPage() {
-  buttonOptions.value.main.loading = false;
-  showAuthError.value = true;
-  // navigateTo({ path: '/' });
-}
-
-function goToRegister() {
-  navigateTo({ path: "/auth/register" });
+  navigateTo({ path: "/" });
 }
 </script>
 
 <style lang="scss" scoped>
 @use "@/assets/styles/pages/auth.scss";
 .form-content {
-  margin-top: 84px;
-  margin-bottom: 56px;
-  padding: 0px 16px;
-  gap: 8px;
+  position: relative;
+  margin-bottom: 28px;
+}
+.form-footer {
+  &__no-account {
+    text-align: center;
+  }
 }
 </style>

@@ -2,57 +2,111 @@ name: CI/CD
 
 on:
   push:
-    branches: [master, develop]
+    branches: [main, develop]
   pull_request:
-    branches: [master, develop]
+    branches: [main, develop]
 
 jobs:
-  # 1. Install dependencies job
-  lint_test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
           node-version: 20
-
       - name: Cache node_modules
         uses: actions/cache@v3
         with:
           path: node_modules
           key: ${{ runner.os }}-node-v20-deps-${{ hashFiles('**/package-lock.json') }}
-
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
-
       - name: Run lint
         run: npm run lint
 
-      - name: Run tests
-        run: npm run coverage
+  unit_test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-v20-deps-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm install
+      - name: Run unit tests
+        run: npx vitest run --dir tests/unit
 
-      - name: Code coverage
-        uses: codecov/codecov-action@v3
-  # # 2. Build and push Docker image job, which depends on "lint_test"
-  # build_and_push:
-  #   runs-on: ubuntu-latest
-  #   needs: lint_test
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v2
+  integration_test:
+    runs-on: ubuntu-latest
+    needs: unit_test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-v20-deps-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm install
+      - name: Run integration tests
+        run: npx vitest run --dir tests/integration
 
-  #     - name: Log in to Docker Hub
-  #       uses: docker/login-action@v2
-  #       with:
-  #         username: ${{ secrets.DOCKER_USERNAME }}
-  #         password: ${{ secrets.DOCKER_PASSWORD }}
-
-  #     - name: Build Docker image
-  #       run: docker build -t Black1Rabbit/tonight:latest .
-
-  #     - name: Push Docker image to Docker Hub
-  #       run: docker push Black1Rabbit/tonight:latest
+  build-and-publish:
+    name: Build & Publish
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    needs: [integration_test]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Extract version
+        id: extract_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Create & push Git tag
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v$VERSION
+          git push origin v$VERSION
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/geogreen-platform/web-app:${{ env.VERSION }}
+            ghcr.io/geogreen-platform/web-app:latest

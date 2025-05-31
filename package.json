@@ -1,49 +1,54 @@
 {
   "name": "nuxt-app",
   "type": "module",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "lint": "yarn lint:eslint && yarn lint:prettier",
-    "lint:eslint": "eslint .",
-    "lint:prettier": "prettier . --check",
-    "lintfix": "eslint . --fix && prettier --write --list-different .",
     "dev": "nuxt dev --port 7894 --host",
+    "lint": "npx biome check",
+    "lintfix": "npx biome check --fix",
+    "format": "npx prettier --write .",
+    "lintformat": "npx prettier --write . && npx biome check --fix",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "start": "nuxt start"
   },
   "dependencies": {
     "@nuxt/image": "^1.8.1",
-    "@nuxtjs/color-mode": "^3.5.2",
     "@pinia/nuxt": "^0.5.5",
     "@quasar/extras": "^1.16.12",
-    "nuxt": "^3.13.2",
+    "normalize.css": "^8.0.1",
+    "nuxt": "^3.15.0",
     "nuxt-quasar-ui": "^2.1.6",
+    "@sentry/nuxt": "^9.17.0",
+    "ol": "^10.3.1",
+    "ol-contextmenu": "^5.5.0",
+    "ol-ext": "^4.0.24",
     "pinia": "^2.2.4",
+    "prettier": "^3.5.3",
     "quasar": "^2.17.0",
     "vue": "latest",
-    "vue-router": "latest"
+    "vue-router": "latest",
+    "vue3-openlayers": "^11.2.1"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^3.7.3",
-    "@nuxt/eslint": "^0.5.7",
-    "@nuxt/test-utils": "^3.14.4",
+    "@biomejs/biome": "1.9.4",
+    "@nuxt/test-utils": "^3.15.4",
     "@vitejs/plugin-vue": "^5.1.4",
     "@vitest/coverage-v8": "^2.1.4",
     "@vue/test-utils": "^2.4.6",
-    "eslint": "^9.12.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
     "jsdom": "^25.0.1",
-    "prettier": "^3.3.3",
+    "lefthook": "^1.10.10",
     "sass": "^1.79.5",
     "typescript": "^5.6.2",
     "vitest": "^2.1.4"
   },
   "overrides": {
-    "vue": "latest"
+    "vue": "latest",
+    "@vercel/nft": "^0.29.2"
   }
 }

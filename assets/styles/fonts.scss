@@ -11,7 +11,10 @@
     url("../fonts/Montserrat-VF.woff2") format("woff2"),
     url("../fonts/Montserrat-VF.ttf") format("truetype");
 }
-
+@font-face {
+  font-family: "Russo One";
+  src: url("../fonts/RussoOne-Regular.ttf") format("truetype");
+}
 @font-face {
   font-family: "LVerdana";
   src: url("../fonts/Verdana.ttf") format("truetype");

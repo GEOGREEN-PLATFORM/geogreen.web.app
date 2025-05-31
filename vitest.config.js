@@ -9,5 +9,6 @@ export default defineVitestConfig({
         domEnvironment: "jsdom",
       },
     },
+    setupFiles: ["vitest.setup.js"],
   },
 });
